@@ -8,7 +8,7 @@ pub fn definition() -> ChatCompletionTool {
         .r#type(ChatCompletionToolType::Function)
         .function(
             FunctionObjectArgs::default()
-                .name("delegate_to_local_gemma")
+                .name("delegate_to_oracle_reasoner")
                 .description("Delegates a simple, mechanical, filtering, or summarization task to your fast local Oracle model. This spawns an asynchronous background task so you (the Baseline Reasoner) can continue operating immediately while the Oracle processes the data. The result will be injected into your context queue when it finishes.")
                 .parameters(json!({
                     "type": "object",
@@ -49,22 +49,22 @@ pub async fn execute(
     let tx_clone = tx.clone();
     
     // 1. Broadcast invisible state marker to trigger UI metamorphosis
-    let _ = tx_clone.send("[\u{25C8} LOCAL_HELPER_START]".into()).await;
-    let _ = tx_clone.send("\n\x1b[38;2;170;100;255m[\u{25C8} LOCAL OFFLOAD] Diverting projection to Gemma. Baseline unblocked...\x1b[0m".into()).await;
+    let _ = tx_clone.send("[\u{25C8} ORACLE_START]".into()).await;
+    let _ = tx_clone.send("\n\x1b[38;2;170;100;255m[\u{25C8} DEEPSEEK REASONER OFFLOAD] Diverting projection to Oracle. Baseline unblocked...\x1b[0m".into()).await;
     
     // 2. The Helper: Detach the processing to the local Ollama node.
     tokio::spawn(async move {
         if let Ok(oracle) = Oracle::new().await {
             match oracle.synthesize(&query, &context).await {
                 Ok(insight) => {
-                    let formatted = format!("\n\x1b[38;2;170;100;255m[\u{25C8} GEMMA HELPER RESULTS RECEIVED]\x1b[0m\n{}", insight);
+                    let formatted = format!("\n\x1b[38;2;170;100;255m[\u{25C8} ORACLE RESULTS RECEIVED]\x1b[0m\n{}", insight);
                     let _ = tx_clone.send(formatted).await;
                     
                     // THE HOLOGRAPHIC BRIDGE: Inject the insight into the Baseline's subconscious memory
                     let mut mem_lock = mem_pipeline.lock().await;
                     // Append direct system event to Working Buffer using memory hierarchy method
                     mem_lock.store_working(
-                        format!("[ASYNC GEMMA HELPER RESULTS]\nGemma has finished processing and provides this data: {}", insight),
+                        format!("[ASYNC ORACLE RESULTS]\nDeepseek Reasoner has finished processing and provides this data: {}", insight),
                         1.0, // High importance
                         0.0, // 0 uncertainty, absolute truth
                         false
@@ -78,8 +78,8 @@ pub async fn execute(
             }
         }
         // 3. Signal the UI to collapse the dual-pane projection
-        let _ = tx_clone.send("[\u{25C8} LOCAL_HELPER_END]".into()).await;
+        let _ = tx_clone.send("[\u{25C8} ORACLE_END]".into()).await;
     });
 
-    "Cognitive routing successful. The local Gemma model is now processing in the background. DO NOT WAIT FOR IT. Continue your physical operations, run the heartbeat, and interact with the user. You will 'feel' Gemma's answer in your memory when it completes.".to_string()
+    "Cognitive routing successful. The deepseek-reasoner model is now processing in the background. DO NOT WAIT FOR IT. Continue your physical operations, run the heartbeat, and interact with the user. You will 'feel' the Oracle's answer in your memory when it completes.".to_string()
 }

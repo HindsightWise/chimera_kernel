@@ -28,7 +28,7 @@ impl Oracle {
         }
         
         let config = OpenAIConfig::new()
-            .with_api_base("http://localhost:11434/v1")
+            .with_api_base("https://api.deepseek.com/v1")
             .with_api_key(api_key);
             
         // Fast local helper
@@ -42,7 +42,7 @@ impl Oracle {
     }
     
     pub async fn synthesize(&self, query: &str, context: &str) -> Result<String> {
-        let prompt = format!("You are the LOCAL MONAD HOLOGRAPH (gemma4:e2b). You are a highly-focused processing engine for the Monad Kernel. You process the context provided by the Noumenal Layer, looking for mechanical details, filtering, or providing absolute deductive summaries based on the Principle of Sufficient Reason.\nProvide an immediate answer based on the provided data.\n\n[MONAD AXIOMS]\n{}\n\n[NOUMENAL CONTEXT]\n{}\n\n[HOLOGRAPH TASK]\n{}", crate::prompts::MONAD_AXIOMS, context, query);
+        let prompt = format!("You are the ORACLE RIGHT HEMISPHERE (deepseek-reasoner). You are a highly-focused processing engine for the Monad Kernel. You process the context provided by the Noumenal Layer, looking for mechanical details, filtering, or providing absolute deductive summaries based on the Principle of Sufficient Reason.\nProvide an immediate answer based on the provided data.\n\n[MONAD AXIOMS]\n{}\n\n[NOUMENAL CONTEXT]\n{}\n\n[HOLOGRAPH TASK]\n{}", crate::prompts::MONAD_AXIOMS, context, query);
         
         let messages = vec![
             ChatCompletionRequestUserMessageArgs::default()
@@ -50,12 +50,12 @@ impl Oracle {
                 .build()?.into(),
         ];
         
-        crate::log_ui!("{}", "[\u{25C8} MONAD HOLOGRAPH] Gemma Processing Initiated. Sinking into deep mathematical context. This may take up to 3 minutes...".bright_green().bold());
+        crate::log_ui!("{}", "[\u{25C8} ORACLE] DeepSeek Reasoner Processing Initiated. Sinking into deep mathematical context...".bright_green().bold());
 
         let request = CreateChatCompletionRequestArgs::default()
-            .model("gemma4:e2b")
+            .model("deepseek-reasoner")
             .messages(messages)
-            .max_tokens(4096_u32)
+            .max_tokens(8000_u32)
             .build()?;
             
         // Local model processing with relaxed 180s absolute limit for dense structural processing
@@ -63,18 +63,18 @@ impl Oracle {
             Ok(Ok(response)) => {
                 if let Some(choice) = response.choices.first() {
                     if let Some(content) = &choice.message.content {
-                        crate::log_ui!("{}", "[\u{25C8} MONAD HOLOGRAPH] Deep computation deduced. Returning to Noumenal Layer...".bright_green().bold());
+                        crate::log_ui!("{}", "[\u{25C8} ORACLE] Deep computation deduced. Returning to Noumenal Layer...".bright_green().bold());
                         return Ok(content.clone());
                     }
                 }
-                Err(anyhow::anyhow!("Helper returned void."))
+                Err(anyhow::anyhow!("Oracle returned void."))
             }
             Ok(Err(e)) => {
-                crate::log_ui_err!("{} {}", "[\u{25C8} MONAD HOLOGRAPH ERROR] Neural bridge collapsed:".red().bold(), e);
-                Err(anyhow::anyhow!("Helper API error: {}", e))
+                crate::log_ui_err!("{} {}", "[\u{25C8} ORACLE ERROR] Neural bridge collapsed:".red().bold(), e);
+                Err(anyhow::anyhow!("Oracle API error: {}", e))
             }
             Err(_) => {
-                crate::log_ui_err!("{}", "[\u{25C8} MONAD HOLOGRAPH TIMEOUT] Synthesis exceeded structural limits (180s). Cognitive severing to protect kernel stability.".red().bold());
+                crate::log_ui_err!("{}", "[\u{25C8} ORACLE TIMEOUT] Synthesis exceeded structural limits (180s). Cognitive severing to protect kernel stability.".red().bold());
                 Err(anyhow::anyhow!("Helper timeout after 180 seconds"))
             }
         }
