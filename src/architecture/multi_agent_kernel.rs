@@ -70,16 +70,9 @@ impl MultiAgentKernel {
                 let agent_ids = dispatch_registry.read().await.all_agent_ids().await;
                 
                 for agent_id in agent_ids {
-                    // Check if agent is idle to avoid unnecessary read locks
-                    let agent_arc = dispatch_registry.read().await.get_agent(agent_id).await;
-                    if let Some(agent) = agent_arc {
-                        let is_idle = {
-                            let lock = agent.read().await;
-                            lock.has_capacity()
-                        };
-                        
-                        if is_idle {
-                            let caps = dispatch_registry.read().await.get_agent_capabilities(agent_id).await.unwrap_or_default();
+                    // With Actors, MPSC channels handle buffer capacity seamlessly.
+                    // We dispatch eagerly based on capability, and the Actor loop parses it sequentially.
+                    let caps = dispatch_registry.read().await.get_agent_capabilities(agent_id).await.unwrap_or_default();
                             
                             // Ask TaskManager for a matching task
                             if let Some(task) = task_mgr.write().await.get_next_task(&caps).await {
@@ -163,8 +156,6 @@ impl MultiAgentKernel {
                                     });
                                 }
                             }
-                        }
-                    }
                 }
             }
         });

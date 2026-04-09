@@ -5,7 +5,6 @@ pub mod utils;
 
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
-use std::fs;
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -56,11 +55,13 @@ pub struct WikiArticle {
 }
 
 impl WikiManager {
-    pub fn new(config: WikiConfig) -> Result<Self, String> {
+    pub async fn new(config: WikiConfig) -> Result<Self, String> {
         // Ensure directories exist
-        fs::create_dir_all(&config.raw_dir)
+        tokio::fs::create_dir_all(&config.raw_dir)
+            .await
             .map_err(|e| format!("Failed to create raw directory: {}", e))?;
-        fs::create_dir_all(&config.wiki_dir)
+        tokio::fs::create_dir_all(&config.wiki_dir)
+            .await
             .map_err(|e| format!("Failed to create wiki directory: {}", e))?;
         
         Ok(Self {
@@ -69,13 +70,14 @@ impl WikiManager {
         })
     }
     
-    pub fn scan_raw_documents(&self) -> Result<Vec<PathBuf>, String> {
+    pub async fn scan_raw_documents(&self) -> Result<Vec<PathBuf>, String> {
         let mut documents = Vec::new();
         
-        for entry in fs::read_dir(&self.config.raw_dir)
-            .map_err(|e| format!("Failed to read raw directory: {}", e))?
-        {
-            let entry = entry.map_err(|e| format!("Failed to read entry: {}", e))?;
+        let mut dir = tokio::fs::read_dir(&self.config.raw_dir)
+            .await
+            .map_err(|e| format!("Failed to read raw directory: {}", e))?;
+            
+        while let Some(entry) = dir.next_entry().await.map_err(|e| format!("Failed to read entry: {}", e))? {
             let path = entry.path();
             
             if path.is_file() {

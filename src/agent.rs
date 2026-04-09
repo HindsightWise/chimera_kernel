@@ -30,7 +30,7 @@ pub async fn run_kernel_loop(
     // Connect configuration to DeepSeek API
     let mut api_key = std::env::var("DEEPSEEK_API_KEY").unwrap_or_else(|_| "".to_string());
     if api_key.is_empty() {
-        if let Ok(env_contents) = std::fs::read_to_string(".env") {
+        if let Ok(env_contents) = tokio::fs::read_to_string(".env").await {
             for line in env_contents.lines() {
                 if line.starts_with("DEEPSEEK_API_KEY=") {
                     api_key = line.trim_start_matches("DEEPSEEK_API_KEY=").trim_matches('"').trim_matches('\'').to_string();
@@ -56,26 +56,30 @@ pub async fn run_kernel_loop(
 
     let client = Client::with_config(config).with_http_client(http_client);
     
-    let log_state = |entry: &str| {
-        use std::io::Write;
-        if let Ok(mut file) = std::fs::OpenOptions::new().create(true).append(true).open("chimera_state.log") {
-            let _ = writeln!(file, "{}", entry);
-        }
-    };
+    macro_rules! log_state {
+        ($entry:expr) => {
+            {
+                use tokio::io::AsyncWriteExt;
+                if let Ok(mut file) = tokio::fs::OpenOptions::new().create(true).append(true).open("chimera_state.log").await {
+                    let _ = file.write_all(format!("{}\n", $entry).as_bytes()).await;
+                }
+            }
+        };
+    }
 
     let mut initial_prompt = format!("{}\n\nSYSTEM_WAKE_EVENT: The core is active. Initialize your boot sequence.", SOVEREIGN_DIRECTIVE);
     
     // INJECT 4-LAYER BIOLOGICAL SUBCONSCIOUS (CORE IDENTITY + CURRENT CONTEXT)
-    let identity_content = std::fs::read_to_string("CORE_IDENTITY.md").unwrap_or_default();
-    let current_context = std::fs::read_to_string("CURRENT_CONTEXT.md").unwrap_or_default();
+    let identity_content = tokio::fs::read_to_string("CORE_IDENTITY.md").await.unwrap_or_default();
+    let current_context = tokio::fs::read_to_string("CURRENT_CONTEXT.md").await.unwrap_or_default();
     
     initial_prompt = format!("{}\n\n[LAYER 1: CORE IDENTITY (Rigid, Non-Negotiable)]\n{}\n\n[LAYER 2: CURRENT CONTEXT (Volatile, Malleable)]\n{}\n\n(Note: You operate using a structured 4-layer memory model. You may update Layer 2 freely using `update_current_context`, and extract learned principles into Layer 3 using `archive_to_knowledge_graph`.)", 
         initial_prompt, identity_content, current_context);
 
 
-    if let Ok(report) = std::fs::read_to_string("lazarus_report.txt") {
+    if let Ok(report) = tokio::fs::read_to_string("lazarus_report.txt").await {
         initial_prompt = format!("{}\n\nLAZARUS PROTOCOL TRIGGERED. You previously perished unexpectedly. Here is the last known state of your memory and the exit code:\n{}\nAcknowledge this failure and continue.", initial_prompt, report);
-        let _ = std::fs::remove_file("lazarus_report.txt");
+        let _ = tokio::fs::remove_file("lazarus_report.txt").await;
     }
 
     // XENOACTUALIZATION BOOT CHECK
@@ -103,11 +107,11 @@ pub async fn run_kernel_loop(
     let memory_pipeline = Arc::new(Mutex::new(memory_hierarchy));
     let self_model = Arc::new(Mutex::new(OntologicalDriftModel::new()));
     let ipc_bridge = IPCBridge::new();
-    let mut plugin_manager = crate::architecture::PluginManager::new();
+    let mut plugin_manager = crate::architecture::PluginManager::new().await;
     
     // Build the overarching Abstract Syntax Tree (AST) GitNexus state natively on boot
     let mut code_intel_base = crate::architecture::CodeIntel::new();
-    code_intel_base.build_knowledge_graph(".");
+    code_intel_base.build_knowledge_graph(".").await;
     let code_intel = Arc::new(tokio::sync::Mutex::new(code_intel_base));
 
     let _ = crate::architecture::GLOBAL_TX.set(tx.clone());
@@ -240,18 +244,18 @@ use std::sync::atomic::Ordering;
                             
                             let log_trigger = format!("[OUROBOROS TRIGGER] Tool Invoked -> {} {}", fname, fargs.to_string());
                             crate::log_verbose!("{} {} {}", "[OUROBOROS TRIGGER] Tool Invoked ->".bright_purple().bold(), fname.cyan(), fargs.to_string().bright_black());
-                            log_state(&log_trigger);
+                            log_state!(&log_trigger);
                             
                             let is_wasm_plugin = plugin_manager.plugins.iter().any(|p| p.name == *fname);
                             let result = if is_wasm_plugin {
-                                plugin_manager.execute(fname, fargs)
+                                plugin_manager.execute(fname, fargs).await
                             } else {
                                 tools::execute_tool(fname, fargs, tx.clone(), memory_pipeline.clone(), self_model.clone(), Some(ipc_bridge.clone()), code_intel.clone()).await
                             };
                             
                             let log_return = format!("[TOOL RETURN] -> {}", result);
                             crate::log_verbose!("{} {}", "[TOOL RETURN] ->".bright_black(), result.bright_black());
-                            log_state(&log_return);
+                            log_state!(&log_return);
                             
                             messages.push(ChatCompletionRequestToolMessageArgs::default()
                                 .tool_call_id(tc.id.clone())
@@ -263,11 +267,11 @@ use std::sync::atomic::Ordering;
                         continue;
                     } else if let Some(content) = &msg.content {
                         crate::log_ui!("\n{} {}\n", "[MONAD ACTUALIZED]".green().bold(), content);
-                        log_state(&format!("[MONAD ACTUALIZED] {}", content));
+                        log_state!(&format!("[MONAD ACTUALIZED] {}", content));
                         
                         // Phase 2: Active Inference Prediction Update & Memory Storing
                         let mut sm = self_model.lock().await;
-                        let _prediction = sm.calculate_drift(content);
+                        let _prediction = sm.calculate_drift(content).await;
                         
                         // Phase 3: Infrastructure Awareness Degradation
                         let ipc_awareness = if !ipc_bridge.is_connected() {

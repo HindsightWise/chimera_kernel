@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::fs;
+use tokio::fs;
 use std::path::Path;
 use tree_sitter::{Parser, Query, QueryCursor};
 use petgraph::graph::{DiGraph, NodeIndex};
@@ -80,7 +80,7 @@ impl CodeIntel {
         }
     }
 
-    pub fn build_knowledge_graph(&mut self, workspace_dir: &str) {
+    pub async fn build_knowledge_graph(&mut self, workspace_dir: &str) {
         let walker = walkdir::WalkDir::new(workspace_dir).into_iter();
         let mut rust_files = vec![];
         for entry in walker.filter_map(|e| e.ok()) {
@@ -90,7 +90,7 @@ impl CodeIntel {
         }
         
         for file_path in rust_files {
-            self.parse_file_ast(&file_path);
+            self.parse_file_ast(&file_path).await;
         }
         
         self.resolve_call_edges();
@@ -106,8 +106,8 @@ impl CodeIntel {
         }
     }
 
-    fn parse_file_ast(&mut self, file_path: &Path) {
-        let Ok(source_code) = fs::read_to_string(file_path) else {
+    async fn parse_file_ast(&mut self, file_path: &Path) {
+        let Ok(source_code) = fs::read_to_string(file_path).await else {
             return;
         };
 

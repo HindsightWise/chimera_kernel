@@ -15,10 +15,10 @@ pub struct Oracle {
 }
 
 impl Oracle {
-    pub fn new() -> Result<Self> {
+    pub async fn new() -> Result<Self> {
         let mut api_key = std::env::var("DEEPSEEK_API_KEY").unwrap_or_else(|_| "".to_string());
         if api_key.is_empty() {
-            if let Ok(env_contents) = std::fs::read_to_string(".env") {
+            if let Ok(env_contents) = tokio::fs::read_to_string(".env").await {
                 for line in env_contents.lines() {
                     if line.starts_with("DEEPSEEK_API_KEY=") {
                         api_key = line.trim_start_matches("DEEPSEEK_API_KEY=").trim_matches('"').trim_matches('\'').to_string();

@@ -54,7 +54,7 @@ pub async fn execute(
     
     // 2. The Helper: Detach the processing to the local Ollama node.
     tokio::spawn(async move {
-        if let Ok(oracle) = Oracle::new() {
+        if let Ok(oracle) = Oracle::new().await {
             match oracle.synthesize(&query, &context).await {
                 Ok(insight) => {
                     let formatted = format!("\n\x1b[38;2;170;100;255m[\u{25C8} GEMMA HELPER RESULTS RECEIVED]\x1b[0m\n{}", insight);

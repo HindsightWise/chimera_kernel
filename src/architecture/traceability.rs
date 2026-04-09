@@ -1,5 +1,3 @@
-use std::fs;
-use std::io::Write;
 
 #[allow(dead_code)]
 pub enum MatrixCategory {
@@ -9,7 +7,7 @@ pub enum MatrixCategory {
     Unknown,
 }
 
-pub fn track_behavior(tool_name: &str) {
+pub async fn track_behavior(tool_name: &str) {
     let category = match tool_name {
         "tavily_search" | "spider_rss" | "deep_read_url" => MatrixCategory::CAVA,
         "gitnexus_blast_radius" | "gitnexus_execution_flow" | "gitnexus_architectural_drift" => MatrixCategory::FATE,
@@ -25,7 +23,8 @@ pub fn track_behavior(tool_name: &str) {
     };
     
     let log_msg = format!("[BEHAVIORAL TRACE] Tool Engine invoked '{}' -> {}\n", tool_name, cat_str);
-    if let Ok(mut f) = fs::OpenOptions::new().append(true).create(true).open("chimera_state.log") {
-        let _ = write!(f, "{}", log_msg);
+    if let Ok(mut f) = tokio::fs::OpenOptions::new().append(true).create(true).open("chimera_state.log").await {
+        use tokio::io::AsyncWriteExt;
+        let _ = f.write_all(log_msg.as_bytes()).await;
     }
 }

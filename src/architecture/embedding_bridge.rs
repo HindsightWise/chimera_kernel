@@ -53,9 +53,9 @@ impl IPCBridge {
                         if bytes == 0 { break; }
                         // Log Python IPC stderr silently into the chimera_state.log without breaking the TUI
                         if !line.trim().is_empty() {
-                            if let Ok(mut file) = std::fs::OpenOptions::new().create(true).append(true).open("chimera_state.log") {
-                                use std::io::Write;
-                                let _ = writeln!(file, "[MNEMOSYNE SERVER LOG]: {}", line.trim());
+                            if let Ok(mut file) = tokio::fs::OpenOptions::new().create(true).append(true).open("chimera_state.log").await {
+                                use tokio::io::AsyncWriteExt;
+                                let _ = file.write_all(format!("[MNEMOSYNE SERVER LOG]: {}\n", line.trim()).as_bytes()).await;
                             }
                         }
                         line.clear();

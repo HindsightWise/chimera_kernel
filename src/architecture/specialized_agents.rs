@@ -73,7 +73,7 @@ impl Agent for ReasoningAgent {
                         }
                     }
 
-                    if let Ok(oracle) = crate::architecture::duality::Oracle::new() {
+                    if let Ok(oracle) = crate::architecture::duality::Oracle::new().await {
                         let combined_payload = if !historical_context.is_empty() {
                             format!("{}\n\nCurrent Dream:\n{}", historical_context, payload_str)
                         } else {
@@ -609,7 +609,7 @@ impl Agent for SynthesisAgent {
             let agent_id = self.id();
             
             tokio::spawn(async move {
-                if let Ok(oracle) = crate::architecture::Oracle::new() {
+                if let Ok(oracle) = crate::architecture::Oracle::new().await {
                     let prompt = format!("You are the Synthesizer. A massive subtask graph has just completed. The following are the exact raw subtask outputs:\n\n{}\n\nDistill this raw data into a definitive, singular conclusion or tactical truth.", payload_str);
                     
                     match oracle.synthesize("Synthesize final graph completion data", &prompt).await {

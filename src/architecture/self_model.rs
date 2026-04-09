@@ -53,7 +53,7 @@ impl OntologicalDriftModel {
     }
 
     /// Evaluates the Monad's current directional phase shift.
-    pub fn calculate_drift(&mut self, response: &str) -> Projection {
+    pub async fn calculate_drift(&mut self, response: &str) -> Projection {
         let anticipated = self.phase_drift;
         // Centralize via gravity (tendency to return to 0.0) 
         let mut d = self.phase_drift * 0.9; 
@@ -80,7 +80,7 @@ impl OntologicalDriftModel {
         self.topological_stress = (anticipated - self.phase_drift).abs(); 
         
         // F.E.A.R. automation intercept (renamed variables)
-        crate::architecture::fear_automation::evaluate_and_reprogram(self, response);
+        crate::architecture::fear_automation::evaluate_and_reprogram(self, response).await;
         
         Projection {
             next_action_vector: vec![0.0; 10],

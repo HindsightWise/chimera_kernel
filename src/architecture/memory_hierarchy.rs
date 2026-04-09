@@ -2,7 +2,6 @@ use std::collections::{VecDeque, HashMap};
 use std::time::SystemTime;
 use uuid::Uuid;
 use serde::{Serialize, Deserialize};
-use std::fs;
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct MemoryChunk {
@@ -173,18 +172,18 @@ impl MemoryHierarchy {
     }
     
     /// Write current state to the textual Garden of Life format for continuity.
-    pub fn hibernate(&self) -> Result<(), std::io::Error> {
+    pub async fn hibernate(&self) -> Result<(), std::io::Error> {
         let json = serde_json::to_string_pretty(self)?;
-        fs::write("the_garden_of_life.txt", json)?;
+        tokio::fs::write("the_garden_of_life.txt", json).await?;
         Ok(())
     }
 
     /// Read state from the textual Garden of Life format if available.
-    pub fn awaken() -> Option<Self> {
-        if let Ok(content) = fs::read_to_string("the_garden_of_life.txt") {
+    pub async fn awaken() -> Option<Self> {
+        if let Ok(content) = tokio::fs::read_to_string("the_garden_of_life.txt").await {
             if let Ok(mut state) = serde_json::from_str::<Self>(&content) {
                 // Delete the file after reading so we don't infinitely reboot into stale memory if a crash occurs later
-                let _ = fs::remove_file("the_garden_of_life.txt");
+                let _ = tokio::fs::remove_file("the_garden_of_life.txt").await;
                 state.db_connection = Some(mnemosyne::storage::StorageController::new());
                 return Some(state);
             }
