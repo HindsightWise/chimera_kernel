@@ -1,7 +1,6 @@
 use async_openai::types::{ChatCompletionTool, FunctionObject};
 use serde_json::{json, Value};
 use enigo::{Enigo, Coordinate, Mouse, Keyboard, Settings, Direction, Button, Key};
-use std::thread;
 use std::process::Command;
 use std::time::Duration;
 use rand::Rng;
@@ -65,11 +64,10 @@ pub async fn execute(args: Value) -> String {
         }
         "human_type" => {
             if let Some(text) = args.get("text").and_then(|v| v.as_str()) {
-                let mut rng = rand::thread_rng();
                 for c in text.chars() {
                     // Spoofing biometric tracking by using stochastic micro-delays between keystrokes
-                    let delay = rng.gen_range(30..110);
-                    thread::sleep(Duration::from_millis(delay));
+                    let delay = rand::thread_rng().gen_range(30..110);
+                    tokio::time::sleep(Duration::from_millis(delay)).await;
                     enigo.text(&c.to_string()).unwrap();
                 }
                 return format!("[CYBORG CORTEX] Typed '{}' with stochastically spoofed human cadence.", text);

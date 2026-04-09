@@ -16,6 +16,7 @@ pub mod specialized_agents;
 pub mod multi_agent_kernel;
 pub mod sensory_drift;pub mod task_decomposer;
 pub mod agent_coordinator;
+pub mod gatekeeper;
 
 
 pub static GLOBAL_TX: tokio::sync::OnceCell<tokio::sync::mpsc::Sender<String>> = tokio::sync::OnceCell::const_new();
@@ -39,3 +40,4 @@ pub use specialized_agents::SpecializedAgentFactory;
 pub use multi_agent_kernel::MultiAgentKernel;
 pub use task_decomposer::{TaskDecomposer, DecompositionPattern, CapabilityGraph};
 pub use agent_coordinator::{AgentCoordinator, SubtaskStatus};
+pub use gatekeeper::Gatekeeper;

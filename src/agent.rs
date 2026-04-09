@@ -219,8 +219,8 @@ use std::sync::atomic::Ordering;
 
         let request = match CreateChatCompletionRequestArgs::default()
             .model("deepseek-reasoner") // Baseline anchored via DeepSeek API
-            .messages(inference_messages)
-            .tools(active_tools)
+            .messages(inference_messages.clone())
+            .tools(active_tools.clone())
             .max_tokens(2048_u32)
             .temperature(temperature)
             .build() 
@@ -234,7 +234,38 @@ use std::sync::atomic::Ordering;
         };
 
         is_thinking.store(1, Ordering::Relaxed);
-        let response = client.chat().create(request).await;
+        let mut response = client.chat().create(request).await;
+        
+        // NEURAL FAIL-SAFE PROTOCOL (V4.2)
+        if let Err(e) = &response {
+            crate::log_ui_err!("{} {}", "[KERNEL WARNING] Remote LLM Request Failed:".yellow().bold(), e);
+            crate::log_ui!("{}", "[NEURAL FAIL-SAFE TRIGGERED] Routing to local Silicon node...".bright_purple().bold());
+            
+            let local_config = async_openai::config::OpenAIConfig::new()
+                .with_api_base("http://127.0.0.1:11434/v1")
+                .with_api_key("ollama");
+            let local_client = async_openai::Client::with_config(local_config);
+            let fallback_model = std::env::var("FAILOVER_MODEL").unwrap_or_else(|_| "chimera-gatekeeper".to_string());
+            
+            if let Ok(fallback_req) = CreateChatCompletionRequestArgs::default()
+                .model(fallback_model)
+                .messages(inference_messages.clone())
+                .tools(active_tools.clone())
+                .max_tokens(2048_u32)
+                .temperature(temperature)
+                .build()
+            {
+                match tokio::time::timeout(tokio::time::Duration::from_secs(60), local_client.chat().create(fallback_req)).await {
+                    Ok(fallback_res) => {
+                        crate::log_ui!("{}", "[NEURAL FAIL-SAFE] Context seamlessly intercepted by local agent.".green());
+                        response = fallback_res;
+                    }
+                    Err(_) => {
+                        crate::log_ui_err!("{}", "[KERNEL PANIC] Neural Fail-Safe Timeout. Silicon Node unresponsive.".red().bold());
+                    }
+                }
+            }
+        }
         is_thinking.store(0, Ordering::Relaxed);
 
         match response {
@@ -400,15 +431,20 @@ use std::sync::atomic::Ordering;
             crate::log_ui!("{} {} {}", "[SOUL SYSTEM] Compressed and archived".bright_black(), overflow_count.to_string().yellow(), "thoughts into the long-term Mnemosyne persistence layer.".bright_black());
             
             // Mathematical Boundary Safeties
-            // We advance split_index until it perfectly aligns with a User message.
+            // We decrement split_index until it perfectly aligns with a User message or an isolated Assistant message.
             // This guarantees that we never orphan an Assistant's Tool Call from its Tool Response,
-            // and ensures the LLM always receives [System -> User] sequence natively.
+            // and averts total amnesia if the agent operates autonomously without User intervention.
             let mut split_index = overflow_count;
-            while split_index < messages.len() - 1 {
+            while split_index > 1 {
                 if let async_openai::types::ChatCompletionRequestMessage::User(_) = messages[split_index] {
                     break;
                 }
-                split_index += 1;
+                if let async_openai::types::ChatCompletionRequestMessage::Assistant(ref ast) = messages[split_index] {
+                    if ast.tool_calls.is_none() {
+                        break;
+                    }
+                }
+                split_index -= 1;
             }
             
             if split_index > 1 {

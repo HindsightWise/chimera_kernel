@@ -1,4 +1,5 @@
 use std::io::{self};
+use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::sync::mpsc::{Sender, UnboundedReceiver};
 use std::sync::atomic::AtomicU8;
 use std::sync::Arc;
@@ -14,13 +15,14 @@ pub async fn run(tx_stdin: Sender<String>, mut top_rx: UnboundedReceiver<String>
         }
     });
 
-    // Take over the main thread to wait for user input
-    let stdin = io::stdin();
+    // Take over the main thread to wait for user input asynchronously
+    let stdin = tokio::io::stdin();
+    let mut reader = BufReader::new(stdin);
     let mut buffer = String::new();
 
     loop {
         buffer.clear();
-        match stdin.read_line(&mut buffer) {
+        match reader.read_line(&mut buffer).await {
             Ok(0) => {
                 // EOF detected. Park this thread so background agents can run without 100% CPU lock
                 tokio::time::sleep(tokio::time::Duration::from_secs(86400)).await;
