@@ -27,11 +27,10 @@ impl Agent for ReasoningAgent {
     async fn health_check(&self) -> bool { self.base.health_check().await }
     fn status(&self) -> AgentStatus { self.base.status() }
     
-    async fn subscribe_to_topics(&self, message_bus: Arc<MessageBus>) -> Result<()> {
-        self.base.subscribe_to_topics(message_bus.clone()).await?;
-        message_bus.subscribe(self.id(), "SYSTEM.DREAM").await?;
+    async fn subscribe_to_topics(&self, message_bus: Arc<MessageBus>) -> Result<tokio::sync::broadcast::Receiver<Message>> {
+        let rx = self.base.subscribe_to_topics(message_bus.clone()).await?;
         let _ = self.bus.set(message_bus);
-        Ok(())
+        Ok(rx)
     }
     
     async fn handle_message(&mut self, message: Message) -> Result<()> {
@@ -198,12 +197,6 @@ impl Agent for ResearchAgent {
     async fn health_check(&self) -> bool { self.base.health_check().await }
     fn status(&self) -> AgentStatus { self.base.status() }
     
-    async fn subscribe_to_topics(&self, message_bus: Arc<MessageBus>) -> Result<()> {
-        self.base.subscribe_to_topics(message_bus.clone()).await?;
-        message_bus.subscribe(self.id(), "SYSTEM.DREAM").await?;
-        Ok(())
-    }
-    
     async fn handle_message(&mut self, message: Message) -> Result<()> {
         if message.topic == "SYSTEM.DREAM" {
             crate::log_verbose!("{} QUEUING REALITY VALIDATION", "[RESEARCH AGENT]".cyan().bold());
@@ -255,12 +248,6 @@ impl Agent for TradingAgent {
     async fn health_check(&self) -> bool { self.base.health_check().await }
     fn status(&self) -> AgentStatus { self.base.status() }
     
-    async fn subscribe_to_topics(&self, message_bus: Arc<MessageBus>) -> Result<()> {
-        self.base.subscribe_to_topics(message_bus.clone()).await?;
-        message_bus.subscribe(self.id(), "SYSTEM.DREAM").await?;
-        Ok(())
-    }
-    
     async fn handle_message(&mut self, message: Message) -> Result<()> {
         if message.topic == "SYSTEM.DREAM" {
             crate::log_verbose!("{} ADJUSTING RISK MODELS", "[TRADING AGENT]".green().bold());
@@ -286,13 +273,6 @@ impl Agent for ContextManagementAgent {
     async fn execute_task(&mut self, task: Task) -> Result<TaskResult> { self.base.execute_task(task).await }
     async fn health_check(&self) -> bool { self.base.health_check().await }
     fn status(&self) -> AgentStatus { self.base.status() }
-    
-    async fn subscribe_to_topics(&self, message_bus: Arc<MessageBus>) -> Result<()> {
-        self.base.subscribe_to_topics(message_bus.clone()).await?;
-        message_bus.subscribe(self.id(), "SYSTEM.DREAM").await?;
-        message_bus.subscribe(self.id(), "SYSTEM.TASK_COMPLETE").await?;
-        Ok(())
-    }
     
     async fn handle_message(&mut self, message: Message) -> Result<()> {
         if message.topic == "SYSTEM.TASK_COMPLETE" {
@@ -370,12 +350,6 @@ impl Agent for SystemManagementAgent {
     async fn health_check(&self) -> bool { self.base.health_check().await }
     fn status(&self) -> AgentStatus { self.base.status() }
     
-    async fn subscribe_to_topics(&self, message_bus: Arc<MessageBus>) -> Result<()> {
-        self.base.subscribe_to_topics(message_bus.clone()).await?;
-        message_bus.subscribe(self.id(), "SYSTEM.DREAM").await?;
-        Ok(())
-    }
-    
     async fn handle_message(&mut self, message: Message) -> Result<()> {
         if message.topic == "SYSTEM.DREAM" {
             crate::log_verbose!("{} TRACKING DREAM METRICS", "[SYSTEM AGENT]".bright_black().bold());
@@ -399,12 +373,6 @@ impl Agent for HumanInterfaceAgent {
     async fn execute_task(&mut self, task: Task) -> Result<TaskResult> { self.base.execute_task(task).await }
     async fn health_check(&self) -> bool { self.base.health_check().await }
     fn status(&self) -> AgentStatus { self.base.status() }
-    
-    async fn subscribe_to_topics(&self, message_bus: Arc<MessageBus>) -> Result<()> {
-        self.base.subscribe_to_topics(message_bus.clone()).await?;
-        message_bus.subscribe(self.id(), "SYSTEM.ALERT").await?;
-        Ok(())
-    }
     
     async fn handle_message(&mut self, message: Message) -> Result<()> {
         if message.topic == "SYSTEM.ALERT" {
@@ -436,7 +404,6 @@ impl Agent for ToolExecutionAgent {
     fn max_concurrent_tasks(&self) -> usize { self.base.max_concurrent_tasks() }
     async fn health_check(&self) -> bool { self.base.health_check().await }
     fn status(&self) -> AgentStatus { self.base.status() }
-    async fn subscribe_to_topics(&self, message_bus: Arc<MessageBus>) -> Result<()> { self.base.subscribe_to_topics(message_bus).await }
     async fn handle_message(&mut self, message: Message) -> Result<()> { self.base.handle_message(message).await }
 
     async fn execute_task(&mut self, task: Task) -> Result<TaskResult> {
@@ -499,7 +466,6 @@ impl Agent for LocalProcessingAgent {
     fn max_concurrent_tasks(&self) -> usize { self.base.max_concurrent_tasks() }
     async fn health_check(&self) -> bool { self.base.health_check().await }
     fn status(&self) -> AgentStatus { self.base.status() }
-    async fn subscribe_to_topics(&self, message_bus: Arc<MessageBus>) -> Result<()> { self.base.subscribe_to_topics(message_bus).await }
     async fn handle_message(&mut self, message: Message) -> Result<()> { self.base.handle_message(message).await }
 
     async fn execute_task(&mut self, task: Task) -> Result<TaskResult> {
@@ -540,7 +506,6 @@ impl Agent for CodeAnalysisAgent {
     fn max_concurrent_tasks(&self) -> usize { self.base.max_concurrent_tasks() }
     async fn health_check(&self) -> bool { self.base.health_check().await }
     fn status(&self) -> AgentStatus { self.base.status() }
-    async fn subscribe_to_topics(&self, message_bus: Arc<MessageBus>) -> Result<()> { self.base.subscribe_to_topics(message_bus).await }
     async fn handle_message(&mut self, message: Message) -> Result<()> { self.base.handle_message(message).await }
 
     async fn execute_task(&mut self, task: Task) -> Result<TaskResult> {
@@ -586,11 +551,10 @@ impl Agent for SynthesisAgent {
     async fn health_check(&self) -> bool { self.base.health_check().await }
     fn status(&self) -> AgentStatus { self.base.status() }
     
-    async fn subscribe_to_topics(&self, message_bus: Arc<MessageBus>) -> Result<()> {
-        self.base.subscribe_to_topics(message_bus.clone()).await?;
-        message_bus.subscribe(self.id(), "SYSTEM.GRAPH_COMPLETED").await?;
+    async fn subscribe_to_topics(&self, message_bus: Arc<MessageBus>) -> Result<tokio::sync::broadcast::Receiver<Message>> {
+        let rx = self.base.subscribe_to_topics(message_bus.clone()).await?;
         let _ = self.bus.set(message_bus);
-        Ok(())
+        Ok(rx)
     }
 
         async fn handle_message(&mut self, message: Message) -> Result<()> {

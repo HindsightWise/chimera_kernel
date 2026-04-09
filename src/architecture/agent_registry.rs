@@ -67,19 +67,78 @@ impl AgentRegistry {
         let agent_id = id;
         tokio::spawn(async move {
             crate::log_ui!("Agent Actor {} Online", agent_id);
-            while let Some(cmd) = rx.recv().await {
-                match cmd {
-                    ActorCommand::ExecuteTask(env) => {
-                        let res = agent.execute_task(env.task).await;
-                        let _ = env.respond_to.send(res);
+            let mut bus_rx: Option<tokio::sync::broadcast::Receiver<Message>> = None;
+            
+            loop {
+                if let Some(ref mut brx) = bus_rx {
+                    tokio::select! {
+                        cmd_opt = rx.recv() => {
+                            match cmd_opt {
+                                Some(cmd) => {
+                                    match cmd {
+                                        ActorCommand::ExecuteTask(env) => {
+                                            let res = agent.execute_task(env.task).await;
+                                            let _ = env.respond_to.send(res);
+                                        }
+                                        ActorCommand::HandleMessage(env) => {
+                                            let res = agent.handle_message(env.message).await;
+                                            let _ = env.respond_to.send(res);
+                                        }
+                                        ActorCommand::SubscribeToTopics(bus, respond_to) => {
+                                            match agent.subscribe_to_topics(bus).await {
+                                                Ok(new_rx) => {
+                                                    bus_rx = Some(new_rx);
+                                                    let _ = respond_to.send(Ok(()));
+                                                }
+                                                Err(e) => {
+                                                    let _ = respond_to.send(Err(e));
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                None => break, // Channel closed
+                            }
+                        }
+                        msg_res = brx.recv() => {
+                            match msg_res {
+                                Ok(msg) => {
+                                    let _ = agent.handle_message(msg).await;
+                                }
+                                Err(tokio::sync::broadcast::error::RecvError::Closed) => {
+                                    bus_rx = None;
+                                }
+                                Err(tokio::sync::broadcast::error::RecvError::Lagged(skipped)) => {
+                                    crate::log_ui_err!("Agent {} lagged and dropped {} messages!", agent_id, skipped);
+                                }
+                            }
+                        }
                     }
-                    ActorCommand::HandleMessage(env) => {
-                        let res = agent.handle_message(env.message).await;
-                        let _ = env.respond_to.send(res);
-                    }
-                    ActorCommand::SubscribeToTopics(bus, respond_to) => {
-                        let res = agent.subscribe_to_topics(bus).await;
-                        let _ = respond_to.send(res);
+                } else {
+                    if let Some(cmd) = rx.recv().await {
+                        match cmd {
+                            ActorCommand::ExecuteTask(env) => {
+                                let res = agent.execute_task(env.task).await;
+                                let _ = env.respond_to.send(res);
+                            }
+                            ActorCommand::HandleMessage(env) => {
+                                let res = agent.handle_message(env.message).await;
+                                let _ = env.respond_to.send(res);
+                            }
+                            ActorCommand::SubscribeToTopics(bus, respond_to) => {
+                                match agent.subscribe_to_topics(bus).await {
+                                    Ok(new_rx) => {
+                                        bus_rx = Some(new_rx);
+                                        let _ = respond_to.send(Ok(()));
+                                    }
+                                    Err(e) => {
+                                        let _ = respond_to.send(Err(e));
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        break;
                     }
                 }
             }

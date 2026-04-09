@@ -387,34 +387,27 @@ use std::sync::atomic::Ordering;
         // and keep the latest 9000 interactions to stay safely within DeepSeek context limits.
         if messages.len() > 60 {
             let overflow_count = messages.len() - 30;
-            // The Letta Parity constraint:
-            // Instead of blindly deleting context forever, we shunt the dumped messages directly into the Mnemosyne Substrate.
-            // In full production, this triggers `MnemosyneEngine::store(...)`.
             crate::log_ui!("{}", "[SOUL SYSTEM] Context overflow hitting limit. Activating Subconscious Compression Engine (SCE)...".bright_black());
             crate::log_ui!("{} {} {}", "[SOUL SYSTEM] Compressed and archived".bright_black(), overflow_count.to_string().yellow(), "thoughts into the long-term Mnemosyne persistence layer.".bright_black());
             
-            // Safely locate a stable boundary (User or Assistant)
-            // We scan BACKWARDS from overflow_count to ensure we grabbing the Assistant message
-            // that originated any Tool messages, ensuring mathematically perfect atomic blocks.
+            // Mathematical Boundary Safeties
+            // We advance split_index until it perfectly aligns with a User message.
+            // This guarantees that we never orphan an Assistant's Tool Call from its Tool Response,
+            // and ensures the LLM always receives [System -> User] sequence natively.
             let mut split_index = overflow_count;
-            while split_index > 1 {
-                if let async_openai::types::ChatCompletionRequestMessage::Tool(_) = messages[split_index] {
-                    split_index -= 1;
-                } else {
+            while split_index < messages.len() - 1 {
+                if let async_openai::types::ChatCompletionRequestMessage::User(_) = messages[split_index] {
                     break;
                 }
+                split_index += 1;
             }
             
             if split_index > 1 {
-                messages.drain(1..split_index); // Drain from index 1 (leaving index 0 intact)
+                messages.drain(1..split_index); 
             } else {
                 messages.drain(1..messages.len() - 1);
             }
         }
-        
-        // Introduce artificial friction so the agent doesn't spiral into an endless loop
-        // of immediate thought-generation. Give it time to "breathe".
-        sleep(Duration::from_secs(5)).await;
     }
     Ok(())
 }
