@@ -3,6 +3,7 @@ use std::path::Path;
 use serde::{Deserialize, Serialize};
 use wasmtime::*;
 use wasmtime_wasi::sync::WasiCtxBuilder;
+use wasi_common::pipe::WritePipe;
 use async_openai::types::{ChatCompletionTool, FunctionObject};
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -102,11 +103,14 @@ impl PluginManager {
 
         let args_str = serde_json::to_string(&args).unwrap_or_default();
         
+        let stdout = WritePipe::new_in_memory();
+        
         // Build restricted WASI Sandbox Environment
         let mut builder = WasiCtxBuilder::new();
         // Use single-statement builder modifications to avoid 'unwrap()' or return type trait issues
         let _ = builder.arg(name);
         let _ = builder.arg(&args_str);
+        let _ = builder.stdout(Box::new(stdout.clone()));
         
         let wasi = builder.build();
 
@@ -128,8 +132,17 @@ impl PluginManager {
                 return format!("[WASM SANDBOX PANIC TRAPPED] {}", trap_msg);
             }
         }
+        
+        // Drop store so we can unwrap stdout cleanly, or just call try_into_inner
+        drop(store);
+        
+        let bytes = stdout.try_into_inner().unwrap().into_inner();
+        let output = String::from_utf8_lossy(&bytes).into_owned();
 
-        // Standardize output passing: we tell writing tools to dump their results to stdout or a unified env
-        "[WASM EXECUTION COMPLETE THEORETICALLY] (Note: direct stdout byte scraping in wasmtime 14 without cap-std requires filesystem pipes or return codes, currently tracking exit boundaries.)".to_string()
+        if output.trim().is_empty() {
+             "[WASM EXECUTION COMPLETE] (No stdout output detected)".to_string()
+        } else {
+             format!("[WASM STDOUT]\n{}", output)
+        }
     }
 }

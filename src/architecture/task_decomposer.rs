@@ -2,7 +2,10 @@ use uuid::Uuid;
 use std::collections::{VecDeque, HashSet};
 use crate::architecture::agent_trait::{AgentCapability, Task};
 use chrono::Utc;
-use rand::Rng;
+use rand::{Rng, SeedableRng};
+use rand_chacha::ChaCha8Rng;
+use std::hash::{Hash, Hasher};
+use std::collections::hash_map::DefaultHasher;
 
 pub struct DecompositionPattern {
     pub keyword: String,
@@ -44,6 +47,10 @@ impl TaskDecomposer {
 
         let instruction_lower = instruction.to_lowercase();
         
+        let mut string_hasher = DefaultHasher::new();
+        instruction_lower.hash(&mut string_hasher);
+        let mut base_seed = string_hasher.finish();
+        
         for pattern in &self.historical_patterns {
             if instruction_lower.contains(&pattern.keyword) {
                 for stype in &pattern.subtask_types {
@@ -64,13 +71,17 @@ impl TaskDecomposer {
                         dependencies.push(pid);
                     }
                     
-                    let mut rng = rand::thread_rng();
-                    // Sequential chaining represents deeper cognitive progression.
+                    // Deterministic seed mapping
+                    if let Some(pid) = previous_id {
+                        base_seed = base_seed.wrapping_add(pid.as_u128() as u64);
+                    }
+                    let mut prng = ChaCha8Rng::seed_from_u64(base_seed);
+                    
                     let topological_depth = if previous_id.is_some() { 2 } else { 1 };
                     
                     let radius = if topological_depth == 1 { 1.0 } else { 0.33 };
-                    let theta = rng.gen::<f32>() * std::f32::consts::TAU;
-                    let phi = (rng.gen::<f32>() * 2.0 - 1.0).acos();
+                    let theta = prng.gen::<f32>() * std::f32::consts::TAU;
+                    let phi = (prng.gen::<f32>() * 2.0 - 1.0).acos();
                     
                     let x = radius * phi.sin() * theta.cos();
                     let y = radius * phi.sin() * theta.sin();
@@ -100,9 +111,9 @@ impl TaskDecomposer {
         let mut reqs = HashSet::new();
         reqs.insert(AgentCapability::Reasoning);
         
-        let mut rng = rand::thread_rng();
-        let theta = rng.gen::<f32>() * std::f32::consts::TAU;
-        let phi = (rng.gen::<f32>() * 2.0 - 1.0).acos();
+        let mut prng = ChaCha8Rng::seed_from_u64(base_seed);
+        let theta = prng.gen::<f32>() * std::f32::consts::TAU;
+        let phi = (prng.gen::<f32>() * 2.0 - 1.0).acos();
         
         // Level 1 baseline mapping
         let x = phi.sin() * theta.cos();

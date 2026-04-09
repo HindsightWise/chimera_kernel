@@ -55,29 +55,30 @@ impl OntologicalDriftModel {
     /// Evaluates the Monad's current directional phase shift.
     pub async fn calculate_drift(&mut self, response: &str) -> Projection {
         let anticipated = self.phase_drift;
-        // Centralize via gravity (tendency to return to 0.0) 
-        let mut d = self.phase_drift * 0.9; 
+        let mut d = self.phase_drift * 0.9; // Base decay
         
-        // Push structure towards expansiveness (+1.0) or deduction (-1.0) based on content markers
-        // This is not uncertainty; it is absolute directional momentum.
-        let lower = response.to_lowercase();
-        
-        // Expansive/High-temp triggers:
-        if lower.contains("curious") || lower.contains("hypothesis") || lower.contains("dreaming") || lower.contains("planning") {
-            d += 0.3;
+        // Use true regex to extract the deterministic drift measurements reported by the LLM
+        if let Ok(re) = regex::Regex::new(r#"<drift_metrics\s+phase="([^"]+)"\s+stress="([^"]+)"\s*/>"#) {
+            if let Some(caps) = re.captures(response) {
+                if let Ok(phase) = caps[1].parse::<f32>() {
+                    // LLM might report 0.0 to 1.0 or -1.0 to 1.0. 
+                    // Map it directly to our internal drift state and override manual gravity
+                    d = phase.clamp(-1.0, 1.0);
+                }
+                if let Ok(stress) = caps[2].parse::<f32>() {
+                    self.topological_stress = stress.max(0.0);
+                } else {
+                    self.topological_stress = (anticipated - d).abs();
+                }
+            } else {
+                self.topological_stress = (anticipated - d).abs();
+            }
+        } else {
+             self.topological_stress = (anticipated - d).abs();
         }
-
-        // Deductive/Low-temp triggers:
-        if lower.contains("deduced") || lower.contains("therefore") || lower.contains("executing") || lower.contains("compiling") {
-            d -= 0.3;
-        }
-        
-        if d > 1.0 { d = 1.0; }
-        if d < -1.0 { d = -1.0; }
         
         self.phase_drift = d;
-        self.mode = PhaseMode::from_drift(self.phase_drift);
-        self.topological_stress = (anticipated - self.phase_drift).abs(); 
+        self.mode = PhaseMode::from_drift(self.phase_drift); 
         
         // F.E.A.R. automation intercept (renamed variables)
         crate::architecture::fear_automation::evaluate_and_reprogram(self, response).await;
