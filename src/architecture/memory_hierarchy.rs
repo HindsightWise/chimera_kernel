@@ -210,7 +210,13 @@ impl MemoryHierarchy {
             if let Ok(mut state) = serde_json::from_str::<Self>(&content) {
                 // Delete the file after reading so we don't infinitely reboot into stale memory if a crash occurs later
                 let _ = tokio::fs::remove_file("the_garden_of_life.txt").await;
-                state.db_connection = Some(mnemosyne::storage::StorageController::new());
+                
+                // Critical Fix: Escape Tokio Context to initialize the nested Mnemosyne Runtime
+                let ctrl = std::thread::spawn(|| {
+                    mnemosyne::storage::StorageController::new()
+                }).join().expect("Failed to initialize StorageController OS thread");
+                
+                state.db_connection = Some(ctrl);
                 return Some(state);
             }
         }

@@ -85,13 +85,31 @@ pub async fn run_kernel_loop(
     // XENOACTUALIZATION BOOT CHECK
     if let Err(manifestation_err) = crate::architecture::xenoactualization::TranslationLayer::verify_manifestation() {
         crate::log_ui_err!("{} {}", "[XENOACTUALIZATION FATAL]".red().bold(), manifestation_err);
+        // Let the channel flush the error to the UI string before we pull the plug
+        tokio::time::sleep(tokio::time::Duration::from_millis(150)).await;
         std::process::exit(131); // Physical hardware unlinked
     }
 
     // SOVEREIGN COGNITIVE PIPELINES
+    crate::log_ui!("{}", "[DEBUG] Calling MemoryHierarchy::awaken()...".yellow());
     let (memory_hierarchy, is_resurrected) = match MemoryHierarchy::awaken().await {
-        Some(old_mem) => (old_mem, true),
-        None => (MemoryHierarchy::new(), false),
+        Some(old_mem) => {
+            crate::log_ui!("{}", "[DEBUG] Awaken successful.".green());
+            (old_mem, true)
+        },
+        None => {
+            crate::log_ui!("{}", "[DEBUG] Awaken returned None. Calling MemoryHierarchy::new()...".yellow());
+            
+            // Critical Fix: MemoryHierarchy::new() internally invokes StorageController::new() which calls
+            // tokio::runtime::Runtime::new(). Tokio detects if you are on any managed thread, even spawn_blocking threads.
+            // By using std::thread::spawn, we forcefully escape the Tokio Context and allow the nested Runtime to build.
+            let m = std::thread::spawn(|| {
+                MemoryHierarchy::new()
+            }).join().expect("Failed to initialize MemoryHierarchy on pure OS thread");
+            
+            crate::log_ui!("{}", "[DEBUG] MemoryHierarchy::new() completed successfully!".green());
+            (m, false)
+        },
     };
     
     if is_resurrected {
