@@ -95,9 +95,9 @@ pub trait Agent: Send + Sync {
     /// Get agent status for monitoring
     fn status(&self) -> AgentStatus;
     
-    /// Phase 3.2: Subscribe to required MessageBus topics (e.g., SYSTEM.DREAM)
-    async fn subscribe_to_topics(&self, _message_bus: Arc<MessageBus>) -> Result<()> {
-        Ok(())
+    /// Phase 3.2: Subscribe to required MessageBus topics
+    async fn subscribe_to_topics(&self, message_bus: Arc<MessageBus>) -> Result<tokio::sync::broadcast::Receiver<Message>> {
+        Ok(message_bus.subscribe())
     }
     
     /// Phase 3.2: Process an incoming message routed via the MessageBus
@@ -194,11 +194,9 @@ impl Agent for BaseAgent {
         self.status.clone()
     }
     
-    async fn subscribe_to_topics(&self, message_bus: Arc<MessageBus>) -> Result<()> {
-        // Base agents subscribe to generic telemetry topics out of defaults
-        message_bus.subscribe(self.id(), "SYSTEM.HEALTH").await?;
-        message_bus.subscribe(self.id(), "SYSTEM.STATUS").await?;
-        Ok(())
+    async fn subscribe_to_topics(&self, message_bus: Arc<MessageBus>) -> Result<tokio::sync::broadcast::Receiver<Message>> {
+        // Topic filtering happens dynamically in handle_message
+        Ok(message_bus.subscribe())
     }
     
     async fn handle_message(&mut self, message: Message) -> Result<()> {

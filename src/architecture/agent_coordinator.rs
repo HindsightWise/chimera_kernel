@@ -34,16 +34,11 @@ impl AgentCoordinator {
     
     pub async fn run_coordinator_loop(&self, bus: Arc<MessageBus>) {
         let listener_id = Uuid::new_v4();
-        let _ = bus.subscribe(listener_id, "SYSTEM.COMPLEX_TASK_STARTED").await;
-        let _ = bus.subscribe(listener_id, "SYSTEM.SUBTASK_ASSIGNED").await;
-        let _ = bus.subscribe(listener_id, "SYSTEM.SUBTASK_COMPLETED").await;
-        let _ = bus.subscribe(listener_id, "SYSTEM.SUBTASK_FAILED").await;
+        let mut rx = bus.subscribe();
 
-        let mut interval = tokio::time::interval(tokio::time::Duration::from_millis(1000));
         loop {
-            interval.tick().await;
-            while bus.has_messages(listener_id).await {
-                if let Some(msg) = bus.receive(listener_id).await {
+            match rx.recv().await {
+                Ok(msg) => {
                     match msg.topic.as_str() {
                         "SYSTEM.COMPLEX_TASK_STARTED" => {
                             if let Ok(data) = serde_json::from_value::<serde_json::Value>(msg.payload) {
@@ -201,6 +196,13 @@ impl AgentCoordinator {
                         },
                         _ => {}
                     }
+                }
+                Err(tokio::sync::broadcast::error::RecvError::Lagged(skipped)) => {
+                    crate::log_ui_err!("AgentCoordinator lagged and dropped {} messages!", skipped);
+                }
+                Err(tokio::sync::broadcast::error::RecvError::Closed) => {
+                    // System shutting down
+                    break;
                 }
             }
         }

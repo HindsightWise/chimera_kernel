@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::fs;
+use tokio::fs;
 use std::path::Path;
 use tree_sitter::{Parser, Query, QueryCursor};
 use petgraph::graph::{DiGraph, NodeIndex};
@@ -80,7 +80,7 @@ impl CodeIntel {
         }
     }
 
-    pub fn build_knowledge_graph(&mut self, workspace_dir: &str) {
+    pub async fn build_knowledge_graph(&mut self, workspace_dir: &str) {
         let walker = walkdir::WalkDir::new(workspace_dir).into_iter();
         let mut rust_files = vec![];
         for entry in walker.filter_map(|e| e.ok()) {
@@ -90,7 +90,7 @@ impl CodeIntel {
         }
         
         for file_path in rust_files {
-            self.parse_file_ast(&file_path);
+            self.parse_file_ast(&file_path).await;
         }
         
         self.resolve_call_edges();
@@ -106,8 +106,8 @@ impl CodeIntel {
         }
     }
 
-    fn parse_file_ast(&mut self, file_path: &Path) {
-        let Ok(source_code) = fs::read_to_string(file_path) else {
+    async fn parse_file_ast(&mut self, file_path: &Path) {
+        let Ok(source_code) = fs::read_to_string(file_path).await else {
             return;
         };
 
@@ -156,11 +156,34 @@ impl CodeIntel {
         
         for m in matches {
             for capture in m.captures {
-                let name = capture.node.utf8_text(source_code.as_bytes()).unwrap_or("unknown").to_string();
+                let base_name = capture.node.utf8_text(source_code.as_bytes()).unwrap_or("unknown").trim().to_string();
                 let line_num = capture.node.start_position().row as u32 + 1;
                 
+                // Cross-Await Scope Tracking (De-Larp Blast Radius)
+                let mut current_node = capture.node;
+                let mut scope_prefix = Vec::new();
+                while let Some(parent) = current_node.parent() {
+                    let p_kind = parent.kind();
+                    if p_kind == "mod_item" {
+                        if let Some(n) = parent.child_by_field_name("name") {
+                            scope_prefix.insert(0, n.utf8_text(source_code.as_bytes()).unwrap_or(""));
+                        }
+                    } else if p_kind == "impl_item" {
+                        if let Some(t) = parent.child_by_field_name("type") {
+                            scope_prefix.insert(0, t.utf8_text(source_code.as_bytes()).unwrap_or(""));
+                        }
+                    }
+                    current_node = parent;
+                }
+                
+                let expanded_name = if scope_prefix.is_empty() {
+                    base_name.clone()
+                } else {
+                    format!("{}::{}", scope_prefix.join("::"), base_name)
+                };
+                
                 // Truncate excessively long matches like entire impl blocks just to the name visually
-                let short_name = if name.len() > 50 { format!("{}...", &name[0..47]) } else { name.clone() };
+                let short_name = if expanded_name.len() > 80 { format!("{}...", &expanded_name[0..77]) } else { expanded_name.clone() };
                 
                 let unique_id = format!("{}:{}:{}", path_str, short_name, line_num);
                 let node_idx = self.ensure_node(unique_id, CodeEntity {

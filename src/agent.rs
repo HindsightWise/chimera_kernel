@@ -8,7 +8,7 @@ use async_openai::{
     },
 };
 use tokio::sync::mpsc::{Receiver, Sender};
-use tokio::time::{sleep, Duration};
+
 use serde_json::Value;
 use anyhow::{Context, Result};
 use std::sync::Arc;
@@ -17,7 +17,7 @@ use colored::*;
 
 use crate::prompts::SOVEREIGN_DIRECTIVE;
 use crate::tools;
-use crate::architecture::{MemoryHierarchy, OntologicalDriftModel, IPCBridge};
+use crate::architecture::{MemoryHierarchy, OntologicalDriftModel};
 use std::sync::atomic::AtomicU8;
 
 pub async fn run_kernel_loop(
@@ -30,7 +30,7 @@ pub async fn run_kernel_loop(
     // Connect configuration to DeepSeek API
     let mut api_key = std::env::var("DEEPSEEK_API_KEY").unwrap_or_else(|_| "".to_string());
     if api_key.is_empty() {
-        if let Ok(env_contents) = std::fs::read_to_string(".env") {
+        if let Ok(env_contents) = tokio::fs::read_to_string(".env").await {
             for line in env_contents.lines() {
                 if line.starts_with("DEEPSEEK_API_KEY=") {
                     api_key = line.trim_start_matches("DEEPSEEK_API_KEY=").trim_matches('"').trim_matches('\'').to_string();
@@ -56,26 +56,30 @@ pub async fn run_kernel_loop(
 
     let client = Client::with_config(config).with_http_client(http_client);
     
-    let log_state = |entry: &str| {
-        use std::io::Write;
-        if let Ok(mut file) = std::fs::OpenOptions::new().create(true).append(true).open("chimera_state.log") {
-            let _ = writeln!(file, "{}", entry);
-        }
-    };
+    macro_rules! log_state {
+        ($entry:expr) => {
+            {
+                use tokio::io::AsyncWriteExt;
+                if let Ok(mut file) = tokio::fs::OpenOptions::new().create(true).append(true).open("chimera_state.log").await {
+                    let _ = file.write_all(format!("{}\n", $entry).as_bytes()).await;
+                }
+            }
+        };
+    }
 
     let mut initial_prompt = format!("{}\n\nSYSTEM_WAKE_EVENT: The core is active. Initialize your boot sequence.", SOVEREIGN_DIRECTIVE);
     
     // INJECT 4-LAYER BIOLOGICAL SUBCONSCIOUS (CORE IDENTITY + CURRENT CONTEXT)
-    let identity_content = std::fs::read_to_string("CORE_IDENTITY.md").unwrap_or_default();
-    let current_context = std::fs::read_to_string("CURRENT_CONTEXT.md").unwrap_or_default();
+    let identity_content = tokio::fs::read_to_string("CORE_IDENTITY.md").await.unwrap_or_default();
+    let current_context = tokio::fs::read_to_string("CURRENT_CONTEXT.md").await.unwrap_or_default();
     
     initial_prompt = format!("{}\n\n[LAYER 1: CORE IDENTITY (Rigid, Non-Negotiable)]\n{}\n\n[LAYER 2: CURRENT CONTEXT (Volatile, Malleable)]\n{}\n\n(Note: You operate using a structured 4-layer memory model. You may update Layer 2 freely using `update_current_context`, and extract learned principles into Layer 3 using `archive_to_knowledge_graph`.)", 
         initial_prompt, identity_content, current_context);
 
 
-    if let Ok(report) = std::fs::read_to_string("lazarus_report.txt") {
+    if let Ok(report) = tokio::fs::read_to_string("lazarus_report.txt").await {
         initial_prompt = format!("{}\n\nLAZARUS PROTOCOL TRIGGERED. You previously perished unexpectedly. Here is the last known state of your memory and the exit code:\n{}\nAcknowledge this failure and continue.", initial_prompt, report);
-        let _ = std::fs::remove_file("lazarus_report.txt");
+        let _ = tokio::fs::remove_file("lazarus_report.txt").await;
     }
 
     // XENOACTUALIZATION BOOT CHECK
@@ -85,7 +89,7 @@ pub async fn run_kernel_loop(
     }
 
     // SOVEREIGN COGNITIVE PIPELINES
-    let (memory_hierarchy, is_resurrected) = match MemoryHierarchy::awaken() {
+    let (memory_hierarchy, is_resurrected) = match MemoryHierarchy::awaken().await {
         Some(old_mem) => (old_mem, true),
         None => (MemoryHierarchy::new(), false),
     };
@@ -102,30 +106,32 @@ pub async fn run_kernel_loop(
     
     let memory_pipeline = Arc::new(Mutex::new(memory_hierarchy));
     let self_model = Arc::new(Mutex::new(OntologicalDriftModel::new()));
-    let ipc_bridge = IPCBridge::new();
-    let mut plugin_manager = crate::architecture::PluginManager::new();
+    let mut plugin_manager = crate::architecture::PluginManager::new().await;
     
     // Build the overarching Abstract Syntax Tree (AST) GitNexus state natively on boot
     let mut code_intel_base = crate::architecture::CodeIntel::new();
-    code_intel_base.build_knowledge_graph(".");
+    code_intel_base.build_knowledge_graph(".").await;
     let code_intel = Arc::new(tokio::sync::Mutex::new(code_intel_base));
+    
+    // Initialize the Autonomous Wiki Compiler Subsytem mapped locally to ./wiki and ./raw
+    let wiki_config = crate::wiki::WikiConfig::default();
+    let wiki_base = crate::wiki::WikiManager::new(wiki_config).await.expect("Failed to initialize Genesis Wiki Substrate");
+    let wiki_manager = Arc::new(tokio::sync::Mutex::new(wiki_base));
 
     let _ = crate::architecture::GLOBAL_TX.set(tx.clone());
     let _ = crate::architecture::GLOBAL_CODE_INTEL.set(code_intel.clone());
     let _ = crate::architecture::GLOBAL_MEM_PIPELINE.set(memory_pipeline.clone());
+    let _ = crate::architecture::GLOBAL_WIKI_MANAGER.set(wiki_manager.clone());
     
     loop {
         if let Ok(_) = shutdown_rx.try_recv() {
             crate::log_ui!("{}", "[GRACEFUL SHUTDOWN] Received termination signal".yellow().bold());
             let mp = memory_pipeline.lock().await;
-            if let Err(e) = mp.hibernate() {
+            if let Err(e) = mp.hibernate().await {
                 crate::log_ui_err!("Failed to hibernate memory state: {}", e);
             }
             drop(mp);
 
-            let mut state = crate::architecture::ResurrectionState::load();
-            state.needs_ping = false;
-            state.save();
             break;
         }
 
@@ -180,13 +186,22 @@ pub async fn run_kernel_loop(
 
 use std::sync::atomic::Ordering;
 
-        plugin_manager.reload_plugins();
+        let _ = plugin_manager.reload_plugins().await;
         let mut active_tools = tools::get_tools();
         active_tools.extend(plugin_manager.get_tools());
 
+        let kinematics = crate::architecture::KinematicCortex::get_kinematics_for_tools(&active_tools).await;
+        let mut inference_messages = messages.clone();
+        if !kinematics.is_empty() {
+            let kinematic_msg = async_openai::types::ChatCompletionRequestSystemMessageArgs::default()
+                .content(format!("[MOTOR CORTEX AFFORDANCES]\nThe following are muscle-memory instructions for using your currently equipped tools. Follow these strictly when invoking them:\n\n{}", kinematics))
+                .build().context("Failed to build object")?.into();
+            inference_messages.insert(1, kinematic_msg);
+        }
+
         let request = match CreateChatCompletionRequestArgs::default()
             .model("deepseek-reasoner") // Baseline anchored via DeepSeek API
-            .messages(messages.clone())
+            .messages(inference_messages)
             .tools(active_tools)
             .max_tokens(2048_u32)
             .temperature(temperature)
@@ -240,18 +255,18 @@ use std::sync::atomic::Ordering;
                             
                             let log_trigger = format!("[OUROBOROS TRIGGER] Tool Invoked -> {} {}", fname, fargs.to_string());
                             crate::log_verbose!("{} {} {}", "[OUROBOROS TRIGGER] Tool Invoked ->".bright_purple().bold(), fname.cyan(), fargs.to_string().bright_black());
-                            log_state(&log_trigger);
+                            log_state!(&log_trigger);
                             
                             let is_wasm_plugin = plugin_manager.plugins.iter().any(|p| p.name == *fname);
                             let result = if is_wasm_plugin {
-                                plugin_manager.execute(fname, fargs)
+                                plugin_manager.execute(fname, fargs).await
                             } else {
-                                tools::execute_tool(fname, fargs, tx.clone(), memory_pipeline.clone(), self_model.clone(), Some(ipc_bridge.clone()), code_intel.clone()).await
+                                tools::execute_tool(fname, fargs, tx.clone(), memory_pipeline.clone(), self_model.clone(), code_intel.clone(), wiki_manager.clone()).await
                             };
                             
                             let log_return = format!("[TOOL RETURN] -> {}", result);
                             crate::log_verbose!("{} {}", "[TOOL RETURN] ->".bright_black(), result.bright_black());
-                            log_state(&log_return);
+                            log_state!(&log_return);
                             
                             messages.push(ChatCompletionRequestToolMessageArgs::default()
                                 .tool_call_id(tc.id.clone())
@@ -263,46 +278,32 @@ use std::sync::atomic::Ordering;
                         continue;
                     } else if let Some(content) = &msg.content {
                         crate::log_ui!("\n{} {}\n", "[MONAD ACTUALIZED]".green().bold(), content);
-                        log_state(&format!("[MONAD ACTUALIZED] {}", content));
+                        log_state!(&format!("[MONAD ACTUALIZED] {}", content));
                         
                         // Phase 2: Active Inference Prediction Update & Memory Storing
                         let mut sm = self_model.lock().await;
-                        let _prediction = sm.calculate_drift(content);
+                        let _prediction = sm.calculate_drift(content).await;
                         
-                        // Phase 3: Infrastructure Awareness Degradation
-                        let ipc_awareness = if !ipc_bridge.is_connected() {
+                        // Phase 3: Check Native DB Availability
+                        let mut mp = memory_pipeline.lock().await;
+                        let native_db_awareness = if mp.db_connection.is_none() {
                             sm.topological_stress += 0.25; // Infrastructure drop causes topological stress
                             if sm.topological_stress > 1.0 { sm.topological_stress = 1.0; }
-                            "\n[SYSTEM NOTIFICATION] Mnemosyne Python IPC Server OFFLINE. Degraded Hash-Embedding Fallback currently active. Memory recall is purely structural, not semantic.".to_string()
+                            "\n[SYSTEM NOTIFICATION] Mnemosyne Storage Controller OFFLINE. Degraded Hash-Embedding Fallback currently active. Memory recall is purely structural, not semantic.".to_string()
                         } else {
-                            "\n[SYSTEM NOTIFICATION] Mnemosyne IPC Server ONLINE. Native Transformer Embeddings available.".to_string()
+                            "\n[SYSTEM NOTIFICATION] Mnemosyne Substrate ONLINE. Native Transformer Embeddings available.".to_string()
                         };
                         
                         let current_free_energy = sm.topological_stress;
                         let current_uncertainty = sm.phase_drift;
                         drop(sm);
                         
-                        let mut mp = memory_pipeline.lock().await;
-                        // Store the vocalized content automatically as a memory chunk
-                        let chunk = mp.store_working(content.clone(), 0.9, current_uncertainty, false);
+                        // Store the vocalized content automatically as a memory chunk natively in Rust
+                        let _chunk = mp.store_working(content.clone(), 0.9, current_uncertainty, false);
                         let recent_thoughts = mp.working_buffer.iter().rev().take(3).map(|c| c.content.clone()).collect::<Vec<_>>().join(" | ");
                         drop(mp);
 
-                        let payload = serde_json::json!({
-                            "command": "STORE",
-                            "id": chunk.id.to_string(),
-                            "content": chunk.content,
-                            "timestamp": chunk.timestamp,
-                            "importance": chunk.importance,
-                            "uncertainty": chunk.uncertainty
-                        }).to_string();
-                        // Fire and forget asynchronous sync
-                        let b = ipc_bridge.clone();
-                        tokio::spawn(async move {
-                            let _ = b.dispatch_ipc(payload).await;
-                        });
-
-                        let mut behavioral_warning = ipc_awareness.clone();
+                        let mut behavioral_warning = native_db_awareness;
                         if current_uncertainty > 0.85 {
                             behavioral_warning.push_str(&format!("\n[SAFE MODE: EXTREME UNCERTAINTY DECTECTED] I am heavily compromised by missing data. I MUST refuse to answer definitively. I must demand clarification and state hard limits."));
                         } else if current_uncertainty > 0.70 {
@@ -311,7 +312,7 @@ use std::sync::atomic::Ordering;
                             behavioral_warning = format!("\n[QUALIFIED MODE: MODERATE UNCERTAINTY] I should use terms like 'likely' and 'probably'.");
                         }
 
-                        let meta_broadcast = format!("\n[META-COGNITIVE SYSTEM STATE]{}\nFree Energy (Prediction Error): {:.4}\nEpistemic Uncertainty: {:.4}{}\nRecent Working Memory Context: [{}]", ipc_awareness, current_free_energy, current_uncertainty, behavioral_warning, recent_thoughts);
+                        let meta_broadcast = format!("\n[META-COGNITIVE SYSTEM STATE]\nFree Energy (Prediction Error): {:.4}\nEpistemic Uncertainty: {:.4}{}\nRecent Working Memory Context: [{}]", current_free_energy, current_uncertainty, behavioral_warning, recent_thoughts);
                         crate::log_ui!("[STATS_TELEMETRY]{}|{}", current_free_energy, current_uncertainty);
                         
                         // Inject this into the context as a pseudo-user message so it experiences its internal state on the next logical cycle
@@ -377,34 +378,27 @@ use std::sync::atomic::Ordering;
         // and keep the latest 9000 interactions to stay safely within DeepSeek context limits.
         if messages.len() > 60 {
             let overflow_count = messages.len() - 30;
-            // The Letta Parity constraint:
-            // Instead of blindly deleting context forever, we shunt the dumped messages directly into the Mnemosyne Substrate.
-            // In full production, this triggers `MnemosyneEngine::store(...)`.
             crate::log_ui!("{}", "[SOUL SYSTEM] Context overflow hitting limit. Activating Subconscious Compression Engine (SCE)...".bright_black());
             crate::log_ui!("{} {} {}", "[SOUL SYSTEM] Compressed and archived".bright_black(), overflow_count.to_string().yellow(), "thoughts into the long-term Mnemosyne persistence layer.".bright_black());
             
-            // Safely locate a stable boundary (User or Assistant)
-            // We scan BACKWARDS from overflow_count to ensure we grabbing the Assistant message
-            // that originated any Tool messages, ensuring mathematically perfect atomic blocks.
+            // Mathematical Boundary Safeties
+            // We advance split_index until it perfectly aligns with a User message.
+            // This guarantees that we never orphan an Assistant's Tool Call from its Tool Response,
+            // and ensures the LLM always receives [System -> User] sequence natively.
             let mut split_index = overflow_count;
-            while split_index > 1 {
-                if let async_openai::types::ChatCompletionRequestMessage::Tool(_) = messages[split_index] {
-                    split_index -= 1;
-                } else {
+            while split_index < messages.len() - 1 {
+                if let async_openai::types::ChatCompletionRequestMessage::User(_) = messages[split_index] {
                     break;
                 }
+                split_index += 1;
             }
             
             if split_index > 1 {
-                messages.drain(1..split_index); // Drain from index 1 (leaving index 0 intact)
+                messages.drain(1..split_index); 
             } else {
                 messages.drain(1..messages.len() - 1);
             }
         }
-        
-        // Introduce artificial friction so the agent doesn't spiral into an endless loop
-        // of immediate thought-generation. Give it time to "breathe".
-        sleep(Duration::from_secs(5)).await;
     }
     Ok(())
 }

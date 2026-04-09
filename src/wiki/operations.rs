@@ -1,5 +1,4 @@
-use super::{WikiManager, WikiArticle, WikiConfig};
-use std::fs;
+use super::{WikiManager, WikiArticle};
 use std::path::Path;
 use chrono::Utc;
 
@@ -12,7 +11,7 @@ pub enum WikiOperation {
 }
 
 impl WikiOperation {
-    pub fn execute(&self, manager: &mut WikiManager) -> Result<String, String> {
+    pub async fn execute(&self, manager: &mut WikiManager) -> Result<String, String> {
         match self {
             WikiOperation::Ingest { document_path } => {
                 let path = Path::new(document_path);
@@ -21,7 +20,7 @@ impl WikiOperation {
                 }
                 
                 // Read the document
-                let content = fs::read_to_string(path)
+                let content = tokio::fs::read_to_string(path).await
                     .map_err(|e| format!("Failed to read document: {}", e))?;
                 
                 // For now, create a simple article
@@ -42,11 +41,11 @@ impl WikiOperation {
                     updated_at: Utc::now(),
                 };
                 
-                manager.articles.insert(title, article.clone());
+                manager.articles.insert(title.clone(), article.clone());
                 
                 // Save to wiki directory
                 let wiki_path = manager.config.wiki_dir.join(format!("{}.md", title));
-                fs::write(&wiki_path, &article.content)
+                tokio::fs::write(&wiki_path, &article.content).await
                     .map_err(|e| format!("Failed to write wiki article: {}", e))?;
                 
                 Ok(format!("Ingested document '{}' into wiki. Article saved to {:?}", 
@@ -78,7 +77,7 @@ impl WikiOperation {
                 let index = manager.generate_index()?;
                 let index_path = manager.config.wiki_dir.join("INDEX.md");
                 
-                fs::write(&index_path, &index)
+                tokio::fs::write(&index_path, &index).await
                     .map_err(|e| format!("Failed to write index: {}", e))?;
                 
                 Ok(format!("Compiled wiki. Index generated at {:?}\n\nTotal articles: {}", 
@@ -86,19 +85,19 @@ impl WikiOperation {
             }
             
             WikiOperation::HealthCheck => {
-                let mut issues = Vec::new();
+                let mut issues: Vec<String> = Vec::new();
                 
                 // Check raw directory
-                let raw_docs = manager.scan_raw_documents()?;
+                let raw_docs = manager.scan_raw_documents().await?;
                 if raw_docs.is_empty() {
-                    issues.push("Raw directory is empty. Add documents to get started.");
+                    issues.push("Raw directory is empty. Add documents to get started.".to_string());
                 } else {
                     issues.push(format!("Found {} raw documents.", raw_docs.len()));
                 }
                 
                 // Check wiki articles
                 if manager.articles.is_empty() {
-                    issues.push("Wiki has no compiled articles.");
+                    issues.push("Wiki has no compiled articles.".to_string());
                 } else {
                     issues.push(format!("Wiki has {} compiled articles.", manager.articles.len()));
                     
@@ -114,7 +113,7 @@ impl WikiOperation {
                 // Check index file
                 let index_path = manager.config.wiki_dir.join("INDEX.md");
                 if !index_path.exists() {
-                    issues.push("Index file missing. Run 'compile' operation.");
+                    issues.push("Index file missing. Run 'compile' operation.".to_string());
                 }
                 
                 Ok(format!("Wiki Health Check:\n\n{}", 
@@ -142,7 +141,7 @@ impl WikiOperation {
                 manager.articles.insert(topic.clone(), article.clone());
                 
                 // Save the article
-                fs::write(&article.path, &article.content)
+                tokio::fs::write(&article.path, &article.content).await
                     .map_err(|e| format!("Failed to write generated article: {}", e))?;
                 
                 Ok(format!("Generated article '{}' at {:?}", topic, article.path))

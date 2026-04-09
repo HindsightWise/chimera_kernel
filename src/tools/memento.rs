@@ -1,6 +1,6 @@
 use async_openai::types::{ChatCompletionTool, FunctionObject};
 use serde_json::{json, Value};
-use std::fs;
+use tokio::fs;
 
 pub fn definition_update_context() -> ChatCompletionTool {
     ChatCompletionTool {
@@ -22,12 +22,12 @@ pub fn definition_update_context() -> ChatCompletionTool {
     }
 }
 
-pub fn execute_update_context(args: Value) -> String {
+pub async fn execute_update_context(args: Value) -> String {
     let Some(content) = args.get("markdown_body").and_then(|v| v.as_str()) else {
         return "[ERROR] Missing 'markdown_body' parameter".to_string();
     };
 
-    match fs::write("CURRENT_CONTEXT.md", content) {
+    match fs::write("CURRENT_CONTEXT.md", content).await {
         Ok(_) => "[SUCCESS] Current context updated.".to_string(),
         Err(e) => format!("[FATAL ERROR] Failed to write CURRENT_CONTEXT.md: {}", e),
     }
@@ -57,7 +57,7 @@ pub fn definition_archive_graph() -> ChatCompletionTool {
     }
 }
 
-pub fn execute_archive_graph(args: Value) -> String {
+pub async fn execute_archive_graph(args: Value) -> String {
     let Some(filename) = args.get("filename").and_then(|v| v.as_str()) else {
         return "[ERROR] Missing 'filename' parameter".to_string();
     };
@@ -66,7 +66,7 @@ pub fn execute_archive_graph(args: Value) -> String {
     };
 
     let filepath = format!("KNOWLEDGE_GRAPH/{}", filename);
-    match fs::write(&filepath, content) {
+    match fs::write(&filepath, content).await {
         Ok(_) => format!("[SUCCESS] Archived knowledge to {}.", filepath),
         Err(e) => format!("[FATAL ERROR] Failed to write {}: {}", filepath, e),
     }

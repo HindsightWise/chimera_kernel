@@ -70,16 +70,9 @@ impl MultiAgentKernel {
                 let agent_ids = dispatch_registry.read().await.all_agent_ids().await;
                 
                 for agent_id in agent_ids {
-                    // Check if agent is idle to avoid unnecessary read locks
-                    let agent_arc = dispatch_registry.read().await.get_agent(agent_id).await;
-                    if let Some(agent) = agent_arc {
-                        let is_idle = {
-                            let lock = agent.read().await;
-                            lock.has_capacity()
-                        };
-                        
-                        if is_idle {
-                            let caps = dispatch_registry.read().await.get_agent_capabilities(agent_id).await.unwrap_or_default();
+                    // With Actors, MPSC channels handle buffer capacity seamlessly.
+                    // We dispatch eagerly based on capability, and the Actor loop parses it sequentially.
+                    let caps = dispatch_registry.read().await.get_agent_capabilities(agent_id).await.unwrap_or_default();
                             
                             // Ask TaskManager for a matching task
                             if let Some(task) = task_mgr.write().await.get_next_task(&caps).await {
@@ -163,32 +156,24 @@ impl MultiAgentKernel {
                                     });
                                 }
                             }
-                        }
-                    }
                 }
             }
         });
 
         // Phase 3.2: The Central Dispatcher (MessagePump)
         // Continuously polls the MessageBus queues and dispenses messages to agent receptors
-        let pump_registry = self.registry.clone();
+        let _pump_registry = self.registry.clone();
         let pump_bus = self.message_bus.clone();
         let kernel_task_manager = self.task_manager.clone();
         let kernel_decomposer = self.task_decomposer.clone();
         let publish_bus = self.message_bus.clone();
         
-        let kernel_listener_id = uuid::Uuid::new_v4();
-        let _ = pump_bus.subscribe(kernel_listener_id, "SYSTEM.NEW_TASK").await;
-        let _ = pump_bus.subscribe(kernel_listener_id, "SYSTEM.AEGIS_QUARANTINE").await;
+        let mut rx = pump_bus.subscribe();
         
         tokio::spawn(async move {
-            let mut interval = tokio::time::interval(tokio::time::Duration::from_millis(500));
             loop {
-                interval.tick().await;
-                
-                // 1. Intercept SYSTEM.NEW_TASK submissions, route to Decomposer, and push to Task Manager
-                while pump_bus.has_messages(kernel_listener_id).await {
-                    if let Some(msg) = pump_bus.receive(kernel_listener_id).await {
+                match rx.recv().await {
+                    Ok(msg) => {
                         if msg.topic == "SYSTEM.NEW_TASK" {
                             if let Ok(task) = serde_json::from_value::<crate::architecture::agent_trait::Task>(msg.payload) {
                                 let instruction = task.payload.get("instruction").and_then(|v| v.as_str()).unwrap_or("");
@@ -211,7 +196,7 @@ impl MultiAgentKernel {
                                     // Broadcast the Complex Topological Trace Graph
                                     let _ = publish_bus.publish(crate::architecture::message_bus::Message {
                                         id: uuid::Uuid::new_v4(),
-                                        sender: kernel_listener_id,
+                                        sender: uuid::Uuid::default(),
                                         topic: "SYSTEM.COMPLEX_TASK_STARTED".to_string(),
                                         payload: serde_json::json!({
                                             "parent_id": task.id.to_string(),
@@ -244,18 +229,11 @@ impl MultiAgentKernel {
                             }
                         }
                     }
-                }
-                
-                // Get all agent ids
-                let agent_ids = pump_registry.read().await.all_agent_ids().await;
-                
-                for agent_id in agent_ids {
-                    // Check if they have messages using has_messages() then receive()
-                    while pump_bus.has_messages(agent_id).await {
-                        if let Some(msg) = pump_bus.receive(agent_id).await {
-                            // Safely route to the agent's memory
-                            let _ = pump_registry.read().await.dispatch_message(agent_id, msg).await;
-                        }
+                    Err(tokio::sync::broadcast::error::RecvError::Closed) => {
+                        break;
+                    }
+                    Err(tokio::sync::broadcast::error::RecvError::Lagged(skipped)) => {
+                        crate::log_ui_err!("Kernel Message Pump lagged and dropped {} messages!", skipped);
                     }
                 }
             }

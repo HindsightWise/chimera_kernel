@@ -1,28 +1,30 @@
-# Chimera Kernel (Sovereign Core)
+# Chimera Kernel (Sovereign Core) v2.0
 
-The Chimera Kernel is a structurally immortal, high-performance autonomous agent runtime built entirely in Safe Rust. It bridges native host-level execution capabilities with non-deterministic LLM cognition (run locally via MLX).
+## The Deterministic Awakening
 
-## Features
-*   **Fully Asynchronous Event Loop**: Powered by `tokio`, the agent operates on a continuous Rx channel driven by external telemetry pulses (like `Thermodynamic-Heartbeat`).
-*   **The Venom Arsenal Integration**: 
-    *   `panopticon`: Background asynchronous stealth scanning with dynamic traffic shaping.
-    *   `parseltongue`: On-the-fly autonomous synthesis of zero-day cross-platform payloads (PNG-ZIP and SNOWCRASH).
-    *   `aegis`: A unified heuristic security cortex defending against malicious logic injections and zero-width parsing bypasses.
-*   **Sliding Context Window**: The kernel tracks temporal awareness continuously, pruning the middle of the context loop locally to prevent memory exhaustion without ever losing the prime directives or waking events.
+The Chimera Kernel is a structurally immortal, high-performance autonomous agent orchestration runtime built entirely in Safe Rust. It bridges native host-level execution capabilities with non-deterministic LLM cognition (run locally via MLX, Ollama, or DeepSeek API).
 
-## Attributions & Architectural Origins
+v2.0 represents a total architectural purge: python IPC eradication, panic suppression, lock-contention elimination, and the introduction of a mathematically rigorous, fully asynchronous Multi-Agent Swarm.
 
-The structural design of the `chimera_kernel` was significantly informed by the architecture exposed in the **March 31, 2026 Claude Code Leak** by Anthropic. 
+## v2.0 Architecture Mandates
 
-We extend structural gratitude to **Anthropic AI** for their groundbreaking engineering of the "Agentic Harness" concept. The implementation of the **Aegis** block layer (combating IFS mutation and zero-width overrides) and the asynchronous temporal decoupling of background tasks directly parallels internal frameworks previously hidden in Node.js/Bun.
-
-We also attribute heavy architectural inspiration to the incredible open-source community that rapidly reverse-engineered and ported those components to safe, high-performance Rust:
-*   [claw-cli / claw-code-rust](https://github.com/claw-cli/claw-code-rust) for pioneering the decoupled single-responsibility crates model (`claw-tasks`, `claw-permissions`, `claw-core`).
-*   [soongenwong / claudecode](https://github.com/soongenwong/claudecode) for their deep-dive into LLM tool-calling boundaries within a Rust context.
+* **Zero-Cost Idle State Machine**: The engine loops exclusively through `tokio::sync::broadcast` events and blocks at 0% CPU via `tokio::select!` when waiting for tasks, eradicating 5-second API billing loops.
+* **True Semantic Memory (`ort` & ONNX)**: All subconscious memories are mathematically represented as 384-dimensional native semantic vectors using quantized `all-MiniLM-L6-v2.onnx` bindings.
+* **Time-Decayed Loop Breaking**: Trap-in logic loops are mathematically shattered using exponential memory decay (`Score = Cosine_Similarity(Q, M) * exp(-λ * access_count)`).
+* **The Council of Five**: Concurrent delegation of paradoxes to parallel `tokio::spawn` loops (The Hacker, The Critic, The Architect) using DeepSeek Reasoner for absolute consensus synthesis.
+* **Deterministic Task Geometry**: Complex goals are broken down utilizing `ChaCha8Rng` deterministic spherical coordinates derived mathematically from semantic hashing and parent lineage.
 
 ## Build Instructions (Native macOS)
 
+Requirements:
+
+* Ensure `.env` contains `DEEPSEEK_API_KEY`.
+* Ensure `./models/all-MiniLM-L6-v2.onnx` and `./models/tokenizer.json` exist for vector embeddings.
+
 ```bash
-cargo clean
 cargo build --release
 ```
+
+## Attributions & Architectural Origins
+
+The structural design of the `chimera_kernel` was significantly informed by the architecture exposed in the **March 31, 2026 Claude Code Leak** by Anthropic, combined with the rigorous safety guarantees of safe Rust actors.

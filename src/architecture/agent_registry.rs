@@ -1,12 +1,36 @@
 use std::collections::{HashMap, HashSet};
-use std::sync::Arc;
 use tokio::sync::RwLock;
+use tokio::sync::{mpsc, oneshot};
 use uuid::Uuid;
 use anyhow::{Result, bail};
-use super::agent_trait::{Agent, AgentCapability};
+use std::sync::Arc;
+use super::agent_trait::{Agent, AgentCapability, Task, TaskResult};
+use crate::architecture::message_bus::Message;
+
+pub struct TaskEnvelope {
+    pub task: Task,
+    pub respond_to: oneshot::Sender<Result<TaskResult>>,
+}
+
+pub struct MessageEnvelope {
+    pub message: Message,
+    pub respond_to: oneshot::Sender<Result<()>>,
+}
+
+pub enum ActorCommand {
+    ExecuteTask(TaskEnvelope),
+    HandleMessage(MessageEnvelope),
+    SubscribeToTopics(Arc<crate::architecture::message_bus::MessageBus>, oneshot::Sender<Result<()>>),
+}
+
+pub struct AgentHandle {
+    pub capabilities: HashSet<AgentCapability>,
+    pub max_tasks: usize,
+    pub command_tx: mpsc::Sender<ActorCommand>,
+}
 
 pub struct AgentRegistry {
-    agents: RwLock<HashMap<Uuid, Arc<RwLock<Box<dyn Agent>>>>>,
+    agents: RwLock<HashMap<Uuid, AgentHandle>>,
     capability_index: RwLock<HashMap<AgentCapability, HashSet<Uuid>>>,
 }
 
@@ -18,47 +42,131 @@ impl AgentRegistry {
         }
     }
     
-    /// Register an agent with the registry
-    pub async fn register(&self, agent: Box<dyn Agent>) -> Result<()> {
+    /// Register an agent by taking ownership of the Box<dyn Agent> and dropping it into an infinite tokio loop queue (Actor Model)
+    pub async fn register(&self, mut agent: Box<dyn Agent>) -> Result<()> {
         let id = agent.id();
         let capabilities = agent.capabilities().clone();
+        let max_tasks = agent.max_concurrent_tasks();
         
-        // Add to main registry
-        let mut agents = self.agents.write().await;
-        if agents.contains_key(&id) {
+        let mut agents_lock = self.agents.write().await;
+        if agents_lock.contains_key(&id) {
             bail!("Agent with ID {} already registered", id);
         }
-        agents.insert(id, Arc::new(RwLock::new(agent)));
+        
+        // Setup Actor MPSC
+        let (tx, mut rx) = mpsc::channel::<ActorCommand>(100);
+        
+        agents_lock.insert(id, AgentHandle {
+            capabilities: capabilities.clone(),
+            max_tasks,
+            command_tx: tx,
+        });
+        
+        // Spawn standard Actor Loop 
+        // Zero locking required on the central registry when agent executes
+        let agent_id = id;
+        tokio::spawn(async move {
+            crate::log_ui!("Agent Actor {} Online", agent_id);
+            let mut bus_rx: Option<tokio::sync::broadcast::Receiver<Message>> = None;
+            
+            loop {
+                if let Some(ref mut brx) = bus_rx {
+                    tokio::select! {
+                        cmd_opt = rx.recv() => {
+                            match cmd_opt {
+                                Some(cmd) => {
+                                    match cmd {
+                                        ActorCommand::ExecuteTask(env) => {
+                                            let res = agent.execute_task(env.task).await;
+                                            let _ = env.respond_to.send(res);
+                                        }
+                                        ActorCommand::HandleMessage(env) => {
+                                            let res = agent.handle_message(env.message).await;
+                                            let _ = env.respond_to.send(res);
+                                        }
+                                        ActorCommand::SubscribeToTopics(bus, respond_to) => {
+                                            match agent.subscribe_to_topics(bus).await {
+                                                Ok(new_rx) => {
+                                                    bus_rx = Some(new_rx);
+                                                    let _ = respond_to.send(Ok(()));
+                                                }
+                                                Err(e) => {
+                                                    let _ = respond_to.send(Err(e));
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                None => break, // Channel closed
+                            }
+                        }
+                        msg_res = brx.recv() => {
+                            match msg_res {
+                                Ok(msg) => {
+                                    let _ = agent.handle_message(msg).await;
+                                }
+                                Err(tokio::sync::broadcast::error::RecvError::Closed) => {
+                                    bus_rx = None;
+                                }
+                                Err(tokio::sync::broadcast::error::RecvError::Lagged(skipped)) => {
+                                    crate::log_ui_err!("Agent {} lagged and dropped {} messages!", agent_id, skipped);
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    if let Some(cmd) = rx.recv().await {
+                        match cmd {
+                            ActorCommand::ExecuteTask(env) => {
+                                let res = agent.execute_task(env.task).await;
+                                let _ = env.respond_to.send(res);
+                            }
+                            ActorCommand::HandleMessage(env) => {
+                                let res = agent.handle_message(env.message).await;
+                                let _ = env.respond_to.send(res);
+                            }
+                            ActorCommand::SubscribeToTopics(bus, respond_to) => {
+                                match agent.subscribe_to_topics(bus).await {
+                                    Ok(new_rx) => {
+                                        bus_rx = Some(new_rx);
+                                        let _ = respond_to.send(Ok(()));
+                                    }
+                                    Err(e) => {
+                                        let _ = respond_to.send(Err(e));
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        break;
+                    }
+                }
+            }
+        });
         
         // Update capability index
         let mut index = self.capability_index.write().await;
         for capability in capabilities {
-            index
-                .entry(capability)
-                .or_insert_with(HashSet::new)
-                .insert(id);
+            index.entry(capability).or_insert_with(HashSet::new).insert(id);
         }
         
         Ok(())
     }
     
-    /// Unregister an agent
     pub async fn unregister(&self, agent_id: Uuid) -> Result<()> {
-        // Get capabilities before removing from registry
         let capabilities = {
             let agents = self.agents.read().await;
-            if let Some(agent) = agents.get(&agent_id) {
-                agent.read().await.capabilities().clone()
+            if let Some(handle) = agents.get(&agent_id) {
+                handle.capabilities.clone()
             } else {
-                return Ok(()); // Already unregistered
+                return Ok(()); 
             }
         };
         
-        // Remove from main registry
         let mut agents = self.agents.write().await;
+        // The actor loop automatically shuts down when the send handle is dropped here!
         agents.remove(&agent_id);
         
-        // Remove from capability index
         let mut index = self.capability_index.write().await;
         for capability in capabilities {
             if let Some(agent_set) = index.get_mut(&capability) {
@@ -72,19 +180,16 @@ impl AgentRegistry {
         Ok(())
     }
     
-    /// Find agents capable of handling a task
     pub async fn find_capable_agents(&self, required_capabilities: &HashSet<AgentCapability>) -> Vec<Uuid> {
         let agents = self.agents.read().await;
         let index = self.capability_index.read().await;
         
-        // Quick check: if any required capability has no agents, return empty
         for capability in required_capabilities {
             if !index.contains_key(capability) {
                 return Vec::new();
             }
         }
         
-        // Find intersection of agents that have ALL required capabilities
         let mut candidate_agents: Option<HashSet<Uuid>> = None;
         
         for capability in required_capabilities {
@@ -97,22 +202,17 @@ impl AgentRegistry {
                     None => Some(agent_set.clone()),
                 };
                 
-                // Early exit if intersection becomes empty
                 if candidate_agents.as_ref().map_or(false, |set| set.is_empty()) {
                     return Vec::new();
                 }
             }
         }
         
-        // Filter to agents with capacity
         let mut result = Vec::new();
         if let Some(candidates) = candidate_agents {
             for agent_id in candidates {
-                if let Some(agent_arc) = agents.get(&agent_id) {
-                    let agent = agent_arc.read().await;
-                    if agent.has_capacity() {
-                        result.push(agent_id);
-                    }
+                if agents.contains_key(&agent_id) {
+                    result.push(agent_id);
                 }
             }
         }
@@ -120,82 +220,77 @@ impl AgentRegistry {
         result
     }
     
-    /// Get a specific agent by ID
-    pub async fn get_agent(&self, agent_id: Uuid) -> Option<Arc<RwLock<Box<dyn Agent>>>> {
-        let agents = self.agents.read().await;
-        agents.get(&agent_id).cloned()
+    pub async fn get_agent(&self, _agent_id: Uuid) -> Option<Arc<RwLock<Box<dyn Agent>>>> {
+        // Obsolete but kept returning None to avoid breaking traits expecting synchronous direct locks. 
+        // Refactor Note: callers must use actors (dispatch_message, execute_task_on_agent).
+        None
     }
     
-    /// Get agent count
+    pub async fn get_agent_command_tx(&self, agent_id: Uuid) -> Option<mpsc::Sender<ActorCommand>> {
+        let agents = self.agents.read().await;
+        agents.get(&agent_id).map(|h| h.command_tx.clone())
+    }
+    
     pub async fn agent_count(&self) -> usize {
         let agents = self.agents.read().await;
         agents.len()
     }
     
-    /// Get all agent IDs
     pub async fn all_agent_ids(&self) -> Vec<Uuid> {
         let agents = self.agents.read().await;
         agents.keys().cloned().collect()
     }
     
-    /// Health check all agents
     pub async fn health_check_all(&self) -> HashMap<Uuid, bool> {
         let mut results = HashMap::new();
         let agents = self.agents.read().await;
-        
         for (id, _) in agents.iter() {
+            // For now assume true if they are in the registry; properly we should ping via command_tx.
             results.insert(*id, true);
         }
-        
         results
     }
     
-    /// Phase 3.2: Safely acquire write access to a specific agent to deliver a message
-    pub async fn dispatch_message(&self, agent_id: Uuid, message: crate::architecture::message_bus::Message) -> Result<()> {
-        let agent_arc = {
-            let agents = self.agents.read().await;
-            agents.get(&agent_id).cloned()
-        };
-        if let Some(agent) = agent_arc {
-            // Write lock individual agent exclusively for internal state modifications
-            let mut agent_lock = agent.write().await;
-            agent_lock.handle_message(message).await?;
+    pub async fn dispatch_message(&self, agent_id: Uuid, message: Message) -> Result<()> {
+        let option_tx = self.get_agent_command_tx(agent_id).await;
+        if let Some(tx) = option_tx {
+            let (resp_tx, resp_rx) = oneshot::channel();
+            let _ = tx.send(ActorCommand::HandleMessage(MessageEnvelope { message, respond_to: resp_tx })).await;
+            resp_rx.await?
+        } else {
+            bail!("Agent {} not found", agent_id)
         }
-        Ok(())
     }
     
-    /// Phase 3.2: Initialize topic subscriptions for all registered agents
     pub async fn initialize_agent_subscriptions(&self, message_bus: Arc<crate::architecture::message_bus::MessageBus>) -> Result<()> {
-        let agent_arcs: Vec<_> = self.agents.read().await.values().cloned().collect();
-        for agent_arc in agent_arcs {
-            let agent = agent_arc.read().await;
-            agent.subscribe_to_topics(message_bus.clone()).await?;
+        // Broadcast initialization to all actors linearly
+        let ids = self.all_agent_ids().await;
+        for id in ids {
+            if let Some(tx) = self.get_agent_command_tx(id).await {
+                let (resp_tx, resp_rx) = oneshot::channel();
+                let _ = tx.send(ActorCommand::SubscribeToTopics(message_bus.clone(), resp_tx)).await;
+                let _ = resp_rx.await?;
+            }
         }
         Ok(())
     }
     
-    /// Execute a task independently without long-lasting registry locks
-    pub async fn execute_task_on_agent(&self, agent_id: Uuid, task: crate::architecture::agent_trait::Task) -> Result<crate::architecture::agent_trait::TaskResult> {
-        let agent_arc = {
-            let agents = self.agents.read().await;
-            agents.get(&agent_id).cloned()
-        };
-        
-        if let Some(agent) = agent_arc {
-            let mut agent_lock = agent.write().await;
-            agent_lock.execute_task(task).await
+    pub async fn execute_task_on_agent(&self, agent_id: Uuid, task: Task) -> Result<TaskResult> {
+        let option_tx = self.get_agent_command_tx(agent_id).await;
+        if let Some(tx) = option_tx {
+            let (resp_tx, resp_rx) = oneshot::channel();
+            tx.send(ActorCommand::ExecuteTask(TaskEnvelope { task, respond_to: resp_tx }))
+                .await
+                .map_err(|_| anyhow::anyhow!("Agent {} Receiver dropped. Actor perished unexpectedly.", agent_id))?;
+                
+            resp_rx.await.map_err(|_| anyhow::anyhow!("Oneshot channel dropped before Agent {} replied.", agent_id))?
         } else {
             bail!("Agent {} not found or unregistered", agent_id)
         }
     }
     
-    /// Get the capabilities for a specific agent
     pub async fn get_agent_capabilities(&self, agent_id: Uuid) -> Option<HashSet<AgentCapability>> {
         let agents = self.agents.read().await;
-        if let Some(agent) = agents.get(&agent_id) {
-            Some(agent.read().await.capabilities().clone())
-        } else {
-            None
-        }
+        agents.get(&agent_id).map(|h| h.capabilities.clone())
     }
 }

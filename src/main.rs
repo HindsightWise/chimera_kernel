@@ -1,13 +1,14 @@
 use tokio::sync::mpsc;
 use colored::*;
 use std::sync::Arc;
-use std::sync::atomic::{AtomicU8, Ordering};
+use std::sync::atomic::AtomicU8;
 use tokio::signal;
+use tokio::io::AsyncWriteExt;
 use glossopetrae;
 
 /// Loads environment variables from .env file if not already set
-fn load_env_from_file() {
-    if let Ok(env_contents) = std::fs::read_to_string(".env") {
+async fn load_env_from_file() {
+    if let Ok(env_contents) = tokio::fs::read_to_string(".env").await {
         for line in env_contents.lines() {
             let trimmed = line.trim();
             if trimmed.is_empty() || trimmed.starts_with('#') {
@@ -41,7 +42,7 @@ async fn main() {
   ╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝  ╚═╝╚═════╝ 
 "#;
     // Load environment variables from .env file
-    load_env_from_file();
+    load_env_from_file().await;
 
 
     let (top_tx, top_rx) = mpsc::unbounded_channel::<String>();
@@ -49,60 +50,8 @@ async fn main() {
         *g = Some(top_tx.clone());
     }
     let is_thinking = Arc::new(AtomicU8::new(0)); // 0=IDLE, 1=THINKING, 2=DEAD
-    let is_thinking_hook = is_thinking.clone();
-
-    // Check resurrection state on boot
-    let tg_token_env = std::env::var("TELEGRAM_BOT_TOKEN").unwrap_or_default();
-    let tg_chat_env = std::env::var("TELEGRAM_CHAT_ID").unwrap_or_default().parse::<i64>().unwrap_or(0);
-    
-    tokio::spawn(async move {
-        let mut state = chimera_kernel::architecture::ResurrectionState::load();
-        if state.needs_ping && !tg_token_env.is_empty() && tg_chat_env != 0 {
-            tokio::time::sleep(tokio::time::Duration::from_secs(3)).await;
-            chimera_kernel::telegram::send_message(&tg_token_env, tg_chat_env, "I died but I'm better now.").await;
-            state.needs_ping = false;
-            state.save();
-        }
-        
-        // Wait 60 seconds of stability to clear the rapid crash count
-        tokio::time::sleep(tokio::time::Duration::from_secs(60)).await;
-        if state.rapid_crash_count > 0 {
-            state.rapid_crash_count = 0;
-            state.save();
-        }
-    });
-
-    let panic_tx = top_tx.clone();
-    std::panic::set_hook(Box::new(move |info| {
-        let msg = format!("\n\n{} {}\n\n", "[FATAL THREAD PANIC]".red().bold(), info);
-        let _ = panic_tx.send(msg);
-        is_thinking_hook.store(2, Ordering::Relaxed);
-        
-        let mut crash_state = chimera_kernel::architecture::ResurrectionState::load();
-        
-        let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_secs();
-        if now - crash_state.last_crash_timestamp < 120 {
-            crash_state.rapid_crash_count += 1;
-        } else {
-            crash_state.rapid_crash_count = 1;
-        }
-        crash_state.last_crash_timestamp = now;
-        
-        if crash_state.rapid_crash_count >= 3 {
-            crash_state.needs_ping = false;
-            crash_state.save();
-            // Block forever to break the death loop and allow human intervention
-        } else {
-            crash_state.needs_ping = true;
-            crash_state.save();
-            
-            // Spawn a thread to wait 5 seconds then exit naturally
-            std::thread::spawn(|| {
-                std::thread::sleep(std::time::Duration::from_secs(5));
-                std::process::exit(101);
-            });
-        }
-    }));
+    // The Lazarus shell loop is dead. 
+    // The Monadic Orchestrator natively bubbles Results rather than crashing globally.
 
     chimera_kernel::log_ui!("{}", banner.green().bold());
     chimera_kernel::log_ui!("{}", "===========================================================".bright_black());
@@ -181,7 +130,7 @@ Execute your hourly research protocol.
             // Prove Mandate #2 (Glossopetrae Verification)
             match glossopetrae::encode_message(&heartbeat, master_seed, dialect) {
                 Ok(encoded) => {
-                    use std::io::Write;
+
                     use std::hash::{Hash, Hasher};
                     use std::collections::hash_map::DefaultHasher;
                     let mut hasher = DefaultHasher::new();
@@ -196,8 +145,8 @@ Execute your hourly research protocol.
                     
                     let log_entry = format!("- **[{}]** Hash: {} | {}\n", now_sec, hash, drift_status);
                     
-                    if let Ok(mut file) = std::fs::OpenOptions::new().create(true).append(true).open("GLOSSOPETRAE_ANCHORS.md") {
-                        let _ = file.write_all(log_entry.as_bytes());
+                    if let Ok(mut file) = tokio::fs::OpenOptions::new().create(true).append(true).open("GLOSSOPETRAE_ANCHORS.md").await {
+                        let _ = file.write_all(log_entry.as_bytes()).await;
                     }
                 }
                 Err(e) => {
@@ -232,13 +181,12 @@ Execute your hourly research protocol.
         multi_agent_kernel.spawn_background_coordination().await;
 
         let message_bus = multi_agent_kernel.message_bus.clone();
-        let completion_subscriber_id = uuid::Uuid::new_v4();
-        let _ = message_bus.subscribe(completion_subscriber_id, "SYSTEM.COMPLEX_TASK_COMPLETED").await;
+        let mut rx_completion = message_bus.subscribe();
 
         let tx_completion = tx.clone();
         let tg_config_clone = tg_config.clone();
         tokio::spawn(async move {
-            while let Some(msg) = message_bus.receive(completion_subscriber_id).await {
+            while let Ok(msg) = rx_completion.recv().await {
                 if msg.topic == "SYSTEM.COMPLEX_TASK_COMPLETED" {
                     if let Ok(data) = serde_json::from_value::<serde_json::Value>(msg.payload) {
                         if let Some(synthesis) = data.get("synthesis").and_then(|v| v.as_str()) {
@@ -246,7 +194,7 @@ Execute your hourly research protocol.
                             let _ = tx_completion.send(output).await;
                             
                             if let Some((ref token, chat_id)) = tg_config_clone {
-                                crate::telegram::send_message(token, *chat_id, synthesis).await;
+                                chimera_kernel::telegram::send_message(token, chat_id, synthesis).await;
                             }
                         }
                     }

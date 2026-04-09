@@ -6,6 +6,7 @@ pub mod telegram;
 pub mod architecture;
 pub mod ui;
 pub mod raw_cli;
+pub mod wiki;
 
 use tokio::sync::mpsc;
 use std::sync::Mutex;

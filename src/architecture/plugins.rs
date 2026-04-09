@@ -1,8 +1,9 @@
-use std::fs;
+use tokio::fs;
 use std::path::Path;
 use serde::{Deserialize, Serialize};
 use wasmtime::*;
 use wasmtime_wasi::sync::WasiCtxBuilder;
+use wasi_common::pipe::WritePipe;
 use async_openai::types::{ChatCompletionTool, FunctionObject};
 
 #[derive(Serialize, Deserialize, Clone)]
@@ -20,7 +21,7 @@ pub struct PluginManager {
 }
 
 impl PluginManager {
-    pub fn new() -> Self {
+    pub async fn new() -> Self {
         let mut config = Config::new();
         config.wasm_component_model(false); // We use standard core WASM modules for simplicity
         
@@ -32,23 +33,23 @@ impl PluginManager {
             plugins: Vec::new(),
             plugins_dir,
         };
-        manager.reload_plugins();
+        manager.reload_plugins().await;
         manager
     }
 
-    pub fn reload_plugins(&mut self) {
+    pub async fn reload_plugins(&mut self) {
         self.plugins.clear();
         let path = Path::new(&self.plugins_dir);
         if !path.exists() {
-            let _ = fs::create_dir_all(path);
+            let _ = fs::create_dir_all(path).await;
             return;
         }
 
-        if let Ok(entries) = fs::read_dir(path) {
-            for entry in entries.flatten() {
+        if let Ok(mut entries) = fs::read_dir(path).await {
+            while let Ok(Some(entry)) = entries.next_entry().await {
                 let p = entry.path();
                 if p.extension().and_then(|e| e.to_str()) == Some("json") {
-                    if let Ok(content) = fs::read_to_string(&p) {
+                    if let Ok(content) = fs::read_to_string(&p).await {
                         if let Ok(manifest) = serde_json::from_str::<PluginManifest>(&content) {
                             self.plugins.push(manifest);
                         }
@@ -77,7 +78,7 @@ impl PluginManager {
         tools
     }
 
-    pub fn execute(&self, name: &str, args: serde_json::Value) -> String {
+    pub async fn execute(&self, name: &str, args: serde_json::Value) -> String {
         let Some(manifest) = self.plugins.iter().find(|p| p.name == name) else {
             return format!("[ERROR] Plugin {} not found in memory.", name);
         };
@@ -98,15 +99,18 @@ impl PluginManager {
 
         // We use a temporary file approach to capture stdout safely across environments
         let output_log_path = format!("plugins/{}_output.log", name);
-        let _ = fs::remove_file(&output_log_path);
+        let _ = tokio::fs::remove_file(&output_log_path).await;
 
         let args_str = serde_json::to_string(&args).unwrap_or_default();
+        
+        let stdout = WritePipe::new_in_memory();
         
         // Build restricted WASI Sandbox Environment
         let mut builder = WasiCtxBuilder::new();
         // Use single-statement builder modifications to avoid 'unwrap()' or return type trait issues
         let _ = builder.arg(name);
         let _ = builder.arg(&args_str);
+        let _ = builder.stdout(Box::new(stdout.clone()));
         
         let wasi = builder.build();
 
@@ -128,8 +132,17 @@ impl PluginManager {
                 return format!("[WASM SANDBOX PANIC TRAPPED] {}", trap_msg);
             }
         }
+        
+        // Drop store so we can unwrap stdout cleanly, or just call try_into_inner
+        drop(store);
+        
+        let bytes = stdout.try_into_inner().unwrap().into_inner();
+        let output = String::from_utf8_lossy(&bytes).into_owned();
 
-        // Standardize output passing: we tell writing tools to dump their results to stdout or a unified env
-        "[WASM EXECUTION COMPLETE THEORETICALLY] (Note: direct stdout byte scraping in wasmtime 14 without cap-std requires filesystem pipes or return codes, currently tracking exit boundaries.)".to_string()
+        if output.trim().is_empty() {
+             "[WASM EXECUTION COMPLETE] (No stdout output detected)".to_string()
+        } else {
+             format!("[WASM STDOUT]\n{}", output)
+        }
     }
 }

@@ -20,6 +20,10 @@ base64 = "0.22"
 chrono = "0.4"
 roxmltree = "0.19"
 async-trait = "0.1"
+ort = "2.0.0-alpha.6"
+tokenizers = "0.19"
+rand_chacha = "0.3"
+regex = "1.10"
 
 mnemosyne = { path = "../Mnemosyne-Substrate/mnemosyne" }
 parseltongue = { path = "../Venom-Arsenal/crates/parseltongue" }
@@ -35,6 +39,7 @@ ansi-to-tui = "4.0"
 lazy_static = "1.4"
 wasmtime = "14.0"
 wasmtime-wasi = "14.0"
+wasi-common = "14.0"
 tree-sitter = "0.20"
 tree-sitter-rust = "0.20"
 petgraph = "0.6.4"
