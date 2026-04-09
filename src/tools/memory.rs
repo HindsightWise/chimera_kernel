@@ -5,7 +5,7 @@ use std::hash::{Hash, Hasher};
 
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use crate::architecture::{MemoryHierarchy, IPCBridge};
+use crate::architecture::MemoryHierarchy;
 
 pub fn definition() -> ChatCompletionTool {
     ChatCompletionTool {
@@ -24,57 +24,31 @@ pub fn definition() -> ChatCompletionTool {
     }
 }
 
-pub async fn execute(args: Value, mem_pipeline: Arc<Mutex<MemoryHierarchy>>, ipc_bridge: Option<IPCBridge>) -> String {
+pub async fn execute(args: Value, mem_pipeline: Arc<Mutex<MemoryHierarchy>>) -> String {
     let query = args.get("query").and_then(|v| v.as_str()).unwrap_or("");
     
     // Phase 2: Lock the global hierarchy and update the working buffer 
     let mut memory_system = mem_pipeline.lock().await;
     memory_system.store_working(query.to_string(), 0.8, 0.5, false);
-    drop(memory_system);
     
-    // Phase 3a: Attempt True Python IPC embedding
-    let mut approach = "IPC-NATIVE";
-    let memory_results = if let Some(bridge) = ipc_bridge {
-        let payload = serde_json::json!({
-            "command": "RECALL",
-            "query": query,
-            "limit": 3
-        }).to_string();
-        
-        match bridge.dispatch_ipc(payload).await {
-            Some(res_str) => {
-                if let Ok(val) = serde_json::from_str::<Value>(&res_str) {
-                    if val.get("success").and_then(|v| v.as_bool()).unwrap_or(false) {
-                        if let Some(arr) = val.get("results").and_then(|v| v.as_array()) {
-                            let results_text: Vec<String> = arr.iter().filter_map(|v| v.as_str().map(|s| s.to_string())).collect();
-                            if results_text.is_empty() {
-                                "No relevant subconscious structures found.".to_string()
-                            } else {
-                                results_text.join("\n\n---\n\n")
-                            }
-                        } else {
-                            "[ERROR] Malformed RECALL array".to_string()
-                        }
-                    } else {
-                        approach = "DUMMY-FALLBACK (IPC Recall Failed)";
-                        generate_dummy_fallback(query)
-                    }
-                } else {
-                    approach = "DUMMY-FALLBACK (IPC Parse Failed)";
-                    generate_dummy_fallback(query)
-                }
-            },
-            None => {
-                approach = "DUMMY-FALLBACK";
-                generate_dummy_fallback(query)
+    // Phase 3a: Native Deep Storage Query
+    let mut approach = "NATIVE-RUST";
+    let memory_results = if let Some(db) = &memory_system.db_connection {
+        let encoded = crate::architecture::MemoryHierarchy::encode_spectral_embedding(&query);
+        match db.search_vector(encoded, 3) {
+            Ok(res_str) => res_str,
+            Err(e) => {
+                approach = "DUMMY-FALLBACK (Search Error)";
+                format!("Failed to search native memory: {}", e)
             }
         }
     } else {
-        approach = "DUMMY-FALLBACK (No IPC Spawned)";
+        approach = "DUMMY-FALLBACK (Storage Controller Offline)";
         generate_dummy_fallback(query)
     };
+    drop(memory_system);
     
-    format!("[MNEMOSYNE PROTOTYPE RECALL]\nArchitecture: {}\nQuery: '{}'\n\n[HISTORICAL FRAGMENTS]\n{}", 
+    format!("[MNEMOSYNE SUBSTRATE RECALL]\nArchitecture: {}\nQuery: '{}'\n\n[HISTORICAL FRAGMENTS]\n{}", 
             approach, query, memory_results)
 }
 

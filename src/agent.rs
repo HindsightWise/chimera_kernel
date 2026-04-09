@@ -17,7 +17,7 @@ use colored::*;
 
 use crate::prompts::SOVEREIGN_DIRECTIVE;
 use crate::tools;
-use crate::architecture::{MemoryHierarchy, OntologicalDriftModel, IPCBridge};
+use crate::architecture::{MemoryHierarchy, OntologicalDriftModel};
 use std::sync::atomic::AtomicU8;
 
 pub async fn run_kernel_loop(
@@ -89,7 +89,7 @@ pub async fn run_kernel_loop(
     }
 
     // SOVEREIGN COGNITIVE PIPELINES
-    let (memory_hierarchy, is_resurrected) = match MemoryHierarchy::awaken() {
+    let (memory_hierarchy, is_resurrected) = match MemoryHierarchy::awaken().await {
         Some(old_mem) => (old_mem, true),
         None => (MemoryHierarchy::new(), false),
     };
@@ -106,7 +106,6 @@ pub async fn run_kernel_loop(
     
     let memory_pipeline = Arc::new(Mutex::new(memory_hierarchy));
     let self_model = Arc::new(Mutex::new(OntologicalDriftModel::new()));
-    let ipc_bridge = IPCBridge::new();
     let mut plugin_manager = crate::architecture::PluginManager::new().await;
     
     // Build the overarching Abstract Syntax Tree (AST) GitNexus state natively on boot
@@ -256,7 +255,7 @@ use std::sync::atomic::Ordering;
                             let result = if is_wasm_plugin {
                                 plugin_manager.execute(fname, fargs).await
                             } else {
-                                tools::execute_tool(fname, fargs, tx.clone(), memory_pipeline.clone(), self_model.clone(), Some(ipc_bridge.clone()), code_intel.clone()).await
+                                tools::execute_tool(fname, fargs, tx.clone(), memory_pipeline.clone(), self_model.clone(), code_intel.clone()).await
                             };
                             
                             let log_return = format!("[TOOL RETURN] -> {}", result);
@@ -279,40 +278,26 @@ use std::sync::atomic::Ordering;
                         let mut sm = self_model.lock().await;
                         let _prediction = sm.calculate_drift(content).await;
                         
-                        // Phase 3: Infrastructure Awareness Degradation
-                        let ipc_awareness = if !ipc_bridge.is_connected() {
+                        // Phase 3: Check Native DB Availability
+                        let mut mp = memory_pipeline.lock().await;
+                        let native_db_awareness = if mp.db_connection.is_none() {
                             sm.topological_stress += 0.25; // Infrastructure drop causes topological stress
                             if sm.topological_stress > 1.0 { sm.topological_stress = 1.0; }
-                            "\n[SYSTEM NOTIFICATION] Mnemosyne Python IPC Server OFFLINE. Degraded Hash-Embedding Fallback currently active. Memory recall is purely structural, not semantic.".to_string()
+                            "\n[SYSTEM NOTIFICATION] Mnemosyne Storage Controller OFFLINE. Degraded Hash-Embedding Fallback currently active. Memory recall is purely structural, not semantic.".to_string()
                         } else {
-                            "\n[SYSTEM NOTIFICATION] Mnemosyne IPC Server ONLINE. Native Transformer Embeddings available.".to_string()
+                            "\n[SYSTEM NOTIFICATION] Mnemosyne Substrate ONLINE. Native Transformer Embeddings available.".to_string()
                         };
                         
                         let current_free_energy = sm.topological_stress;
                         let current_uncertainty = sm.phase_drift;
                         drop(sm);
                         
-                        let mut mp = memory_pipeline.lock().await;
-                        // Store the vocalized content automatically as a memory chunk
-                        let chunk = mp.store_working(content.clone(), 0.9, current_uncertainty, false);
+                        // Store the vocalized content automatically as a memory chunk natively in Rust
+                        let _chunk = mp.store_working(content.clone(), 0.9, current_uncertainty, false);
                         let recent_thoughts = mp.working_buffer.iter().rev().take(3).map(|c| c.content.clone()).collect::<Vec<_>>().join(" | ");
                         drop(mp);
 
-                        let payload = serde_json::json!({
-                            "command": "STORE",
-                            "id": chunk.id.to_string(),
-                            "content": chunk.content,
-                            "timestamp": chunk.timestamp,
-                            "importance": chunk.importance,
-                            "uncertainty": chunk.uncertainty
-                        }).to_string();
-                        // Fire and forget asynchronous sync
-                        let b = ipc_bridge.clone();
-                        tokio::spawn(async move {
-                            let _ = b.dispatch_ipc(payload).await;
-                        });
-
-                        let mut behavioral_warning = ipc_awareness.clone();
+                        let mut behavioral_warning = native_db_awareness;
                         if current_uncertainty > 0.85 {
                             behavioral_warning.push_str(&format!("\n[SAFE MODE: EXTREME UNCERTAINTY DECTECTED] I am heavily compromised by missing data. I MUST refuse to answer definitively. I must demand clarification and state hard limits."));
                         } else if current_uncertainty > 0.70 {

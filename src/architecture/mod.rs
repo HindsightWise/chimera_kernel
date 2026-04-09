@@ -1,6 +1,5 @@
 pub mod memory_hierarchy;
 pub mod self_model;
-pub mod embedding_bridge;
 pub mod xenoactualization;
 pub mod kinematics;
 pub mod plugins;
@@ -25,7 +24,7 @@ pub static GLOBAL_MEM_PIPELINE: tokio::sync::OnceCell<std::sync::Arc<tokio::sync
 
 pub use memory_hierarchy::{MemoryHierarchy, MemoryChunk};
 pub use self_model::{OntologicalDriftModel, OntologicalState, Projection};
-pub use embedding_bridge::IPCBridge;
+// Pub use embedding_bridge::IPCBridge; <- REMOVED FOR SPRINT 3 NATIVE RUST MIGRATION
 pub use xenoactualization::{TranslationLayer, DriftMonitor};
 pub use kinematics::KinematicCortex;
 pub use plugins::{PluginManager, PluginManifest};

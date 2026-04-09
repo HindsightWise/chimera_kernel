@@ -16,7 +16,7 @@ use serde_json::Value;
 use tokio::sync::mpsc::Sender;
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use crate::architecture::{MemoryHierarchy, OntologicalDriftModel, IPCBridge};
+use crate::architecture::{MemoryHierarchy, OntologicalDriftModel};
 
 pub fn get_tools() -> Vec<ChatCompletionTool> {
     vec![
@@ -45,7 +45,6 @@ pub async fn execute_tool(
     tx: Sender<String>, 
     mem_pipeline: Arc<Mutex<MemoryHierarchy>>,
     _self_model: Arc<Mutex<OntologicalDriftModel>>,
-    ipc_bridge: Option<IPCBridge>,
     code_intel: Arc<Mutex<crate::architecture::CodeIntel>>
 ) -> String {
     crate::architecture::traceability::track_behavior(name).await;
@@ -58,7 +57,7 @@ pub async fn execute_tool(
         "generate_polyglot" => venom::execute_polyglot(args, tx.clone()).await,
         "stealth_scan" => venom::execute_scan(args, tx.clone()).await,
         "emulate_human" => cyborg::execute(args).await,
-        "mnemosyne_subconscious_recall" => memory::execute(args, mem_pipeline, ipc_bridge).await,
+        "mnemosyne_subconscious_recall" => memory::execute(args, mem_pipeline).await,
         "axiom_clepsydra_extract" => axiom::execute(args).await,
         "invoke_council_of_five" => council::execute(args, tx.clone()).await,
         "trigger_sovereign_reflex" => reflex::execute(args).await,

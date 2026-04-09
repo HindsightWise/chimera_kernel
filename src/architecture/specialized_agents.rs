@@ -14,7 +14,6 @@ pub struct ReasoningAgent {
     base: BaseAgent,
     hypothesis_buffer: Vec<String>,
     bus: Arc<OnceCell<Arc<MessageBus>>>,
-    ipc_bridge: Option<IPCBridge>,
 }
 #[async_trait]
 impl Agent for ReasoningAgent {
@@ -42,35 +41,20 @@ impl Agent for ReasoningAgent {
             if let Some(bus) = self.bus.get().cloned() {
                 let payload_str = message.payload.to_string();
                 let my_id = self.id();
-                let ipc = self.ipc_bridge.clone();
                 tokio::spawn(async move {
-                    // Pre-phase: Recall from Mnemosyne
+                    // Pre-phase: Native Rust Memory Recall
                     let mut historical_context = String::new();
-                    if let Some(bridge) = ipc {
-                        let query_payload = serde_json::json!({
-                            "command": "RECALL",
-                            "query": payload_str,
-                            "limit": 3
-                        }).to_string();
-                        
-                        if let Some(res_str) = bridge.dispatch_ipc(query_payload).await {
-                            if let Ok(res_json) = serde_json::from_str::<serde_json::Value>(&res_str) {
-                                if let Some(results) = res_json.get("results").and_then(|r| r.as_array()) {
-                                    if !results.is_empty() {
-                                        crate::log_verbose!("{} MEMORY RECALL: Found {} past insights.", "[REASONING AGENT]".cyan().bold(), results.len());
-                                        historical_context = "Historical Context from similar dreams:\n".to_string();
-                                        for r in results {
-                                            if let Some(txt) = r.as_str() {
-                                                historical_context.push_str("- ");
-                                                historical_context.push_str(txt);
-                                                historical_context.push_str("\n");
-                                            }
-                                        }
-                                    }
-                                }
+                    if let Some(mem_pipeline) = crate::architecture::GLOBAL_MEM_PIPELINE.get() {
+                        let mp = mem_pipeline.lock().await;
+                        if let Some(db) = &mp.db_connection {
+                            let encoded = crate::architecture::MemoryHierarchy::encode_spectral_embedding(&payload_str);
+                            if let Ok(res_str) = db.search_vector(encoded, 3) {
+                                crate::log_verbose!("{} NATIVE MEMORY RECALL INJECTED.", "[REASONING AGENT]".cyan().bold());
+                                historical_context = format!("Historical Context from Mnemosyne:\n{}", res_str);
                             }
                         }
                     }
+
 
                     if let Ok(oracle) = crate::architecture::duality::Oracle::new().await {
                         let combined_payload = if !historical_context.is_empty() {
@@ -261,7 +245,6 @@ impl Agent for TradingAgent {
 pub struct ContextManagementAgent {
     base: BaseAgent,
     dream_archive: Vec<String>,
-    ipc_bridge: Option<IPCBridge>,
 }
 #[async_trait]
 impl Agent for ContextManagementAgent {
@@ -308,24 +291,12 @@ impl Agent for ContextManagementAgent {
                 if dream_lower.contains("cancer") || dream_lower.contains("fatal") { importance_score = 1.0; }
                 let importance_clamped = importance_score.min(1.0);
                 
-                if let Some(bridge) = &self.ipc_bridge {
-                    let payload = serde_json::json!({
-                        "command": "STORE",
-                        "id": Uuid::new_v4().to_string(),
-                        "content": combined_dream,
-                        "timestamp": chrono::Utc::now().timestamp(),
-                        "importance": importance_clamped,
-                        "uncertainty": 0.5
-                    }).to_string();
-                    
-                    let b = bridge.clone();
-                    tokio::spawn(async move {
-                        let _ = b.dispatch_ipc(payload).await;
-                    });
-                    
-                    crate::log_ui!("{}", "[DELTA RHYTHM] Fossilization Complete. Short-term memory wiped.".bright_cyan().dimmed());
+                if let Some(mem_pipeline) = crate::architecture::GLOBAL_MEM_PIPELINE.get() {
+                    let mut mp = mem_pipeline.lock().await;
+                    mp.store_working(combined_dream, importance_clamped as f32, 0.5, false);
+                    crate::log_ui!("{}", "[DELTA RHYTHM] Fossilization Complete. Native DB Persisted.".bright_cyan().dimmed());
                 } else {
-                    crate::log_ui_err!("{}", "[DELTA RHYTHM ERROR] IPCBridge disconnected. Unable to fossilize memory.".red().bold());
+                    crate::log_ui_err!("{}", "[DELTA RHYTHM ERROR] Memory Pipeline disconnected.".red().bold());
                 }
                 
                 self.dream_archive.clear();
@@ -660,7 +631,7 @@ impl SpecializedAgentFactory {
         })
     }
 
-    pub fn reasoning_agent(ipc_bridge: Option<IPCBridge>) -> Box<dyn Agent> {
+    pub fn reasoning_agent() -> Box<dyn Agent> {
         let mut caps = HashSet::new();
         caps.insert(AgentCapability::Reasoning);
         caps.insert(AgentCapability::Planning);
@@ -668,7 +639,6 @@ impl SpecializedAgentFactory {
             base: BaseAgent::new("ReasoningAgent".to_string(), caps),
             hypothesis_buffer: Vec::new(),
             bus: Arc::new(OnceCell::new()),
-            ipc_bridge,
         })
     }
 
@@ -695,13 +665,12 @@ impl SpecializedAgentFactory {
         })
     }
 
-    pub fn context_management_agent(ipc_bridge: Option<IPCBridge>) -> Box<dyn Agent> {
+    pub fn context_management_agent() -> Box<dyn Agent> {
         let mut caps = HashSet::new();
         caps.insert(AgentCapability::ContextManagement);
         Box::new(ContextManagementAgent {
             base: BaseAgent::new("ContextManagementAgent".to_string(), caps),
             dream_archive: Vec::new(),
-            ipc_bridge,
         })
     }
 
@@ -726,21 +695,18 @@ impl SpecializedAgentFactory {
         })
     }
 
-    /// Helper to spawn all 12 default sovereign agents
     pub fn instantiate_all() -> Vec<Box<dyn Agent>> {
-        let global_ipc = IPCBridge::new();
-        
         vec![
             Self::tool_execution_agent(),
             Self::security_agent(),
             Self::human_interface_agent(),
             Self::memory_agent(),
             Self::trading_agent(),
-            Self::reasoning_agent(Some(global_ipc.clone())),
+            Self::reasoning_agent(),
             Self::monitoring_agent(),
             Self::system_management_agent(),
             Self::research_agent(),
-            Self::context_management_agent(Some(global_ipc.clone())),
+            Self::context_management_agent(),
             Self::code_analysis_agent(),
             Self::local_processing_agent(),
             Self::synthesis_agent(),

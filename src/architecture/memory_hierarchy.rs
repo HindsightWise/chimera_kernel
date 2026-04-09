@@ -100,25 +100,7 @@ impl MemoryHierarchy {
         
         let depth_level = if scale >= 3.0 { 0 } else if scale >= 1.0 { 1 } else { 2 };
 
-        // Forge authentic topological semantic vectors.
-        // We reject the lazy [0.0; 384] mock, and instead encode an immutable, normalized spectral fingerprint.
-        let mut deterministic_embedding = vec![0.0; 384];
-        let bytes = content.as_bytes();
-        for (i, &b) in bytes.iter().enumerate() {
-            let dim = i % 384;
-            // Map byte value (0-255) deterministically across -1.0 to 1.0
-            let float_val = ((b as f32 / 255.0) * 2.0) - 1.0;
-            // Propagate sine-wave interference across dimensions
-            deterministic_embedding[dim] += float_val * (1.0 / (1.0 + (i / 384) as f32));
-        }
-        
-        // Normalize the algebraic vector to total magnitude 1.0 (Unit Vector) so purely Euclidean Cosine Similarity mathematics run flawlessly
-        let mut magnitude = 0.0;
-        for v in &deterministic_embedding { magnitude += v * v; }
-        let magnitude = magnitude.sqrt();
-        if magnitude > 0.0 {
-            for v in &mut deterministic_embedding { *v /= magnitude; }
-        }
+        let deterministic_embedding = Self::encode_spectral_embedding(&content);
 
         let chunk = MemoryChunk {
             id: Uuid::new_v4(),
@@ -189,5 +171,24 @@ impl MemoryHierarchy {
             }
         }
         None
+    }
+    
+    /// Mathematically encodes textual data into a deterministic, localized structural footprint.
+    pub fn encode_spectral_embedding(content: &str) -> Vec<f32> {
+        let mut deterministic_embedding = vec![0.0; 384];
+        let bytes = content.as_bytes();
+        for (i, &b) in bytes.iter().enumerate() {
+            let dim = i % 384;
+            let float_val = ((b as f32 / 255.0) * 2.0) - 1.0;
+            deterministic_embedding[dim] += float_val * (1.0 / (1.0 + (i / 384) as f32));
+        }
+        
+        let mut magnitude = 0.0;
+        for v in &deterministic_embedding { magnitude += v * v; }
+        let magnitude = magnitude.sqrt();
+        if magnitude > 0.0 {
+            for v in &mut deterministic_embedding { *v /= magnitude; }
+        }
+        deterministic_embedding
     }
 }
