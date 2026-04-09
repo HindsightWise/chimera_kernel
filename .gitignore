@@ -1,2 +1,8 @@
 /target
 .env
+*.log
+the_garden_of_life.txt
+CURRENT_CONTEXT.md
+CORE_IDENTITY.md
+GLOSSOPETRAE_ANCHORS.md
+lazarus_report.txt

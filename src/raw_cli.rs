@@ -20,17 +20,23 @@ pub async fn run(tx_stdin: Sender<String>, mut top_rx: UnboundedReceiver<String>
 
     loop {
         buffer.clear();
-        if stdin.read_line(&mut buffer).is_ok() {
-            let line = buffer.trim().to_string();
-            if !line.is_empty() {
-                if line == "/quit" || line == "/exit" {
-                    std::process::exit(0);
+        match stdin.read_line(&mut buffer) {
+            Ok(0) => {
+                // EOF detected. Park this thread so background agents can run without 100% CPU lock
+                tokio::time::sleep(tokio::time::Duration::from_secs(86400)).await;
+            }
+            Ok(_) => {
+                let line = buffer.trim().to_string();
+                if !line.is_empty() {
+                    if line == "/quit" || line == "/exit" {
+                        std::process::exit(0);
+                    }
+                    println!("{} {}", "\n[YOU]".bright_magenta().bold(), line.white());
+                    let _ = tx_stdin.send(line).await;
                 }
-                
-                // Echo the input cleanly in the raw scroll log
-                println!("{} {}", "\n[YOU]".bright_magenta().bold(), line.white());
-                
-                let _ = tx_stdin.send(line).await;
+            }
+            Err(_) => {
+                tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
             }
         }
     }
