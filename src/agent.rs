@@ -101,11 +101,11 @@ pub async fn run_kernel_loop(
             crate::log_ui!("{}", "[DEBUG] Awaken returned None. Calling MemoryHierarchy::new()...".yellow());
             
             // Critical Fix: MemoryHierarchy::new() internally invokes StorageController::new() which calls
-            // tokio::runtime::Runtime::new(). Tokio detects if you are on any managed thread, even spawn_blocking threads.
-            // By using std::thread::spawn, we forcefully escape the Tokio Context and allow the nested Runtime to build.
-            let m = std::thread::spawn(|| {
+            // tokio::runtime::Runtime::new(). If we use a raw OS thread and call .join() on it, we starve Tokio.
+            // Using tokio::task::spawn_blocking executes it safely on the dedicated blocking pool.
+            let m = tokio::task::spawn_blocking(|| {
                 MemoryHierarchy::new()
-            }).join().expect("Failed to initialize MemoryHierarchy on pure OS thread");
+            }).await.expect("Failed to initialize MemoryHierarchy on blocking thread");
             
             crate::log_ui!("{}", "[DEBUG] MemoryHierarchy::new() completed successfully!".green());
             (m, false)

@@ -98,6 +98,7 @@ impl TaskDecomposer {
                         timeout_secs: Some(300),
                         geometric_node: [x, y, z],
                         topological_depth,
+                        execution_attempts: 0,
                     };
                     subtasks.push(stask);
                     previous_id = Some(task_id); // Chain linearly for default parsing
@@ -131,6 +132,7 @@ impl TaskDecomposer {
             timeout_secs: Some(300),
             geometric_node: [x, y, z],
             topological_depth: 1,
+            execution_attempts: 0,
         });
         
         subtasks

@@ -79,4 +79,45 @@ impl Oracle {
             }
         }
     }
+    
+    pub async fn synthesize_structured(&self, _query: &str, context: &str) -> Result<serde_json::Value> {
+        let system_prompt = format!(
+            "You are a clinical extraction algorithm. Read the following financial text. \
+            Extract the exact quantitative metrics into strictly valid JSON matching this schema. \
+            Output NOTHING ELSE. No markdown, no explanations.\n\
+            SCHEMA: {{ \"ticker\": \"string\", \"net_income_delta_pct\": float, \"sentiment\": \"bullish\" | \"bearish\" | \"neutral\" }}\n\n\
+            [TEXT]\n{}", context
+        );
+
+        // Force the local model (via Ollama/vLLM) to output JSON
+        let request = async_openai::types::CreateChatCompletionRequestArgs::default()
+            .model("gemma4:e2b")
+            .messages(vec![
+                async_openai::types::ChatCompletionRequestUserMessageArgs::default().content(system_prompt).build()?.into()
+            ])
+            .response_format(async_openai::types::ChatCompletionResponseFormat {
+                r#type: async_openai::types::ChatCompletionResponseFormatType::JsonObject,
+            })
+            .build()?;
+            
+        // For local models running on standard 11434 Ollama binding
+        let local_config = async_openai::config::OpenAIConfig::new()
+            .with_api_base("http://127.0.0.1:11434/v1")
+            .with_api_key("ollama");
+        let local_client = async_openai::Client::with_config(local_config);
+
+        match tokio::time::timeout(std::time::Duration::from_secs(60), local_client.chat().create(request)).await {
+            Ok(Ok(response)) => {
+                if let Some(choice) = response.choices.first() {
+                    if let Some(content) = &choice.message.content {
+                        let parsed = serde_json::from_str::<serde_json::Value>(content)?;
+                        return Ok(parsed);
+                    }
+                }
+                Err(anyhow::anyhow!("Oracle returned void."))
+            }
+            Ok(Err(e)) => Err(anyhow::anyhow!("Oracle API error: {}", e)),
+            Err(_) => Err(anyhow::anyhow!("Timeout after 60 seconds")),
+        }
+    }
 }

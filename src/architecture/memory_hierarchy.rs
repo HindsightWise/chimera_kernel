@@ -211,10 +211,10 @@ impl MemoryHierarchy {
                 // Delete the file after reading so we don't infinitely reboot into stale memory if a crash occurs later
                 let _ = tokio::fs::remove_file("the_garden_of_life.txt").await;
                 
-                // Critical Fix: Escape Tokio Context to initialize the nested Mnemosyne Runtime
-                let ctrl = std::thread::spawn(|| {
+                // Critical Fix: Use Tokio's dedicated blocking pool to instantiate the nested Mnemosyne Runtime safely.
+                let ctrl = tokio::task::spawn_blocking(|| {
                     mnemosyne::storage::StorageController::new()
-                }).join().expect("Failed to initialize StorageController OS thread");
+                }).await.expect("Failed to initialize StorageController OS thread");
                 
                 state.db_connection = Some(ctrl);
                 return Some(state);

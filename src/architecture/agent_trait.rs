@@ -45,6 +45,8 @@ pub struct Task {
     pub timeout_secs: Option<u64>,
     pub geometric_node: [f32; 3],  // Monadic spatial mapping
     pub topological_depth: u8,     // Depth in the Euclidean hierarchy
+    #[serde(default)]
+    pub execution_attempts: u8,    // 3-strike circuit breaker
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

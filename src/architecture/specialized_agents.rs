@@ -105,6 +105,7 @@ impl Agent for ReasoningAgent {
                                                 timeout_secs: Some(300),
                                                 geometric_node: [x, y, z],
                                                 topological_depth: 2,
+                                                execution_attempts: 0,
                                             };
                                             
                                             crate::log_verbose!("{} DISPATCHED NEW DREAM-TASK: {}", "[REASONING AGENT]".bright_purple().bold(), desc);

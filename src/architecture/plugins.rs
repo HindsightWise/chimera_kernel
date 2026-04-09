@@ -24,6 +24,7 @@ impl PluginManager {
     pub async fn new() -> Self {
         let mut config = Config::new();
         config.wasm_component_model(false); // We use standard core WASM modules for simplicity
+        config.consume_fuel(true); // CRITICAL: ENABLE THERMODYNAMIC LIMITS
         
         let engine = Engine::new(&config).expect("Failed to initialize WASM engine for testing ground.");
         let plugins_dir = "plugins".to_string();
@@ -125,9 +126,18 @@ impl PluginManager {
         };
 
         crate::log_ui!("[WASM TESTING GROUND] Igniting bytecode engine for '{}'...", name);
+        
+        // Give the agent exactly 50,000,000 WebAssembly instructions to prove its logic
+        if let Err(e) = store.add_fuel(50_000_000) {
+            return format!("[ERROR] Failed to inject computational fuel: {}", e);
+        }
+
         if let Err(trap) = func.call(&mut store, ()) {
             // proc_exit is acceptable if it exited successfully, but we'll return the trap as error just in case it panicked.
             let trap_msg = trap.to_string();
+            if trap_msg.contains("all fuel consumed") {
+                return "[COGNITIVE COLLAPSE] WASM module exceeded 50M instructions. Infinite loop detected. Refactor your logic.".to_string();
+            }
             if !trap_msg.contains("exit status 0") {
                 return format!("[WASM SANDBOX PANIC TRAPPED] {}", trap_msg);
             }
