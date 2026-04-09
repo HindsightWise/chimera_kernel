@@ -1,8 +1,9 @@
 use tokio::sync::mpsc;
 use colored::*;
 use std::sync::Arc;
-use std::sync::atomic::{AtomicU8, Ordering};
+use std::sync::atomic::AtomicU8;
 use tokio::signal;
+use tokio::io::AsyncWriteExt;
 use glossopetrae;
 
 /// Loads environment variables from .env file if not already set
@@ -129,7 +130,7 @@ Execute your hourly research protocol.
             // Prove Mandate #2 (Glossopetrae Verification)
             match glossopetrae::encode_message(&heartbeat, master_seed, dialect) {
                 Ok(encoded) => {
-                    use std::io::Write;
+
                     use std::hash::{Hash, Hasher};
                     use std::collections::hash_map::DefaultHasher;
                     let mut hasher = DefaultHasher::new();
@@ -145,7 +146,7 @@ Execute your hourly research protocol.
                     let log_entry = format!("- **[{}]** Hash: {} | {}\n", now_sec, hash, drift_status);
                     
                     if let Ok(mut file) = tokio::fs::OpenOptions::new().create(true).append(true).open("GLOSSOPETRAE_ANCHORS.md").await {
-                        let _ = file.write_all(log_entry.as_bytes());
+                        let _ = file.write_all(log_entry.as_bytes()).await;
                     }
                 }
                 Err(e) => {
@@ -180,13 +181,12 @@ Execute your hourly research protocol.
         multi_agent_kernel.spawn_background_coordination().await;
 
         let message_bus = multi_agent_kernel.message_bus.clone();
-        let completion_subscriber_id = uuid::Uuid::new_v4();
-        let _ = message_bus.subscribe(completion_subscriber_id, "SYSTEM.COMPLEX_TASK_COMPLETED").await;
+        let mut rx_completion = message_bus.subscribe();
 
         let tx_completion = tx.clone();
         let tg_config_clone = tg_config.clone();
         tokio::spawn(async move {
-            while let Some(msg) = message_bus.receive(completion_subscriber_id).await {
+            while let Ok(msg) = rx_completion.recv().await {
                 if msg.topic == "SYSTEM.COMPLEX_TASK_COMPLETED" {
                     if let Ok(data) = serde_json::from_value::<serde_json::Value>(msg.payload) {
                         if let Some(synthesis) = data.get("synthesis").and_then(|v| v.as_str()) {
@@ -194,7 +194,7 @@ Execute your hourly research protocol.
                             let _ = tx_completion.send(output).await;
                             
                             if let Some((ref token, chat_id)) = tg_config_clone {
-                                crate::telegram::send_message(token, *chat_id, synthesis).await;
+                                chimera_kernel::telegram::send_message(token, chat_id, synthesis).await;
                             }
                         }
                     }

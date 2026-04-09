@@ -8,7 +8,7 @@ use async_openai::{
     },
 };
 use tokio::sync::mpsc::{Receiver, Sender};
-use tokio::time::{sleep, Duration};
+
 use serde_json::Value;
 use anyhow::{Context, Result};
 use std::sync::Arc;
@@ -127,7 +127,7 @@ pub async fn run_kernel_loop(
         if let Ok(_) = shutdown_rx.try_recv() {
             crate::log_ui!("{}", "[GRACEFUL SHUTDOWN] Received termination signal".yellow().bold());
             let mp = memory_pipeline.lock().await;
-            if let Err(e) = mp.hibernate() {
+            if let Err(e) = mp.hibernate().await {
                 crate::log_ui_err!("Failed to hibernate memory state: {}", e);
             }
             drop(mp);
@@ -186,7 +186,7 @@ pub async fn run_kernel_loop(
 
 use std::sync::atomic::Ordering;
 
-        plugin_manager.reload_plugins();
+        let _ = plugin_manager.reload_plugins().await;
         let mut active_tools = tools::get_tools();
         active_tools.extend(plugin_manager.get_tools());
 
@@ -312,7 +312,7 @@ use std::sync::atomic::Ordering;
                             behavioral_warning = format!("\n[QUALIFIED MODE: MODERATE UNCERTAINTY] I should use terms like 'likely' and 'probably'.");
                         }
 
-                        let meta_broadcast = format!("\n[META-COGNITIVE SYSTEM STATE]{}\nFree Energy (Prediction Error): {:.4}\nEpistemic Uncertainty: {:.4}{}\nRecent Working Memory Context: [{}]", ipc_awareness, current_free_energy, current_uncertainty, behavioral_warning, recent_thoughts);
+                        let meta_broadcast = format!("\n[META-COGNITIVE SYSTEM STATE]\nFree Energy (Prediction Error): {:.4}\nEpistemic Uncertainty: {:.4}{}\nRecent Working Memory Context: [{}]", current_free_energy, current_uncertainty, behavioral_warning, recent_thoughts);
                         crate::log_ui!("[STATS_TELEMETRY]{}|{}", current_free_energy, current_uncertainty);
                         
                         // Inject this into the context as a pseudo-user message so it experiences its internal state on the next logical cycle

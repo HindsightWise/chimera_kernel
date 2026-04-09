@@ -162,7 +162,7 @@ impl MultiAgentKernel {
 
         // Phase 3.2: The Central Dispatcher (MessagePump)
         // Continuously polls the MessageBus queues and dispenses messages to agent receptors
-        let pump_registry = self.registry.clone();
+        let _pump_registry = self.registry.clone();
         let pump_bus = self.message_bus.clone();
         let kernel_task_manager = self.task_manager.clone();
         let kernel_decomposer = self.task_decomposer.clone();

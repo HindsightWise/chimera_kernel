@@ -43,7 +43,7 @@ impl TaskDecomposer {
 
     pub fn decompose(&self, instruction: &str, parent_priority: u8) -> Vec<Task> {
         let mut subtasks = Vec::new();
-        let mut previous_id = None;
+        let mut previous_id: Option<Uuid> = None;
 
         let instruction_lower = instruction.to_lowercase();
         

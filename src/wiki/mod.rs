@@ -1,10 +1,8 @@
-pub mod compiler;
 pub mod schema;
 pub mod operations;
-pub mod utils;
 
 use serde::{Deserialize, Serialize};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

@@ -1,4 +1,4 @@
-use super::{WikiManager, WikiArticle, WikiConfig};
+use super::{WikiManager, WikiArticle};
 use std::path::Path;
 use chrono::Utc;
 
@@ -41,7 +41,7 @@ impl WikiOperation {
                     updated_at: Utc::now(),
                 };
                 
-                manager.articles.insert(title, article.clone());
+                manager.articles.insert(title.clone(), article.clone());
                 
                 // Save to wiki directory
                 let wiki_path = manager.config.wiki_dir.join(format!("{}.md", title));
@@ -85,19 +85,19 @@ impl WikiOperation {
             }
             
             WikiOperation::HealthCheck => {
-                let mut issues = Vec::new();
+                let mut issues: Vec<String> = Vec::new();
                 
                 // Check raw directory
                 let raw_docs = manager.scan_raw_documents().await?;
                 if raw_docs.is_empty() {
-                    issues.push("Raw directory is empty. Add documents to get started.");
+                    issues.push("Raw directory is empty. Add documents to get started.".to_string());
                 } else {
                     issues.push(format!("Found {} raw documents.", raw_docs.len()));
                 }
                 
                 // Check wiki articles
                 if manager.articles.is_empty() {
-                    issues.push("Wiki has no compiled articles.");
+                    issues.push("Wiki has no compiled articles.".to_string());
                 } else {
                     issues.push(format!("Wiki has {} compiled articles.", manager.articles.len()));
                     
@@ -113,7 +113,7 @@ impl WikiOperation {
                 // Check index file
                 let index_path = manager.config.wiki_dir.join("INDEX.md");
                 if !index_path.exists() {
-                    issues.push("Index file missing. Run 'compile' operation.");
+                    issues.push("Index file missing. Run 'compile' operation.".to_string());
                 }
                 
                 Ok(format!("Wiki Health Check:\n\n{}", 

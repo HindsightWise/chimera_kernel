@@ -169,12 +169,13 @@ impl MemoryHierarchy {
         // 1. Check Subconscious Mnemosyne Vault natively via KuzuDB/LanceDB connector
         let mut recovered_chunks = Vec::new();
         if let Some(db) = &self.db_connection {
-             if let Ok(mut hits) = db.search_vector(&query_vec, 10).await {
+             if let Ok(hits_str) = db.search_vector(query_vec, 10) {
                  let lambda_decay: f32 = 0.25; // Decay rate
                  
                  // Apply time access penalty to solve 3.2 Time-Decayed Loop Breaking
                  // Score = Cosine_Similarity(Q, M) * exp(-λ * access_count)
-                 for hit in hit_nodes_to_chunks(hits) {
+                 if let Ok(hits_json) = serde_json::from_str::<Vec<serde_json::Value>>(&hits_str) {
+                     for hit in hit_nodes_to_chunks(hits_json) {
                      let accesses = *self.access_records.get(&hit.id).unwrap_or(&0) as f32;
                      let penalization_scalar = (-lambda_decay * accesses).exp();
                      
@@ -187,10 +188,11 @@ impl MemoryHierarchy {
                  }
                  // Sort descending by modified score to suppress heavily repeated loop traps
                  recovered_chunks.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+                 }
              }
         }
         
-        let mut final_results: Vec<MemoryChunk> = recovered_chunks.into_iter().take(3).map(|(c, _)| c).collect();
+        let final_results: Vec<MemoryChunk> = recovered_chunks.into_iter().take(3).map(|(c, _)| c).collect();
         final_results
     }
     

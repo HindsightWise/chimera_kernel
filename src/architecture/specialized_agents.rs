@@ -1,6 +1,5 @@
 use crate::architecture::agent_trait::{AgentCapability, BaseAgent, Agent, Task, TaskResult, AgentStatus};
 use crate::architecture::message_bus::{MessageBus, Message};
-use crate::architecture::embedding_bridge::IPCBridge;
 use std::collections::HashSet;
 use std::sync::Arc;
 use uuid::Uuid;
@@ -189,7 +188,7 @@ impl Agent for ResearchAgent {
             if self.search_queue.len() >= 3 {
                 crate::log_ui!("{}", "[GENESIS ENGINE] Archiving Dream Validation block to Persistent Wiki...".bright_magenta().bold());
                 
-                let combined = self.search_queue.join("\n\n---\n\n");
+                let _combined = self.search_queue.join("\n\n---\n\n");
                 let topic_title = format!("validation_{}", chrono::Utc::now().timestamp());
                 
                 if let Some(wiki_lazy) = crate::architecture::GLOBAL_WIKI_MANAGER.get() {
