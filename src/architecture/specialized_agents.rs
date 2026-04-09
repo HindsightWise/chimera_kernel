@@ -185,6 +185,26 @@ impl Agent for ResearchAgent {
         if message.topic == "SYSTEM.DREAM" {
             crate::log_verbose!("{} QUEUING REALITY VALIDATION", "[RESEARCH AGENT]".cyan().bold());
             self.search_queue.push(message.payload.to_string());
+            
+            if self.search_queue.len() >= 3 {
+                crate::log_ui!("{}", "[GENESIS ENGINE] Archiving Dream Validation block to Persistent Wiki...".bright_magenta().bold());
+                
+                let combined = self.search_queue.join("\n\n---\n\n");
+                let topic_title = format!("validation_{}", chrono::Utc::now().timestamp());
+                
+                if let Some(wiki_lazy) = crate::architecture::GLOBAL_WIKI_MANAGER.get() {
+                    let mut wiki = wiki_lazy.lock().await;
+                    let op = crate::wiki::operations::WikiOperation::GenerateArticle { topic: topic_title };
+                    let _ = op.execute(&mut wiki).await;
+                    
+                    // We can also ingest it
+                    crate::log_ui!("{}", "[GENESIS ENGINE] Baseline successfully stored in Wiki Substrate.".bright_magenta().dimmed());
+                } else {
+                    crate::log_ui_err!("{}", "[GENESIS ENGINE ERROR] Wiki Compiler offline!".red().bold());
+                }
+                
+                self.search_queue.clear();
+            }
         }
         self.base.handle_message(message).await
     }

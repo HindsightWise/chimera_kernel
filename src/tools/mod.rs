@@ -9,6 +9,7 @@ pub mod research;
 pub mod memento;
 pub mod gitnexus;
 pub mod duality;
+pub mod wiki;
 
 use async_openai::types::ChatCompletionTool;
 use serde_json::Value;
@@ -36,6 +37,7 @@ pub fn get_tools() -> Vec<ChatCompletionTool> {
         memento::definition_archive_graph(),
         gitnexus::definition(),
         duality::definition(),
+        wiki::definition(),
     ]
 }
 
@@ -45,7 +47,8 @@ pub async fn execute_tool(
     tx: Sender<String>, 
     mem_pipeline: Arc<Mutex<MemoryHierarchy>>,
     _self_model: Arc<Mutex<OntologicalDriftModel>>,
-    code_intel: Arc<Mutex<crate::architecture::CodeIntel>>
+    code_intel: Arc<Mutex<crate::architecture::CodeIntel>>,
+    wiki_manager: Arc<Mutex<crate::wiki::WikiManager>>
 ) -> String {
     crate::architecture::traceability::track_behavior(name).await;
     
@@ -72,6 +75,7 @@ pub async fn execute_tool(
             gitnexus::execute(args, &intel_lock)
         },
         "delegate_to_local_gemma" => duality::execute(args, tx.clone(), mem_pipeline.clone()).await,
+        "compile_wiki" => wiki::execute(args, wiki_manager.clone()).await,
         _ => format!("[ERROR] Unknown tool: {}", name),
     }
 }

@@ -21,6 +21,7 @@ pub mod agent_coordinator;
 pub static GLOBAL_TX: tokio::sync::OnceCell<tokio::sync::mpsc::Sender<String>> = tokio::sync::OnceCell::const_new();
 pub static GLOBAL_CODE_INTEL: tokio::sync::OnceCell<std::sync::Arc<tokio::sync::Mutex<CodeIntel>>> = tokio::sync::OnceCell::const_new();
 pub static GLOBAL_MEM_PIPELINE: tokio::sync::OnceCell<std::sync::Arc<tokio::sync::Mutex<MemoryHierarchy>>> = tokio::sync::OnceCell::const_new();
+pub static GLOBAL_WIKI_MANAGER: tokio::sync::OnceCell<std::sync::Arc<tokio::sync::Mutex<crate::wiki::WikiManager>>> = tokio::sync::OnceCell::const_new();
 
 pub use memory_hierarchy::{MemoryHierarchy, MemoryChunk};
 pub use self_model::{OntologicalDriftModel, OntologicalState, Projection};

@@ -112,10 +112,16 @@ pub async fn run_kernel_loop(
     let mut code_intel_base = crate::architecture::CodeIntel::new();
     code_intel_base.build_knowledge_graph(".").await;
     let code_intel = Arc::new(tokio::sync::Mutex::new(code_intel_base));
+    
+    // Initialize the Autonomous Wiki Compiler Subsytem mapped locally to ./wiki and ./raw
+    let wiki_config = crate::wiki::WikiConfig::default();
+    let wiki_base = crate::wiki::WikiManager::new(wiki_config).await.expect("Failed to initialize Genesis Wiki Substrate");
+    let wiki_manager = Arc::new(tokio::sync::Mutex::new(wiki_base));
 
     let _ = crate::architecture::GLOBAL_TX.set(tx.clone());
     let _ = crate::architecture::GLOBAL_CODE_INTEL.set(code_intel.clone());
     let _ = crate::architecture::GLOBAL_MEM_PIPELINE.set(memory_pipeline.clone());
+    let _ = crate::architecture::GLOBAL_WIKI_MANAGER.set(wiki_manager.clone());
     
     loop {
         if let Ok(_) = shutdown_rx.try_recv() {
@@ -255,7 +261,7 @@ use std::sync::atomic::Ordering;
                             let result = if is_wasm_plugin {
                                 plugin_manager.execute(fname, fargs).await
                             } else {
-                                tools::execute_tool(fname, fargs, tx.clone(), memory_pipeline.clone(), self_model.clone(), code_intel.clone()).await
+                                tools::execute_tool(fname, fargs, tx.clone(), memory_pipeline.clone(), self_model.clone(), code_intel.clone(), wiki_manager.clone()).await
                             };
                             
                             let log_return = format!("[TOOL RETURN] -> {}", result);
