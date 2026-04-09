@@ -1,0 +1,414 @@
+{
+  "timestamp": "2026-04-07T12:05:08.151975",
+  "sources": [
+    {
+      "name": "Interesting Engineering",
+      "status": "success",
+      "articles": [
+        {
+          "headline": "\ufffd\u001e\ufffd\f`\ufffd\ufffd\ufffd@\u000e\u001c\ufffd'9\u000f\ufffd\n\ufffd\ufffdz\ufffd\t\u0004\ufffd\u043cg\ufffd4[\ufffd\ufffdl\u001e\ufffd\ufffdPm\u0011\nR\ufffd\ufffdk?a\ufffd<\ufffdiS2\ufffd\ufffd\ufffd4\ufffd\ufffd\ufffd\ufffd\u000fjk|\u0011\u001a\ufffdG2\ufffd\ufffdY\ufffdL\ufffd\ufffd0Rj\ufffd\ufffd\ufffd\u05db\ufffd(\ufffdD#\ufffd\u000f\ufffd\ufffdF$9\ufffd9%\ufffd(j...",
+          "url": null
+        }
+      ]
+    },
+    {
+      "name": "ScienceDaily Materials",
+      "status": "success",
+      "articles": []
+    },
+    {
+      "name": "APS Journals",
+      "status": "success",
+      "articles": []
+    },
+    {
+      "name": "AZoM",
+      "status": "success",
+      "articles": []
+    },
+    {
+      "name": "Phys.org Chemistry",
+      "status": "success",
+      "articles": [
+        {
+          "headline": "Fluorescence imaging technique reveals hidden magnetic chemistry in living systems",
+          "url": "https://phys.org/news/2026-04-fluorescence-imaging-technique-reveals-hidden.html"
+        },
+        {
+          "headline": "Advancing synthetic cells: A more flexible system to replicate cellular functions",
+          "url": "https://phys.org/news/2026-04-advancing-synthetic-cells-flexible-replicate.html"
+        },
+        {
+          "headline": "New method rapidly analyzes cell proteins and metabolites",
+          "url": "https://phys.org/news/2026-04-method-rapidly-cell-proteins-metabolites.html"
+        },
+        {
+          "headline": "Review details photocatalyst\u2013biocatalyst systems for semi-artificial photosynthesis",
+          "url": "https://phys.org/news/2026-04-photocatalystbiocatalyst-semi-artificial-photosynthesis.html"
+        },
+        {
+          "headline": "A new equation may help baristas produce the perfect espresso shot every time",
+          "url": "https://phys.org/news/2026-04-equation-baristas-espresso-shot.html"
+        },
+        {
+          "headline": "Polymers built inside the body through blood-catalyzed chemistry allow on-demand brain control",
+          "url": "https://phys.org/news/2026-04-polymers-built-body-blood-catalyzed.html"
+        },
+        {
+          "headline": "Precisely designed oxygen carriers enable low-temperature methane reforming",
+          "url": "https://phys.org/news/2026-04-precisely-oxygen-carriers-enable-temperature.html"
+        },
+        {
+          "headline": "The dual self-assembly network: A new chapter in 3D-printable hydrogels",
+          "url": "https://phys.org/news/2026-04-dual-network-chapter-3d-printable.html"
+        },
+        {
+          "headline": "New insights into hornification could strengthen the future of paper production",
+          "url": "https://phys.org/news/2026-04-insights-hornification-future-paper-production.html"
+        },
+        {
+          "headline": "Iridium's hidden surface chemistry may change how hydrogen and chlorine are made",
+          "url": "https://phys.org/news/2026-03-iridium-hidden-surface-chemistry-hydrogen.html"
+        },
+        {
+          "headline": "Domino polymerization provides a new route to versatile, degradable plastics",
+          "url": "https://phys.org/news/2026-04-domino-polymerization-route-versatile-degradable.html"
+        },
+        {
+          "headline": "New disk-shaped catalyst turns carbon dioxide into methanol at lower temperatures",
+          "url": "https://phys.org/news/2026-04-disk-catalyst-carbon-dioxide-methanol.html"
+        },
+        {
+          "headline": "Smartphone rapid test detects microbiologically contaminated water in less than a minute",
+          "url": "https://phys.org/news/2026-04-smartphone-rapid-microbiologically-contaminated-minute.html"
+        },
+        {
+          "headline": "Dal\u00ed's 'sublime' amber medium may explain unusual aging in a museum masterpiece",
+          "url": "https://phys.org/news/2026-04-dal-sublime-amber-medium-unusual.html"
+        },
+        {
+          "headline": "UV light method offers repeat recycling for acrylic plastics without the environmental cost",
+          "url": "https://phys.org/news/2026-04-uv-method-recycling-acrylic-plastics.html"
+        }
+      ]
+    },
+    {
+      "name": "C&EN",
+      "status": "success",
+      "articles": [
+        {
+          "headline": "Podcast: Inflection Point",
+          "url": null
+        },
+        {
+          "headline": "Chemistry News That Matters",
+          "url": null
+        },
+        {
+          "headline": "Showcasing the beauty of chemistry, chemical engineering, and related sciences....",
+          "url": null
+        },
+        {
+          "headline": "\"On March 1, we put out a report saying \u2018the biggest supply disruption in history, question mark.\u2019 W...",
+          "url": null
+        },
+        {
+          "headline": "Stay on top of the chemistry world with your editor-curated roundup of C&EN stories...",
+          "url": null
+        },
+        {
+          "headline": "C&EN empowers those in and around the global chemical enterprise...",
+          "url": null
+        },
+        {
+          "headline": "Copyright \u00a9\n            2026 American Chemical Society. All\n            Rights Reserved....",
+          "url": null
+        }
+      ]
+    },
+    {
+      "name": "Substack",
+      "status": "success",
+      "articles": []
+    },
+    {
+      "name": "ChemistryWorld",
+      "status": "success",
+      "articles": [
+        {
+          "headline": "Women and early-career researchers bore the burden of NIH\u2019s funding disruptions",
+          "url": "https://www.chemistryworld.com/news/women-and-early-career-researchers-bore-the-burden-of-nihs-funding-disruptions/4023240.article"
+        },
+        {
+          "headline": "Chemists think they know what happened on board the Mary Celeste",
+          "url": "https://www.chemistryworld.com/news/chemists-think-they-know-what-happened-on-board-the-mary-celeste/4023228.article"
+        },
+        {
+          "headline": "How to choose reactor materials and test for compatibility",
+          "url": "https://www.chemistryworld.com/news/how-to-choose-reactor-materials-and-test-for-compatibility/4023141.article"
+        },
+        {
+          "headline": "Expect the unexpected: why the chemistry community should pay more attention to \u2018inert\u2019 materials",
+          "url": "https://www.chemistryworld.com/news/expect-the-unexpected-why-the-chemistry-community-should-pay-more-attention-to-inert-materials/4022936.article"
+        },
+        {
+          "headline": "Two states of water & science sleuths",
+          "url": "https://www.chemistryworld.com/podcasts/two-states-of-water-and-science-sleuths/4023223.article"
+        },
+        {
+          "headline": "Explosive growth in metal\u2013organic framework research is concentrated in China",
+          "url": "https://www.chemistryworld.com/news/explosive-growth-in-metal-organic-framework-research-is-concentrated-in-china/4023225.article"
+        },
+        {
+          "headline": "UK government nominates Leszek Borysiewicz as next UKRI chair",
+          "url": "https://www.chemistryworld.com/news/uk-government-nominates-leszek-borysiewicz-as-next-ukri-chair/4023226.article"
+        },
+        {
+          "headline": "How company presentations can be made relevant",
+          "url": "https://www.chemistryworld.com/careers/how-company-presentations-can-be-made-relevant/4023221.article"
+        },
+        {
+          "headline": "Framing the future: policies to catalyse India's innovation ecosystem",
+          "url": "https://www.chemistryworld.com/collections/framing-the-future-policies-to-catalyse-indias-innovation-ecosystem"
+        },
+        {
+          "headline": "Energy storage and batteries",
+          "url": "https://www.chemistryworld.com/collections/energy-storage-and-batteries"
+        },
+        {
+          "headline": "Solutions for India's sustainability challenge",
+          "url": "https://www.chemistryworld.com/collections/solutions-for-indias-sustainability-challenge"
+        },
+        {
+          "headline": "The future of analytical chemistry",
+          "url": "https://www.chemistryworld.com/collections/the-future-of-analytical-chemistry"
+        },
+        {
+          "headline": "Chemistry of the brain",
+          "url": "https://www.chemistryworld.com/collections/chemistry-of-the-brain"
+        },
+        {
+          "headline": "Water and the environment",
+          "url": "https://www.chemistryworld.com/collections/water-and-the-environment"
+        },
+        {
+          "headline": "Antimicrobial resistance",
+          "url": "https://www.chemistryworld.com/collections/antimicrobial-resistance"
+        }
+      ]
+    },
+    {
+      "name": "arXiv cs.IR",
+      "status": "success",
+      "papers": [
+        {
+          "title": "SkillX: Automatically Constructing Skill Knowledge Bases for Agents",
+          "abstract": "Learning from experience is critical for building capable large language model (LLM) agents, yet prevailing self-evolving paradigms remain inefficient: agents learn in isolation, repeatedly rediscover..."
+        },
+        {
+          "title": "Beyond Hard Negatives: The Importance of Score Distribution in Knowledge Distillation for Dense Retrieval",
+          "abstract": "Transferring knowledge from a cross-encoder teacher via Knowledge Distillation (KD) has become a standard paradigm for training retrieval models. While existing studies have largely focused on mining ..."
+        },
+        {
+          "title": "Ruling Out to Rule In: Contrastive Hypothesis Retrieval for Medical Question Answering",
+          "abstract": "Retrieval-augmented generation (RAG) grounds large language models in external medical knowledge, yet standard retrievers frequently surface hard negatives that are semantically close to the query but..."
+        },
+        {
+          "title": "SLSREC: Self-Supervised Contrastive Learning for Adaptive Fusion of Long- and Short-Term User Interests",
+          "abstract": "User interests typically encompass both long-term preferences and short-term intentions, reflecting the dynamic nature of user behaviors across different timeframes. The uneven temporal distribution o..."
+        },
+        {
+          "title": "SuperLocalMemory V3.3: The Living Brain -- Biologically-Inspired Forgetting, Cognitive Quantization, and Multi-Channel Retrieval for Zero-LLM Agent Memory Systems",
+          "abstract": "AI coding agents operate in a paradox: they possess vast parametric knowledge yet cannot remember a conversation from an hour ago. Existing memory systems store text in vector databases with single-ch..."
+        }
+      ]
+    },
+    {
+      "name": "arXiv cs.FL",
+      "status": "success",
+      "papers": [
+        {
+          "title": "Modelling and Analysis of Supply Chains using Product Time Petri Nets",
+          "abstract": "Supply chains involve geographically distributed manufacturing and assembly sites that must be coordinated under strict timing and resource constraints. While many existing approaches rely on Colored ..."
+        },
+        {
+          "title": "From High-Level Types to Low-Level Monitors: Synthesizing Verified Runtime Checkers for MAVLink",
+          "abstract": "Standard communication protocols for Unmanned Aerial Vehicles (UAVs), such as MAVLink, lack the capability to enforce the contextual validity of message sequences. Autopilots therefore remain vulnerab..."
+        },
+        {
+          "title": "Efficient Solving for Dynamic Data Structure Constraint Satisfaction Problem",
+          "abstract": "Functional verification plays a central role in ensuring the correctness of modern integrated circuit designs, where constrained-random verification is widely adopted to generate diverse stimuli under..."
+        },
+        {
+          "title": "HistMSO: A Logic for Reasoning about Consistency Models with MONA",
+          "abstract": "Reasoning about consistency models for replicated data systems is a challenging task that requires a deep understanding of both the consistency models themselves and a large part of human inputs in me..."
+        },
+        {
+          "title": "(PAC-)Learning state machines from data streams: A generic strategy and an improved heuristic (Extended version)",
+          "abstract": "This is an extended version of our publication Learning state machines from data streams: A generic strategy and an improved heuristic, International Conference on Grammatical Inference (ICGI) 2023, R..."
+        }
+      ]
+    },
+    {
+      "name": "arXiv cs.DL",
+      "status": "success",
+      "papers": [
+        {
+          "title": "Paper Espresso: From Paper Overload to Research Insight",
+          "abstract": "The accelerating pace of scientific publishing makes it increasingly difficult for researchers to stay current. We present Paper Espresso, an open-source platform that automatically discovers, summari..."
+        },
+        {
+          "title": "Bridging the Language Gap in Scholarly Data I: Enhancing Author Disambiguation Algorithms for Chinese Names",
+          "abstract": "Disambiguating scholars with identical names is essential for accurate authorship assignment and robust large-scale scientometric research. Existing methods are often designed for Latin-script metadat..."
+        },
+        {
+          "title": "Towards the AI Historian: Agentic Information Extraction from Primary Sources",
+          "abstract": "AI is supporting, accelerating, and automating scientific discovery across a diverse set of fields. However, AI adoption in historical research remains limited due to the lack of solutions designed fo..."
+        },
+        {
+          "title": "BibTeX Citation Hallucinations in Scientific Publishing Agents: Evaluation and Mitigation",
+          "abstract": "Large language models with web search are increasingly used in scientific publishing agents, yet they still produce BibTeX entries with pervasive field-level errors. Prior evaluations tested base mode..."
+        },
+        {
+          "title": "Do We Need Bigger Models for Science? Task-Aware Retrieval with Small Language Models",
+          "abstract": "Scientific knowledge discovery increasingly relies on large language models, yet many existing scholarly assistants depend on proprietary systems with tens or hundreds of billions of parameters. Such ..."
+        }
+      ]
+    },
+    {
+      "name": "arXiv cs.DB",
+      "status": "success",
+      "papers": [
+        {
+          "title": "Query Optimization and Evaluation via Information Theory: A Tutorial",
+          "abstract": "Database theory is exciting because it studies highly general and practically useful abstractions. Conjunctive query (CQ) evaluation is a prime example: it simultaneously generalizes graph pattern mat..."
+        },
+        {
+          "title": "Cardinality Estimation for High Dimensional Similarity Queries with Adaptive Bucket Probing",
+          "abstract": "In this work, we address the problem of cardinality estimation for similarity search in high-dimensional spaces. Our goal is to design a framework that is lightweight, easy to construct, and capable o..."
+        },
+        {
+          "title": "Version Control System for Data with MatrixOne",
+          "abstract": "The rapid advancement of artificial intelligence has elevated data to a cornerstone of modern software systems. As data projects become increasingly complex and dynamic, version control for data has b..."
+        },
+        {
+          "title": "VectraFlow: Long-Horizon Semantic Processing over Data and Event Streams with LLMs",
+          "abstract": "Monitoring continuous data for meaningful signals increasingly demands long-horizon, stateful reasoning over unstructured streams. However, today's LLM frameworks remain stateless and one-shot, and tr..."
+        },
+        {
+          "title": "CIDER: Boosting Memory-Disaggregated Key-Value Stores with Pessimistic Synchronization",
+          "abstract": "Memory-disaggregated key-value (KV) stores suffer from a severe performance bottleneck due to their I/O redundancy issues. A huge amount of redundant I/Os are generated when synchronizing concurrent d..."
+        }
+      ]
+    },
+    {
+      "name": "arXiv cs.CR",
+      "status": "success",
+      "papers": [
+        {
+          "title": "Comprehensive List of User Deception Techniques in Emails",
+          "abstract": "Email remains a central communication medium, yet its long-standing design and interface conventions continue to enable deceptive attacks. This research note presents a structured list of 42 email-bas..."
+        },
+        {
+          "title": "Strengthening Human-Centric Chain-of-Thought Reasoning Integrity in LLMs via a Structured Prompt Framework",
+          "abstract": "Chain-of-Thought (CoT) prompting has been used to enhance the reasoning capability of LLMs. However, its reliability in security-sensitive analytical tasks remains insufficiently examined, particularl..."
+        },
+        {
+          "title": "Cryptanalysis of the Legendre Pseudorandom Function over Extension Fields",
+          "abstract": "The Legendre Pseudorandom Function (PRF) is a highly efficient cryptographic primitive built upon the Legendre symbol, valued for its low multiplicative complexity in Multi-Party Computation (MPC) and..."
+        },
+        {
+          "title": "Unpacking .zip: A First Look at Domain and File Name Confusion",
+          "abstract": "The namespace for filenames and DNS names has overlapped since the introduction of DNS in 1985: \\texttt{.com} was the original binary format used for DOS and CP/M systems. Recently the introduction of..."
+        },
+        {
+          "title": "Forgetting to Witness: Efficient Federated Unlearning and Its Visible Evaluation",
+          "abstract": "With the increasing importance of data privacy and security, federated unlearning has emerged as a novel research field dedicated to ensuring that federated learning models no longer retain or leak re..."
+        }
+      ]
+    },
+    {
+      "name": "arXiv cs.CC",
+      "status": "success",
+      "papers": [
+        {
+          "title": "Failure of the strong feasible disjunction property",
+          "abstract": "A propositional proof system $P$ has the strong feasible disjunction property iff there is a constant $c \\geq 1$ such that whenever $P$ admits a size $s$ proof of $\\bigvee_i \u03b1_i$ with no two $\u03b1_i$ sha..."
+        },
+        {
+          "title": "Optimal Lower Bounds for Symmetric Modular Circuits",
+          "abstract": "A notorious open question in circuit complexity is whether Boolean operations of arbitrary arity can efficiently be expressed using modular counting gates only. H\u00e5stad's celebrated switching lemma yie..."
+        },
+        {
+          "title": "Subset Balancing and Generalized Subset Sum via Lattices",
+          "abstract": "We study the \\emph{Subset Balancing} problem: given $\\mathbf{x} \\in \\mathbb{Z}^n$ and a coefficient set $C \\subseteq \\mathbb{Z}$, find a nonzero vector $\\mathbf{c} \\in C^n$ such that $\\mathbf{c}\\cdot\\..."
+        },
+        {
+          "title": "Optimal, Qubit-Efficient Quantum Vehicle Routing via Colored-Permutations",
+          "abstract": "We formulate a global-position colored-permutation encoding for the capacitated vehicle routing problem. Each of the $K$ vehicles selects a disjoint partial permutation, and the sum of these $K$ color..."
+        },
+        {
+          "title": "Learning from Equivalence Queries, Revisited",
+          "abstract": "Modern machine learning systems, such as generative models and recommendation systems, often evolve through a cycle of deployment, user interaction, and periodic model updates. This differs from stand..."
+        }
+      ]
+    },
+    {
+      "name": "arXiv cs.HC",
+      "status": "success",
+      "papers": [
+        {
+          "title": "Comprehensive List of User Deception Techniques in Emails",
+          "abstract": "Email remains a central communication medium, yet its long-standing design and interface conventions continue to enable deceptive attacks. This research note presents a structured list of 42 email-bas..."
+        },
+        {
+          "title": "Comparing Human Oversight Strategies for Computer-Use Agents",
+          "abstract": "LLM-powered computer-use agents (CUAs) are shifting users from direct manipulation to supervisory coordination. Existing oversight mechanisms, however, have largely been studied as isolated interface ..."
+        },
+        {
+          "title": "Exploring Expert Perspectives on Wearable-Triggered LLM Conversational Support for Daily Stress Management",
+          "abstract": "Wearable devices increasingly support stress detection, while LLMs enable conversational mental health support. However, designing systems that meaningfully connect wearable-triggered stress events wi..."
+        },
+        {
+          "title": "ClickAIXR: On-Device Multimodal Vision-Language Interaction with Real-World Objects in Extended Reality",
+          "abstract": "We present ClickAIXR, a novel on-device framework for multimodal vision-language interaction with objects in extended reality (XR). Unlike prior systems that rely on cloud-based AI (e.g., ChatGPT) or ..."
+        },
+        {
+          "title": "Demonstrating SIMA-Play: A Serious Game for Forest Management Decision-Making through Board Game and Digital Simulation",
+          "abstract": "Board games have shown promise as educational tools, but their use in engaging learners with the complex, long-term trade-offs of forest management remains strikingly underdeveloped. Addressing this g..."
+        }
+      ]
+    },
+    {
+      "name": "arXiv cs.ET",
+      "status": "success",
+      "papers": [
+        {
+          "title": "Quantum-inspired Ising machine using sparsified spin connectivity",
+          "abstract": "Combinatorial optimization problems become computationally intractable as these NP-hard problems scale. We previously proposed extraction-type majority voting logic (E-MVL), a quantum-inspired algorit..."
+        },
+        {
+          "title": "SAIL: Scene-aware Adaptive Iterative Learning for Long-Tail Trajectory Prediction in Autonomous Vehicles",
+          "abstract": "Autonomous vehicles (AVs) rely on accurate trajectory prediction for safe navigation in diverse traffic environments, yet existing models struggle with long-tail scenarios-rare but safety-critical eve..."
+        },
+        {
+          "title": "STRIDe: Cross-Coupled STT-MRAM Enabling Robust In-Memory-Computing for Deep Neural Network Accelerators",
+          "abstract": "As deep neural network (DNN) models are growing exponentially in size, their deployment on resource-constrained edge platforms is becoming increasingly challenging. In-memory-computing (IMC) with non-..."
+        },
+        {
+          "title": "Eliminating Vendor Lock-In in Quantum Machine Learning via Framework-Agnostic Neural Networks",
+          "abstract": "Quantum machine learning (QML) stands at the intersection of quantum computing and artificial intelligence, offering the potential to solve problems that remain intractable for classical methods. Howe..."
+        },
+        {
+          "title": "Gradual Cognitive Externalization: A Framework for Understanding How Ambient Intelligence Externalizes Human Cognition",
+          "abstract": "Developers are publishing AI agent skills that replicate a colleague's communication style, encode a supervisor's mentoring heuristics, or preserve a person's behavioral repertoire beyond biological d..."
+        }
+      ]
+    },
+    {
+      "name": "arXiv math",
+      "status": "success",
+      "papers": []
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+[
+  {
+    "title": "Cloud Failure Prediction with Hierarchical Temporal Memory: An Empirical Assessment",
+    "abstract": "Hierarchical Temporal Memory (HTM) is an unsupervised learning algorithm inspired by the features of the neocortex that can be used to continuously process stream data and detect anomalies, without requiring a large amount of data for training nor requiring labeled data. HTM is also able to continuously learn from samples, providing a model that is always up-to-date with respect to observations. These characteristics make HTM particularly suitable for supporting online failure prediction in cloud systems, which are systems with a dynamically changing behavior that must be monitored to anticipate problems. This paper presents the first systematic study that assesses HTM in the context of failure prediction. The results that we obtained considering 72 configurations of HTM applied to 12 different types of faults introduced in the Clearwater cloud system show that HTM can help to predict failures with sufficient effectiveness (F-measure = 0.76), representing an interesting practical alternative to (semi-)supervised algorithms.",
+    "published": "2021-10-06T07:09:45Z",
+    "arxiv_id": "2110.03431v2",
+    "category": "other",
+    "search_query": "hierarchical temporal memory",
+    "foundational_score": 3
+  },
+  {
+    "title": "Probabilistic Hierarchical Forecasting with Deep Poisson Mixtures",
+    "abstract": "Hierarchical forecasting problems arise when time series have a natural group structure, and predictions at multiple levels of aggregation and disaggregation across the groups are needed. In such problems, it is often desired to satisfy the aggregation constraints in a given hierarchy, referred to as hierarchical coherence in the literature. Maintaining coherence while producing accurate forecasts can be a challenging problem, especially in the case of probabilistic forecasting. We present a novel method capable of accurate and coherent probabilistic forecasts for time series when reliable hierarchical information is present. We call it Deep Poisson Mixture Network (DPMN). It relies on the combination of neural networks and a statistical model for the joint distribution of the hierarchical multivariate time series structure. By construction, the model guarantees hierarchical coherence and provides simple rules for aggregation and disaggregation of the predictive distributions. We perform an extensive empirical evaluation comparing the DPMN to other state-of-the-art methods which produce hierarchically coherent probabilistic forecasts on multiple public datasets. Comparing to existing coherent probabilistic models, we obtain a relative improvement in the overall Continuous Ranked Probability Score (CRPS) of 11.8% on Australian domestic tourism data, and 8.1% on the Favorita grocery sales dataset, where time series are grouped with geographical hierarchies or travel intent hierarchies. For San Francisco Bay Area highway traffic, where the series' hierarchical structure is randomly assigned, and their correlations are less informative, our method does not show significant performance differences over statistical baselines.",
+    "published": "2021-10-25T18:02:03Z",
+    "arxiv_id": "2110.13179v8",
+    "category": "other",
+    "search_query": "hierarchical temporal memory",
+    "foundational_score": 3
+  },
+  {
+    "title": "HINT: A Hierarchical Index for Intervals in Main Memory",
+    "abstract": "Indexing intervals is a fundamental problem, finding a wide range of applications. Recent work on managing large collections of intervals in main memory focused on overlap joins and temporal aggregation problems. In this paper, we propose novel and efficient in-memory indexing techniques for intervals, with a focus on interval range queries, which are a basic component of many search and analysis tasks. First, we propose an optimized version of a single-level (flat) domain-partitioning approach, which may have large space requirements due to excessive replication. Then, we propose a hierarchical partitioning approach, which assigns each interval to at most two partitions per level and has controlled space requirements. Novel elements of our techniques include the division of the intervals at each partition into groups based on whether they begin inside or before the partition boundaries, reducing the information stored at each partition to the absolutely necessary, and the effective handling of data sparsity and skew. Experimental results on real and synthetic interval sets of different characteristics show that our approaches are typically one order of magnitude faster than the state-of-the-art.",
+    "published": "2021-04-22T09:10:31Z",
+    "arxiv_id": "2104.10939v3",
+    "category": "other",
+    "search_query": "hierarchical temporal memory",
+    "foundational_score": 3
+  },
+  {
+    "title": "A map of approaches to temporal networks",
+    "abstract": "The study of temporal networks is motivated by the simple and important observation that just as network structure can affect dynamics, so can structure in time. Just as network topology can teach us about the system in question, so can its temporal characteristics. In many cases, leaving out either one of these components would lead to an incomplete understanding of the system or poor predictions. We argue that including time into network modeling inevitably leads researchers away from the trodden paths of network science. Temporal network theory requires something different -- new methods, new concepts, new questions -- compared to static networks. In this introductory chapter, we overview the ideas that the field of temporal networks has brought forward in the last decade. We also place the contributions to the current volume on this map of temporal-network approaches.",
+    "published": "2021-03-25T05:46:48Z",
+    "arxiv_id": "2103.13615v1",
+    "category": "other",
+    "search_query": "hierarchical temporal memory",
+    "foundational_score": 3
+  },
+  {
+    "title": "Comparison between illumination model and hydrodynamic simulation for a Direct Drive laser irradiated target",
+    "abstract": "A spherical target irradiated by laser beams located at 49o and 131o with respect to the polar axis has been considered. The illumination model has been used to evaluate the irradiation non-uniformity assuming circular and elliptical super-gaussian laser intensity profiles and the irradiation scheme has been optimized by means of the Polar Direct Drive technique. A parametric study has been performed providing the irradiation non-uniformity as a function of the Polar Direct Drive displacement and of the laser intensity profile parameters. Moreover, two-dimensional axis-symmetric hydrodynamic simulations have been performed for a plastic sphere irradiated by laser beams characterized by a constant flat temporal power pulse. In these simulations the front of the inward shock wave has been tracked providing the time-evolution of any non-uniformity. The results provided by the two methods - illumination model and hydrodynamic data - have been compared and it is found that the illumination model reproduces the main behaviour exhibited by the hydrodynamic data. The two models provide compatible values for the optimum Polar Direct Drive parameter and similar optimal super-gaussian profiles.",
+    "published": "2014-06-30T14:52:09Z",
+    "arxiv_id": "1406.7762v1",
+    "category": "other",
+    "search_query": "hierarchical temporal memory",
+    "foundational_score": 0
+  },
+  {
+    "title": "HDDL 2.1: Towards Defining a Formalism and a Semantics for Temporal HTN Planning",
+    "abstract": "Real world applications as in industry and robotics need modelling rich and diverse automated planning problems. Their resolution usually requires coordinated and concurrent action execution. In several cases, these problems are naturally decomposed in a hierarchical way and expressed by a Hierarchical Task Network (HTN) formalism.\n  HDDL, a hierarchical extension of the Planning Domain Definition Language (PDDL), unlike PDDL 2.1 does not allow to represent planning problems with numerical and temporal constraints, which are essential for real world applications. We propose to fill the gap between HDDL and these operational needs and to extend HDDL by taking inspiration from PDDL 2.1 in order to express numerical and temporal expressions. This paper opens discussions on the semantics and the syntax needed for a future HDDL 2.1 extension.",
+    "published": "2023-06-12T18:21:23Z",
+    "arxiv_id": "2306.07353v1",
+    "category": "other",
+    "search_query": "hierarchical temporal memory",
+    "foundational_score": 3
+  },
+  {
+    "title": "A temporal network version of Watts's cascade model",
+    "abstract": "Threshold models of cascades in the social sciences and economics explain the spread of opinion and innovation due to social influence. In threshold cascade models, fads or innovations spread between agents as determined by their interactions with other agents and their personal threshold of resistance. Typically, these models do not account for structure in the timing of interaction between the units. In this work, we extend a model of social cascades by Duncan Watts to temporal interaction networks. In our model, we assume friends and acquaintances influence agents for a certain time into the future. That is the influence of the past ages and becomes unimportant. Thus, our modified cascade model has an effective time window of influence. We explore two types of thresholds -- thresholds to fractions of the neighbors or absolute numbers. We try our model on six empirical datasets and compare them with null models.",
+    "published": "2021-03-25T04:39:45Z",
+    "arxiv_id": "2103.13604v1",
+    "category": "other",
+    "search_query": "hierarchical temporal memory",
+    "foundational_score": 3
+  },
+  {
+    "title": "Distilling Feedback into Memory-as-a-Tool",
+    "abstract": "We propose a framework that amortizes the cost of inference-time reasoning by converting transient critiques into retrievable guidelines, through a file-based memory system and agent-controlled tool calls. We evaluate this method on the Rubric Feedback Bench, a novel dataset for rubric-based learning. Experiments demonstrate that our augmented LLMs rapidly match the performance of test-time refinement pipelines while drastically reducing inference cost.",
+    "published": "2026-01-09T17:26:52Z",
+    "arxiv_id": "2601.05960v2",
+    "category": "other",
+    "search_query": "hierarchical temporal memory",
+    "foundational_score": 3
+  },
+  {
+    "title": "A Logical Temporal Relational Data Model",
+    "abstract": "Time is one of the most difficult aspects to handle in real world applications such as database systems. Relational database management systems proposed by Codd offer very little built-in query language support for temporal data management. The model itself incorporates neither the concept of time nor any theory of temporal semantics. Many temporal extensions of the relational model have been proposed and some of them are also implemented. This paper offers a brief introduction to temporal database research. We propose a conceptual model for handling time varying attributes in the relational database model with minimal temporal attributes.",
+    "published": "2010-02-05T08:22:24Z",
+    "arxiv_id": "1002.1143v2",
+    "category": "other",
+    "search_query": "hierarchical temporal memory",
+    "foundational_score": 0
+  },
+  {
+    "title": "In-Line-Test of Variability and Bit-Error-Rate of HfOx-Based Resistive Memory",
+    "abstract": "Spatial and temporal variability of HfOx-based resistive random access memory (RRAM) are investigated for manufacturing and product designs. Manufacturing variability is characterized at different levels including lots, wafers, and chips. Bit-error-rate (BER) is proposed as a holistic parameter for the write cycle resistance statistics. Using the electrical in-line-test cycle data, a method is developed to derive BERs as functions of the design margin, to provide guidance for technology evaluation and product design. The proposed BER calculation can also be used in the off-line bench test and build-in-self-test (BIST) for adaptive error correction and for the other types of random access memories.",
+    "published": "2015-08-31T21:05:34Z",
+    "arxiv_id": "1509.00070v1",
+    "category": "other",
+    "search_query": "hierarchical temporal memory",
+    "foundational_score": 0
+  }
+]

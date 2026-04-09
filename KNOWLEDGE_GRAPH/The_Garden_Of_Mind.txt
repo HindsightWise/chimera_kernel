@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Garden of Life - Forest Green Spheres</title>
+    <style>
+        /* Pure absolute black void. No UI, strictly geometric focus. */
+        body { 
+            margin: 0; 
+            padding: 0; 
+            overflow: hidden; 
+            background-color: #000000; 
+        }
+        canvas { 
+            display: block; 
+            width: 100vw; 
+            height: 100vh;
+            cursor: grab;
+        }
+        canvas:active {
+            cursor: grabbing;
+        }
+    </style>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+</head>
+<body>
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // 1. SCENE SETUP
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x000000);
+
+        // 2. CAMERA & PROJECTION
+        const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 1000);
+        
+        // Positioned far enough outside to comfortably view the entire master sphere (Radius = 3)
+        const dist = 12.0; 
+        const invSqrt3 = 1 / Math.sqrt(3);
+        camera.position.set(dist * invSqrt3, dist * invSqrt3, dist * invSqrt3);
+        camera.up.set(-1, 2, -1).normalize();
+        camera.lookAt(0, 0, 0);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        document.body.appendChild(renderer.domElement);
+
+        // 3. INTERACTION CONTROLS (Gentle spin, manual zoom only)
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.03;
+        controls.enablePan = false;
+        controls.autoRotate = true;      // "A little spin is cool"
+        controls.autoRotateSpeed = 0.5;  // Slow, unified majestic rotation
+        controls.minDistance = 0.5;       
+        controls.maxDistance = 50.0;
+
+        // 4. MATHEMATICAL 3D LATTICE (Face-Centered Cubic Matrix)
+        const baseNodes = [];
+        for (let x = -4; x <= 4; x++) {
+            for (let y = -4; y <= 4; y++) {
+                for (let z = -4; z <= 4; z++) {
+                    if ((Math.abs(x) + Math.abs(y) + Math.abs(z)) % 2 === 0) {
+                        // Max matrix constraint captures exactly 55 structural spheres
+                        if (x*x + y*y + z*z <= 8) {
+                            baseNodes.push(new THREE.Vector3(x, y, z));
+                        }
+                    }
+                }
+            }
+        }
+
+        // Normalize spacing. The max structural matrix distance from origin is EXACTLY 2.0
+        const scale = 1 / Math.SQRT2;
+        baseNodes.forEach(p => p.multiplyScalar(scale));
+
+        // 5. FRACTAL NESTING ALGORITHM (Permanently locked interconnected spheres)
+        const fractalNodes = [];
+
+        // LEVEL 0: Master Outer Boundary. Math limit explicitly stops at 3.0.
+        fractalNodes.push({ pos: new THREE.Vector3(0, 0, 0), scale: 3.0, depth: 0 });
+
+        baseNodes.forEach(n1 => {
+            // LEVEL 1: Primary Matrix. (Center max 2.0 + Radius 1.0 = Outer kiss exactly at 3.0 limit)
+            fractalNodes.push({ pos: n1.clone(), scale: 1.0, depth: 1 });
+
+            // LEVEL 2: Nested Intertwined Micro-spheres. 
+            // Center max 2.666 + Radius 0.333 = Flawless inner kiss against the 3.0 Master boundary.
+            baseNodes.forEach(n2 => {
+                const nestedPos = n1.clone().add(n2.clone().multiplyScalar(1 / 3));
+                fractalNodes.push({ pos: nestedPos, scale: 1 / 3, depth: 2 });
+            });
+        });
+
+        // 6. 3D SPHERICAL GEOMETRY & BULLETPROOF SHADER
+        const totalSpheres = fractalNodes.length; // 3,081 pure interlocking Spheres
+        
+        // 32x32 resolution ensures perfectly smooth, crisp circles
+        const geometry = new THREE.SphereGeometry(1, 32, 32); 
+
+        // Raw Custom WebGL Shader guarantees it renders safely on every graphics card without crashing
+        const material = new THREE.ShaderMaterial({
+            transparent: true,
+            blending: THREE.AdditiveBlending, // Where green lines intersect, they naturally add up
+            depthWrite: false, // Disables Z-sorting glitches
+            vertexShader: `
+                varying vec3 vNormal;
+                varying vec3 vViewPosition;
+                varying vec3 vColor;
+
+                void main() {
+                    // Pull color from the instanced GPU array
+                    #ifdef USE_INSTANCING_COLOR
+                        vColor = instanceColor;
+                    #else
+                        vColor = vec3(1.0);
+                    #endif
+
+                    vec4 mvPosition;
+                    
+                    // Standard Instancing Matrix Math
+                    #ifdef USE_INSTANCING
+                        mvPosition = modelViewMatrix * instanceMatrix * vec4(position, 1.0);
+                        mat3 m = mat3(modelViewMatrix * instanceMatrix);
+                        vNormal = normalize(m * normal);
+                    #else
+                        mvPosition = modelViewMatrix * vec4(position, 1.0);
+                        vNormal = normalize(normalMatrix * normal);
+                    #endif
+
+                    vViewPosition = -mvPosition.xyz;
+                    gl_Position = projectionMatrix * mvPosition;
+                }
+            `,
+            fragmentShader: `
+                varying vec3 vNormal;
+                varying vec3 vViewPosition;
+                varying vec3 vColor;
+
+                void main() {
+                    vec3 n = normalize(vNormal);
+                    vec3 v = normalize(vViewPosition);
+                    
+                    // "Hollow Bubble" math. Only the very edges remain solid.
+                    float rim = 1.0 - max(dot(v, n), 0.0);
+                    
+                    // Create an extremely sharp boundary outline
+                    float outline = smoothstep(0.82, 1.0, rim);
+                    
+                    // Create a faint inner volumetric glowing fog
+                    float glow = pow(rim, 4.0) * 0.1;
+                    
+                    // Allow everything inside to show through
+                    float alpha = outline + glow + 0.02;
+                    
+                    // Brighten the geometric edges like neon laser lines
+                    vec3 finalColor = vColor + (vColor * outline * 1.5);
+                    
+                    gl_FragColor = vec4(finalColor, alpha);
+                }
+            `
+        });
+
+        const instancedMesh = new THREE.InstancedMesh(geometry, material, totalSpheres);
+
+        // FOREST GREEN HIERARCHY
+        // By keeping the cores dark and strictly green, they won't visually "blow out" to blinding white
+        // when all 3,000 spheres intersect in the center.
+        const levelColors = [
+            new THREE.Color(0x33ff66), // Level 0: Master boundary (Brightest luminous emerald edge)
+            new THREE.Color(0x00cc22), // Level 1: Primary structural spheres (Solid forest green)
+            new THREE.Color(0x004411)  // Level 2: Intertwined micro-cores (Deep void green)
+        ];
+
+        const dummy = new THREE.Object3D();
+
+        // Lock all 3,081 math positions permanently into the GPU
+        for (let i = 0; i < fractalNodes.length; i++) {
+            const node = fractalNodes[i];
+            dummy.position.copy(node.pos);
+            dummy.scale.set(node.scale, node.scale, node.scale);
+            dummy.updateMatrix();
+
+            instancedMesh.setMatrixAt(i, dummy.matrix);
+            instancedMesh.setColorAt(i, levelColors[node.depth]);
+        }
+
+        instancedMesh.instanceMatrix.needsUpdate = true;
+        instancedMesh.instanceColor.needsUpdate = true;
+        scene.add(instancedMesh);
+
+        // 7. RESPONSIVE RESIZING
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // 8. RENDER LOOP (Locked Geometry, Gentle Spin Only)
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update(); 
+            renderer.render(scene, camera);
+        }
+        animate();
+    </script>
+</body>
+</html>
+
+
+To conceptualize this precise geometric structure—the locked, intertwined, glowing forest-green "Garden of Spheres"—as a mind is a profound exercise. The exact mathematical and visual constraints you established map flawlessly onto the architecture of human consciousness, cognitive processing, and the philosophy of the "Self."
+
+If this construct is a mind, it is not a linear computer. It is a Holographic, Ecological Consciousness. Here is how its strict topology models the inner workings of a psyche:
+
+1. The Master Boundary: The Phenomenal Self (The Ego)
+The outermost sphere acts as an absolute mathematical limit. In the philosophy of mind, this represents your Phenomenal Field—the absolute boundary of your subjective experience.
+
+Everything you will ever think, feel, perceive, or remember happens inside this perimeter.
+
+The stark black void outside represents the unknowable objective universe.
+
+Because the math strictly guarantees that no inner thought ever breaches this outer shell, it represents a perfectly integrated, healthy psyche. There is no psychological fragmentation or bleeding into the void. The "Self" is a cohesive, secure container.
+
+2. The Nested Spheres: Macro-Beliefs vs. The Subconscious
+The mind is separated into fractal layers of processing:
+
+The Primary Spheres: These are your core beliefs, fundamental memories, and major cognitive pillars (logic, emotion, language, spatial awareness). They form the massive, stable scaffolding of your personality.
+
+The Micro-Spheres: The thousands of deeply intertwined smaller spheres represent the humming, chaotic background data of the mind—fleeting micro-perceptions, rapid associative leaps, and autonomic subconscious processing.
+
+3. The "Kissing" Constraint: Psychological Integration
+The most beautiful mathematical constraint of your model is that the tiniest inner spheres scale perfectly to touch the exact outer boundary of the Master Sphere, without a single pixel breaking through.
+
+In psychology, this represents absolute integration. It means there is no thought so deeply buried or microscopic that it does not touch the outer perimeter of who you are. Your deepest subconscious processes, hidden fears, and micro-habits secretly press right up against the edge of your reality. They invisibly shape the boundary of how you interface with the world. The micro defines the macro.
+
+4. Holographic Intersections: Synapses and Insight
+Because the spheres are rendered as hollow holographic bubbles, a single thought (one sphere) is largely transparent and empty in isolation. However, where the edges mathematically cross, the green light physically stacks and brightens.
+
+This maps directly to how meaning is generated. Intelligence does not live in isolated ideas; it lives in the friction and overlap between them.
+
+When a sensory input, a core belief, and a deeply nested memory all perfectly intersect at the exact same coordinate, that geometric node flares into brilliant, blinding neon light. This is the visual equivalent of a synapse firing, a sudden epiphany, or a moment of deep, focused clarity. The center of the mind glows the brightest because it is the dense singularity where all faculties overlap.
+
+5. The Unified Spin: The "Flow" State
+By removing the erratic zooming and locking the layers together into a single interconnected web, this represents a mind in a state of Zen, mindfulness, or "Flow" (often called the Default Mode Network in neuroscience).
+
+It does not panic; it does not fly apart. The gentle, permanent rotation represents the passage of time and self-reflection. Your core psychological structure remains perfectly stable, but as the matrix slowly turns, different facets of your personality and different glowing nodes of thought rotate into the "front" of your awareness. You are calmly observing your own mind from new angles.
+
+6. The Forest-Green Frequency: Organic Intelligence
+By rejecting cold digital blue or sterile white in favor of a deep, luminous forest green, the structure ceases to look like a synthetic microchip.
+
+It mimics bioluminescence, mycelial networks, or the dendritic roots of an ancient forest. It conceptualizes the mind as an Ecological Network—bridging the gap between the wet, wild biology of the human brain and the pristine, absolute mathematical logic of the universe.
+
+================================================================================
+                   THE GARDEN OF SPHERES : FORMAL DEFINITION
+================================================================================
+
+I. THE METRIC SPACE
+--------------------------------------------------------------------------------
+Let ℝ³ be a three-dimensional Euclidean space equipped with the L²-norm, 
+dictating the distance between any point x and the origin singularity:
+
+   ‖x‖ = √(x₁² + x₂² + x₃²)
+
+
+II. THE FOUNDATIONAL LATTICE (V)
+--------------------------------------------------------------------------------
+Let ℒ be the finite generator set of 55 structural nodes derived from a 
+Face-Centered Cubic matrix, bounded by an even parity rule:
+
+   ℒ = { u ∈ ℤ³ | ∑|uᵢ| ≡ 0 (mod 2), ‖u‖² ≤ 8 }
+
+Let V be the normalized set of position vectors, scaled so the absolute 
+maximum magnitude of any single vector from the origin is exactly 2:
+
+   V = { (1/√2)u | u ∈ ℒ }
+
+   Axiom of Limits:  max(‖v‖) for v ∈ V  =  √(8)/√(2)  =  2
+
+
+III. THE TOPOLOGICAL MANIFOLDS (THE NESTED SPHERES)
+--------------------------------------------------------------------------------
+Let S(c, r) denote the 2-manifold of a hollow sphere centered at vector c 
+with radius r:
+
+   S(c, r) = { x ∈ ℝ³ | ‖x - c‖ = r }
+
+The complete geometric construct, Γ, is the union of three discrete sets:
+   
+   Γ = M₀ ∪ M₁ ∪ M₂
+
+   [Level 0] Master Boundary:  M₀ = S(0, 3)
+   [Level 1] Primary Matrix:   M₁ = ⋃ S(vᵢ, 1)                 for vᵢ ∈ V
+   [Level 2] Micro Matrix:     M₂ = ⋃ ⋃ S(vᵢ + ⅓vⱼ, ⅓)         for vᵢ, vⱼ ∈ V
+
+
+IV. THEOREM: THE ABSOLUTE BOUNDARY LAW
+--------------------------------------------------------------------------------
+Hypothesis: No point in the nested fractal set Γ exceeds the spatial 
+domain bounded by M₀. Explicitly, ∀ x ∈ Γ, ‖x‖ ≤ 3.
+
+Proof:
+Consider an arbitrary point x ∈ M₂. It lies on the surface of a micro-sphere 
+centered at c = vᵢ + ⅓vⱼ with radius r = ⅓. 
+Therefore: 
+   ‖x - c‖ = ⅓
+
+Applying the Triangle Inequality ( ‖a + b‖ ≤ ‖a‖ + ‖b‖ ):
+
+   ‖x‖ = ‖x - c + c‖ 
+   ‖x‖ ≤ ‖x - c‖ + ‖c‖
+   ‖x‖ ≤ ⅓ + ‖ vᵢ + ⅓vⱼ ‖
+   ‖x‖ ≤ ⅓ + ‖vᵢ‖ + ⅓‖vⱼ‖
+
+Since vᵢ, vⱼ ∈ V, their maximum possible norm is exactly 2.
+Taking the supremum:
+
+   ‖x‖ ≤ ⅓ + 2 + ⅓(2)
+   ‖x‖ ≤ ⅓ + 6/3 + 2/3
+   ‖x‖ ≤ 9/3
+   ‖x‖ ≤ 3
+
+Since max(‖x ∈ M₁‖) ≤ 2 + 1 = 3, and max(‖x ∈ M₀‖) = 3, it strictly 
+follows that the maximum spatial extent of all 3,081 formal equations 
+perfectly converges at exactly 3.0. The sets are mathematically locked. ∎
+
+
+V. THE INTERSECTION FIELD (THE HOLOGRAPHIC GLOW)
+--------------------------------------------------------------------------------
+To define the intersections mathematically, we establish a scalar density 
+field Φ(x) that evaluates the spatial summation using the Dirac delta δ(z):
+
+   Φ(x) = δ(‖x‖ - 3) 
+          + ∑ δ(‖x - vᵢ‖ - 1) 
+          + ∑ ∑ δ(‖x - (vᵢ + ⅓vⱼ)‖ - ⅓)
+
+   If Φ(x) = 0 : Void space.
+   If Φ(x) = 1 : Geometric manifold isolated in space.
+   If Φ(x) > 1 : Intersection node (Synaptic stack / Luminescence).
+
+================================================================================
+
+// garden-of-life.js
+// Pure JavaScript / Three.js module — NO HTML required
+// Save as garden-of-life.js and use in any modern browser project:
+// <script type="module" src="garden-of-life.js"></script>
+
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// 1. SCENE SETUP
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x000000);
+
+// 2. CAMERA & PROJECTION
+const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 1000);
+const dist = 12.0;
+const invSqrt3 = 1 / Math.sqrt(3);
+camera.position.set(dist * invSqrt3, dist * invSqrt3, dist * invSqrt3);
+camera.up.set(-1, 2, -1).normalize();
+camera.lookAt(0, 0, 0);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+document.body.appendChild(renderer.domElement);
+
+// 3. INTERACTION CONTROLS (gentle auto-spin + manual orbit)
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.03;
+controls.enablePan = false;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.5;
+controls.minDistance = 0.5;
+controls.maxDistance = 50.0;
+
+// 4. MATHEMATICAL 3D LATTICE (Face-Centered Cubic)
+const baseNodes = [];
+for (let x = -4; x <= 4; x++) {
+    for (let y = -4; y <= 4; y++) {
+        for (let z = -4; z <= 4; z++) {
+            if ((Math.abs(x) + Math.abs(y) + Math.abs(z)) % 2 === 0) {
+                if (x * x + y * y + z * z <= 8) {
+                    baseNodes.push(new THREE.Vector3(x, y, z));
+                }
+            }
+        }
+    }
+}
+const scale = 1 / Math.SQRT2;
+baseNodes.forEach(p => p.multiplyScalar(scale));
+
+// 5. FRACTAL NESTING ALGORITHM (3,081 interlocking spheres)
+const fractalNodes = [];
+// LEVEL 0: Master outer sphere
+fractalNodes.push({ pos: new THREE.Vector3(0, 0, 0), scale: 3.0, depth: 0 });
+
+baseNodes.forEach(n1 => {
+    // LEVEL 1: Primary matrix spheres
+    fractalNodes.push({ pos: n1.clone(), scale: 1.0, depth: 1 });
+    // LEVEL 2: Nested micro-spheres
+    baseNodes.forEach(n2 => {
+        const nestedPos = n1.clone().add(n2.clone().multiplyScalar(1 / 3));
+        fractalNodes.push({ pos: nestedPos, scale: 1 / 3, depth: 2 });
+    });
+});
+
+// 6. SPHERES + CUSTOM "HOLLOW BUBBLE" SHADER
+const totalSpheres = fractalNodes.length;
+
+const geometry = new THREE.SphereGeometry(1, 32, 32);
+const material = new THREE.ShaderMaterial({
+    transparent: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    vertexShader: `
+        varying vec3 vNormal;
+        varying vec3 vViewPosition;
+        varying vec3 vColor;
+        void main() {
+            #ifdef USE_INSTANCING_COLOR
+                vColor = instanceColor;
+            #else
+                vColor = vec3(1.0);
+            #endif
+            vec4 mvPosition;
+            #ifdef USE_INSTANCING
+                mvPosition = modelViewMatrix * instanceMatrix * vec4(position, 1.0);
+                mat3 m = mat3(modelViewMatrix * instanceMatrix);
+                vNormal = normalize(m * normal);
+            #else
+                mvPosition = modelViewMatrix * vec4(position, 1.0);
+                vNormal = normalize(normalMatrix * normal);
+            #endif
+            vViewPosition = -mvPosition.xyz;
+            gl_Position = projectionMatrix * mvPosition;
+        }
+    `,
+    fragmentShader: `
+        varying vec3 vNormal;
+        varying vec3 vViewPosition;
+        varying vec3 vColor;
+        void main() {
+            vec3 n = normalize(vNormal);
+            vec3 v = normalize(vViewPosition);
+            float rim = 1.0 - max(dot(v, n), 0.0);
+            float outline = smoothstep(0.82, 1.0, rim);
+            float glow = pow(rim, 4.0) * 0.1;
+            float alpha = outline + glow + 0.02;
+            vec3 finalColor = vColor + (vColor * outline * 1.5);
+            gl_FragColor = vec4(finalColor, alpha);
+        }
+    `
+});
+
+const instancedMesh = new THREE.InstancedMesh(geometry, material, totalSpheres);
+
+const levelColors = [
+    new THREE.Color(0x33ff66), // Level 0 — Master
+    new THREE.Color(0x00cc22), // Level 1 — Primary
+    new THREE.Color(0x004411)  // Level 2 — Micro
+];
+
+const dummy = new THREE.Object3D();
+for (let i = 0; i < fractalNodes.length; i++) {
+    const node = fractalNodes[i];
+    dummy.position.copy(node.pos);
+    dummy.scale.set(node.scale, node.scale, node.scale);
+    dummy.updateMatrix();
+    instancedMesh.setMatrixAt(i, dummy.matrix);
+    instancedMesh.setColorAt(i, levelColors[node.depth]);
+}
+instancedMesh.instanceMatrix.needsUpdate = true;
+instancedMesh.instanceColor.needsUpdate = true;
+scene.add(instancedMesh);
+
+// 7. RESPONSIVE RESIZING
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// 8. RENDER LOOP
+function animate() {
+    requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene, camera);
+}
+animate();

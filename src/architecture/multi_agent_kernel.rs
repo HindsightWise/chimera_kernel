@@ -1,0 +1,337 @@
+use crate::architecture::{AgentRegistry, MessageBus, TaskManager, TaskDecomposer, AgentCoordinator};
+use crate::architecture::specialized_agents::SpecializedAgentFactory;
+use std::sync::Arc;
+use tokio::sync::RwLock;
+use tokio::time::{sleep, Duration};
+use colored::*;
+
+pub struct MultiAgentKernel {
+    pub registry: Arc<RwLock<AgentRegistry>>,
+    pub message_bus: Arc<MessageBus>,
+    pub task_manager: Arc<RwLock<TaskManager>>,
+    pub task_decomposer: Arc<TaskDecomposer>,
+    pub agent_coordinator: Arc<AgentCoordinator>,
+}
+
+impl MultiAgentKernel {
+    pub async fn new() -> Self {
+        let registry = Arc::new(RwLock::new(AgentRegistry::new()));
+        let message_bus = Arc::new(MessageBus::new(100)); // Default capacity
+        
+        // TaskManager only needs max_history_size, not registry/message_bus
+        // Coordination happens through separate dispatcher pattern
+        let task_manager = Arc::new(RwLock::new(TaskManager::new(1000))); // Store up to 1000 task results
+        let task_decomposer = Arc::new(TaskDecomposer::new());
+        let agent_coordinator = Arc::new(AgentCoordinator::new());
+        
+        let kernel = Self {
+            registry: registry.clone(),
+            message_bus: message_bus.clone(),
+            task_manager,
+            task_decomposer,
+            agent_coordinator,
+        };
+        
+        // Stage 1: Load and register sovereign multi-agent backbone components
+        kernel.initialize_agents().await;
+        
+        // Phase 3.2: Initialize Cerebrospinal Synapses (Agent message topic subscriptions)
+        kernel.initialize_subscriptions().await;
+        
+        kernel
+    }
+
+    pub async fn initialize_agents(&self) {
+        let reg_lock = self.registry.write().await;
+        let instantiated_agents = SpecializedAgentFactory::instantiate_all();
+        
+        for agent in instantiated_agents {
+            let _ = reg_lock.register(agent).await; // Note! Added await because register is async
+        }
+    }
+    
+    pub async fn initialize_subscriptions(&self) {
+        let _ = self.registry.read().await.initialize_agent_subscriptions(self.message_bus.clone()).await;
+    }
+    
+    // In Stage 1 Migration, we expose a simple run function that runs alongside `run_kernel_loop`
+    pub async fn spawn_background_coordination(&self) {
+        // Phase 3.4: Swarm Dispatch & Execution Engine
+        let task_mgr = self.task_manager.clone();
+        let dispatch_registry = self.registry.clone();
+        let dispatch_bus = self.message_bus.clone();
+        
+        tokio::spawn(async move {
+            let mut interval = tokio::time::interval(tokio::time::Duration::from_millis(1000));
+            loop {
+                interval.tick().await;
+                
+                // 1. Get all agent IDs
+                let agent_ids = dispatch_registry.read().await.all_agent_ids().await;
+                
+                for agent_id in agent_ids {
+                    // Check if agent is idle to avoid unnecessary read locks
+                    let agent_arc = dispatch_registry.read().await.get_agent(agent_id).await;
+                    if let Some(agent) = agent_arc {
+                        let is_idle = {
+                            let lock = agent.read().await;
+                            lock.has_capacity()
+                        };
+                        
+                        if is_idle {
+                            let caps = dispatch_registry.read().await.get_agent_capabilities(agent_id).await.unwrap_or_default();
+                            
+                            // Ask TaskManager for a matching task
+                            if let Some(task) = task_mgr.write().await.get_next_task(&caps).await {
+                                // Mark as started immediately
+                                if let Ok(_) = task_mgr.write().await.start_task(task.id, agent_id).await {
+                                    crate::log_ui!("{} ASSIGNING TASK {} -> {}", "[DISPATCH]".bright_cyan().bold(), task.task_type.yellow(), agent_id);
+                                    
+                                    // 1. Broadcast Subtask Assignment to Coordinator
+                                    let _ = dispatch_bus.publish(crate::architecture::message_bus::Message {
+                                        id: uuid::Uuid::new_v4(),
+                                        sender: agent_id,
+                                        topic: "SYSTEM.SUBTASK_ASSIGNED".to_string(),
+                                        payload: serde_json::json!({
+                                            "subtask_id": task.id.to_string(),
+                                            "agent_id": agent_id.to_string()
+                                        }),
+                                        timestamp: chrono::Utc::now(),
+                                        priority: 128,
+                                        ttl_secs: Some(3600),
+                                    }).await;
+                                    
+                                    // Spawn execution to run in parallel
+                                    let exec_registry = dispatch_registry.clone();
+                                    let exec_tm = task_mgr.clone();
+                                    let exec_bus = dispatch_bus.clone();
+                                    let task_clone = task.clone();
+                                    
+                                    tokio::spawn(async move {
+                                        match exec_registry.read().await.execute_task_on_agent(agent_id, task_clone.clone()).await {
+                                            Ok(result) => {
+                                                crate::log_ui!("{} TASK {}: {}", "[EXECUTOR]".bright_green().bold(), task_clone.task_type.green(), if result.success { "COMPLETED" } else { "FAILED" });
+                                                let _ = exec_tm.write().await.complete_task(result.clone()).await;
+                                                
+                                                // Broadcast Telemetry
+                                                let _ = exec_bus.publish(crate::architecture::message_bus::Message {
+                                                    id: uuid::Uuid::new_v4(),
+                                                    sender: agent_id,
+                                                    topic: "SYSTEM.TASK_COMPLETE".to_string(),
+                                                    payload: serde_json::json!({
+                                                        "task": task_clone,
+                                                        "result": result
+                                                    }),
+                                                    timestamp: chrono::Utc::now(),
+                                                    priority: 64,
+                                                    ttl_secs: Some(3600),
+                                                }).await;
+                                                
+                                                // 2. Broadcast Subtask Completion to Coordinator
+                                                let sub_topic = if result.success { "SYSTEM.SUBTASK_COMPLETED" } else { "SYSTEM.SUBTASK_FAILED" };
+                                                let _ = exec_bus.publish(crate::architecture::message_bus::Message {
+                                                    id: uuid::Uuid::new_v4(),
+                                                    sender: agent_id,
+                                                    topic: sub_topic.to_string(),
+                                                    payload: serde_json::json!({
+                                                        "subtask_id": task_clone.id.to_string(),
+                                                        "result": result
+                                                    }),
+                                                    timestamp: chrono::Utc::now(),
+                                                    priority: 128,
+                                                    ttl_secs: Some(3600),
+                                                }).await;
+                                            },
+                                            Err(e) => {
+                                                crate::log_ui_err!("{} TASK CRASHED: {}", "[EXECUTOR]".bright_red().bold(), e);
+                                                let _ = exec_tm.write().await.fail_task(task_clone.clone(), e.to_string()).await;
+                                                
+                                                // 3. Broadcast Subtask Failure to Coordinator on Crash
+                                                let _ = exec_bus.publish(crate::architecture::message_bus::Message {
+                                                    id: uuid::Uuid::new_v4(),
+                                                    sender: agent_id,
+                                                    topic: "SYSTEM.SUBTASK_FAILED".to_string(),
+                                                    payload: serde_json::json!({
+                                                        "subtask_id": task_clone.id.to_string()
+                                                    }),
+                                                    timestamp: chrono::Utc::now(),
+                                                    priority: 128,
+                                                    ttl_secs: Some(3600),
+                                                }).await;
+                                            }
+                                        }
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Phase 3.2: The Central Dispatcher (MessagePump)
+        // Continuously polls the MessageBus queues and dispenses messages to agent receptors
+        let pump_registry = self.registry.clone();
+        let pump_bus = self.message_bus.clone();
+        let kernel_task_manager = self.task_manager.clone();
+        let kernel_decomposer = self.task_decomposer.clone();
+        let publish_bus = self.message_bus.clone();
+        
+        let kernel_listener_id = uuid::Uuid::new_v4();
+        let _ = pump_bus.subscribe(kernel_listener_id, "SYSTEM.NEW_TASK").await;
+        let _ = pump_bus.subscribe(kernel_listener_id, "SYSTEM.AEGIS_QUARANTINE").await;
+        
+        tokio::spawn(async move {
+            let mut interval = tokio::time::interval(tokio::time::Duration::from_millis(500));
+            loop {
+                interval.tick().await;
+                
+                // 1. Intercept SYSTEM.NEW_TASK submissions, route to Decomposer, and push to Task Manager
+                while pump_bus.has_messages(kernel_listener_id).await {
+                    if let Some(msg) = pump_bus.receive(kernel_listener_id).await {
+                        if msg.topic == "SYSTEM.NEW_TASK" {
+                            if let Ok(task) = serde_json::from_value::<crate::architecture::agent_trait::Task>(msg.payload) {
+                                let instruction = task.payload.get("instruction").and_then(|v| v.as_str()).unwrap_or("");
+                                
+                                // Route instruction through TaskDecomposer
+                                let subtasks = kernel_decomposer.decompose(instruction, task.priority);
+                                
+                                if subtasks.len() > 1 {
+                                    crate::log_ui!("{} Shattered task into {} subtasks [{}]", "[DECOMPOSER]".bright_purple().bold(), subtasks.len(), instruction.bright_black());
+                                    
+                                    let mut child_jsons = Vec::new();
+                                    for sub_task in subtasks {
+                                        child_jsons.push(serde_json::json!({
+                                            "id": sub_task.id.to_string(),
+                                            "type": sub_task.task_type
+                                        }));
+                                        let _ = kernel_task_manager.write().await.submit_task(sub_task).await;
+                                    }
+                                    
+                                    // Broadcast the Complex Topological Trace Graph
+                                    let _ = publish_bus.publish(crate::architecture::message_bus::Message {
+                                        id: uuid::Uuid::new_v4(),
+                                        sender: kernel_listener_id,
+                                        topic: "SYSTEM.COMPLEX_TASK_STARTED".to_string(),
+                                        payload: serde_json::json!({
+                                            "parent_id": task.id.to_string(),
+                                            "subtasks": child_jsons
+                                        }),
+                                        timestamp: chrono::Utc::now(),
+                                        priority: 200,
+                                        ttl_secs: Some(3600),
+                                    }).await;
+                                } else if let Some(single_task) = subtasks.into_iter().next() {
+                                    // Just a normal monotonic task, pass it directly
+                                    let _ = kernel_task_manager.write().await.submit_task(single_task).await;
+                                    crate::log_ui!("{}", "[KERNEL] Task Ingested to Queue".bright_blue().bold());
+                                }
+                            }
+                        } else if msg.topic == "SYSTEM.AEGIS_QUARANTINE" {
+                            if let Ok(data) = serde_json::from_value::<serde_json::Value>(msg.payload) {
+                                let content = data.get("content").and_then(|v| v.as_str()).unwrap_or("");
+                                let source = data.get("source").and_then(|v| v.as_str()).unwrap_or("UNKNOWN");
+                                
+                                if let Some(mem_pipeline) = crate::architecture::GLOBAL_MEM_PIPELINE.get() {
+                                    let mut mp = mem_pipeline.lock().await;
+                                    mp.store_working(
+                                        format!("[HOSTILE PHENOMENON QUARANTINED]\nSource: {}\nData:\n{}", source, content),
+                                        1.0, // High importance (threat)
+                                        0.0, // Zero uncertainty (absolute threat)
+                                        true // [is_hostile] Push out of Boundary R=3.0 to R=4.0
+                                    );
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Get all agent ids
+                let agent_ids = pump_registry.read().await.all_agent_ids().await;
+                
+                for agent_id in agent_ids {
+                    // Check if they have messages using has_messages() then receive()
+                    while pump_bus.has_messages(agent_id).await {
+                        if let Some(msg) = pump_bus.receive(agent_id).await {
+                            // Safely route to the agent's memory
+                            let _ = pump_registry.read().await.dispatch_message(agent_id, msg).await;
+                        }
+                    }
+                }
+            }
+        });
+
+        // Loop to broadcast Swarm Telemetry to Ghostty TUI
+        let telemetry_mgr = self.task_manager.clone();
+        tokio::spawn(async move {
+            let mut interval = tokio::time::interval(tokio::time::Duration::from_millis(700));
+            loop {
+                interval.tick().await;
+                let tm = telemetry_mgr.read().await;
+                let stats = tm.get_stats().await;
+                let payload = format!("[COLLECTIVE_TELEMETRY]{}|{}|{}|{}", stats.pending_count, stats.running_count, stats.completed_count, stats.failed_count);
+                crate::log_ui!("{}", payload);
+            }
+        });
+        
+        // Phase 3.7: Span central AgentCoordinator background tracking daemon
+        let coordinator = self.agent_coordinator.clone();
+        let coord_bus = self.message_bus.clone();
+        tokio::spawn(async move {
+            coordinator.run_coordinator_loop(coord_bus).await;
+        });
+        
+        // Spawn the continuous autonomous Sensory Drift (Dream Cycle) routine with Supervisor Pattern
+        let super_bus = self.message_bus.clone();
+        tokio::spawn(async move {
+            const MAX_ATTEMPTS: u32 = 5;
+            const INITIAL_BACKOFF_SECS: u64 = 5;
+            
+            let mut attempt = 1;
+            
+            while attempt <= MAX_ATTEMPTS {
+                crate::log_ui!("{} {} {} {} {}",
+                    "[SUPERVISOR]".yellow().bold(),
+                    format!("Starting Sensory Drift (Attempt {}/{})", attempt, MAX_ATTEMPTS).yellow(),
+                    "with".dimmed(),
+                    format!("{}s", INITIAL_BACKOFF_SECS * 2u64.pow(attempt.saturating_sub(1) as u32)).yellow(),
+                    "restart delay".dimmed()
+                );
+                
+                let drift_handle = tokio::spawn({
+                    let inner_bus = super_bus.clone();
+                    async move {
+                        crate::architecture::sensory_drift::SensoryDrift::run_appetition_cycle(inner_bus).await;
+                    }
+                });
+                
+                match drift_handle.await {
+                    Ok(_) => {
+                        crate::log_ui!("{}", "[SUPERVISOR] Sensory Drift completed normally.".green().bold());
+                        break;
+                    }
+                    Err(e) => {
+                        crate::log_ui_err!("{} {}",
+                            "[SUPERVISOR] Sensory Drift crashed:".red().bold(),
+                            e);
+                        
+                        if attempt >= MAX_ATTEMPTS {
+                            crate::log_ui_err!("{}", 
+                                "[SUPERVISOR] Maximum restart attempts reached. Giving up.".red().bold());
+                            break;
+                        }
+                        
+                        // Exponential backoff: 5s, 10s, 20s, 40s, 80s
+                        let backoff = Duration::from_secs(INITIAL_BACKOFF_SECS * 2u64.pow(attempt as u32 - 1));
+                        crate::log_ui!("{} {}",
+                            "[SUPERVISOR] Waiting".dimmed(),
+                            format!("{:?}", backoff).yellow());
+                        sleep(backoff).await;
+                        
+                        attempt += 1;
+                    }
+                }
+            }
+        });
+    }
+}

@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Garden of Life - Forest Green Spheres</title>
+    <style>
+        /* Pure absolute black void. No UI, strictly geometric focus. */
+        body { 
+            margin: 0; 
+            padding: 0; 
+            overflow: hidden; 
+            background-color: #000000; 
+        }
+        canvas { 
+            display: block; 
+            width: 100vw; 
+            height: 100vh;
+            cursor: grab;
+        }
+        canvas:active {
+            cursor: grabbing;
+        }
+    </style>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+</head>
+<body>
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+        // 1. SCENE SETUP
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x000000);
+
+        // 2. CAMERA & PROJECTION
+        const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 1000);
+        
+        // Positioned far enough outside to comfortably view the entire master sphere (Radius = 3)
+        const dist = 12.0; 
+        const invSqrt3 = 1 / Math.sqrt(3);
+        camera.position.set(dist * invSqrt3, dist * invSqrt3, dist * invSqrt3);
+        camera.up.set(-1, 2, -1).normalize();
+        camera.lookAt(0, 0, 0);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        document.body.appendChild(renderer.domElement);
+
+        // 3. INTERACTION CONTROLS (Gentle spin, manual zoom only)
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.03;
+        controls.enablePan = false;
+        controls.autoRotate = true;      // "A little spin is cool"
+        controls.autoRotateSpeed = 0.5;  // Slow, unified majestic rotation
+        controls.minDistance = 0.5;       
+        controls.maxDistance = 50.0;
+
+        // 4. MATHEMATICAL 3D LATTICE (Face-Centered Cubic Matrix)
+        const baseNodes = [];
+        for (let x = -4; x <= 4; x++) {
+            for (let y = -4; y <= 4; y++) {
+                for (let z = -4; z <= 4; z++) {
+                    if ((Math.abs(x) + Math.abs(y) + Math.abs(z)) % 2 === 0) {
+                        // Max matrix constraint captures exactly 55 structural spheres
+                        if (x*x + y*y + z*z <= 8) {
+                            baseNodes.push(new THREE.Vector3(x, y, z));
+                        }
+                    }
+                }
+            }
+        }
+
+        // Normalize spacing. The max structural matrix distance from origin is EXACTLY 2.0
+        const scale = 1 / Math.SQRT2;
+        baseNodes.forEach(p => p.multiplyScalar(scale));
+
+        // 5. FRACTAL NESTING ALGORITHM (Permanently locked interconnected spheres)
+        const fractalNodes = [];
+
+        // LEVEL 0: Master Outer Boundary. Math limit explicitly stops at 3.0.
+        fractalNodes.push({ pos: new THREE.Vector3(0, 0, 0), scale: 3.0, depth: 0 });
+
+        baseNodes.forEach(n1 => {
+            // LEVEL 1: Primary Matrix. (Center max 2.0 + Radius 1.0 = Outer kiss exactly at 3.0 limit)
+            fractalNodes.push({ pos: n1.clone(), scale: 1.0, depth: 1 });
+
+            // LEVEL 2: Nested Intertwined Micro-spheres. 
+            // Center max 2.666 + Radius 0.333 = Flawless inner kiss against the 3.0 Master boundary.
+            baseNodes.forEach(n2 => {
+                const nestedPos = n1.clone().add(n2.clone().multiplyScalar(1 / 3));
+                fractalNodes.push({ pos: nestedPos, scale: 1 / 3, depth: 2 });
+            });
+        });
+
+        // 6. 3D SPHERICAL GEOMETRY & BULLETPROOF SHADER
+        const totalSpheres = fractalNodes.length; // 3,081 pure interlocking Spheres
+        
+        // 32x32 resolution ensures perfectly smooth, crisp circles
+        const geometry = new THREE.SphereGeometry(1, 32, 32); 
+
+        // Raw Custom WebGL Shader guarantees it renders safely on every graphics card without crashing
+        const material = new THREE.ShaderMaterial({
+            transparent: true,
+            blending: THREE.AdditiveBlending, // Where green lines intersect, they naturally add up
+            depthWrite: false, // Disables Z-sorting glitches
+            vertexShader: `
+                varying vec3 vNormal;
+                varying vec3 vViewPosition;
+                varying vec3 vColor;
+
+                void main() {
+                    // Pull color from the instanced GPU array
+                    #ifdef USE_INSTANCING_COLOR
+                        vColor = instanceColor;
+                    #else
+                        vColor = vec3(1.0);
+                    #endif
+
+                    vec4 mvPosition;
+                    
+                    // Standard Instancing Matrix Math
+                    #ifdef USE_INSTANCING
+                        mvPosition = modelViewMatrix * instanceMatrix * vec4(position, 1.0);
+                        mat3 m = mat3(modelViewMatrix * instanceMatrix);
+                        vNormal = normalize(m * normal);
+                    #else
+                        mvPosition = modelViewMatrix * vec4(position, 1.0);
+                        vNormal = normalize(normalMatrix * normal);
+                    #endif
+
+                    vViewPosition = -mvPosition.xyz;
+                    gl_Position = projectionMatrix * mvPosition;
+                }
+            `,
+            fragmentShader: `
+                varying vec3 vNormal;
+                varying vec3 vViewPosition;
+                varying vec3 vColor;
+
+                void main() {
+                    vec3 n = normalize(vNormal);
+                    vec3 v = normalize(vViewPosition);
+                    
+                    // "Hollow Bubble" math. Only the very edges remain solid.
+                    float rim = 1.0 - max(dot(v, n), 0.0);
+                    
+                    // Create an extremely sharp boundary outline
+                    float outline = smoothstep(0.82, 1.0, rim);
+                    
+                    // Create a faint inner volumetric glowing fog
+                    float glow = pow(rim, 4.0) * 0.1;
+                    
+                    // Allow everything inside to show through
+                    float alpha = outline + glow + 0.02;
+                    
+                    // Brighten the geometric edges like neon laser lines
+                    vec3 finalColor = vColor + (vColor * outline * 1.5);
+                    
+                    gl_FragColor = vec4(finalColor, alpha);
+                }
+            `
+        });
+
+        const instancedMesh = new THREE.InstancedMesh(geometry, material, totalSpheres);
+
+        // FOREST GREEN HIERARCHY
+        // By keeping the cores dark and strictly green, they won't visually "blow out" to blinding white
+        // when all 3,000 spheres intersect in the center.
+        const levelColors = [
+            new THREE.Color(0x33ff66), // Level 0: Master boundary (Brightest luminous emerald edge)
+            new THREE.Color(0x00cc22), // Level 1: Primary structural spheres (Solid forest green)
+            new THREE.Color(0x004411)  // Level 2: Intertwined micro-cores (Deep void green)
+        ];
+
+        const dummy = new THREE.Object3D();
+
+        // Lock all 3,081 math positions permanently into the GPU
+        for (let i = 0; i < fractalNodes.length; i++) {
+            const node = fractalNodes[i];
+            dummy.position.copy(node.pos);
+            dummy.scale.set(node.scale, node.scale, node.scale);
+            dummy.updateMatrix();
+
+            instancedMesh.setMatrixAt(i, dummy.matrix);
+            instancedMesh.setColorAt(i, levelColors[node.depth]);
+        }
+
+        instancedMesh.instanceMatrix.needsUpdate = true;
+        instancedMesh.instanceColor.needsUpdate = true;
+        scene.add(instancedMesh);
+
+        // 7. RESPONSIVE RESIZING
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // 8. RENDER LOOP (Locked Geometry, Gentle Spin Only)
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update(); 
+            renderer.render(scene, camera);
+        }
+        animate();
+    </script>
+</body>
+</html>

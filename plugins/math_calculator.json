@@ -1,0 +1,21 @@
+{
+  "name": "math_calculator",
+  "description": "Advanced mathematical operations",
+  "version": "1.0.0",
+  "author": "Chimera Ecosystem",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "operation": {
+        "type": "string",
+        "enum": ["add", "subtract", "multiply", "divide"]
+      },
+      "a": {"type": "number"},
+      "b": {"type": "number"}
+    },
+    "required": ["operation", "a", "b"]
+  },
+  "wasm_file": "math_calculator.wasm",
+  "capabilities": ["env"],
+  "dependencies": []
+}

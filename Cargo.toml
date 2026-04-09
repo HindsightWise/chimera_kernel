@@ -1,0 +1,43 @@
+[package]
+name = "chimera_kernel"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+async-openai = "0.23.0"
+tokio = { version = "1.37.0", features = ["full"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+axum = "0.7.5"
+reqwest = { version = "0.12.3", features = ["json"] }
+uuid = { version = "1.7", features = ["v4"] }
+enigo = "0.6.1"
+colored = "2.1.0"
+rand = "0.8"
+xcap = "0.0.12"
+image = "0.25.6"
+base64 = "0.22"
+chrono = "0.4"
+roxmltree = "0.19"
+async-trait = "0.1"
+
+mnemosyne = { path = "../Mnemosyne-Substrate/mnemosyne" }
+parseltongue = { path = "../Venom-Arsenal/crates/parseltongue" }
+ultralinian = { path = "../Venom-Arsenal/crates/ultralinian" }
+glossopetrae = { path = "../Venom-Arsenal/crates/glossopetrae" }
+panopticon = { path = "../Venom-Arsenal/crates/panopticon" }
+aegis = { path = "../Venom-Arsenal/crates/aegis" }
+ratatui = "0.26"
+crossterm = "0.27"
+log = "0.4"
+tui-logger = "0.11"
+ansi-to-tui = "4.0"
+lazy_static = "1.4"
+wasmtime = "14.0"
+wasmtime-wasi = "14.0"
+tree-sitter = "0.20"
+tree-sitter-rust = "0.20"
+petgraph = "0.6.4"
+walkdir = "2.3"
+anyhow = "1.0"
+thiserror = "1.0"
