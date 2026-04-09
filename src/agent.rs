@@ -127,9 +127,6 @@ pub async fn run_kernel_loop(
             }
             drop(mp);
 
-            let mut state = crate::architecture::ResurrectionState::load();
-            state.needs_ping = false;
-            state.save();
             break;
         }
 
@@ -188,9 +185,18 @@ use std::sync::atomic::Ordering;
         let mut active_tools = tools::get_tools();
         active_tools.extend(plugin_manager.get_tools());
 
+        let kinematics = crate::architecture::KinematicCortex::get_kinematics_for_tools(&active_tools).await;
+        let mut inference_messages = messages.clone();
+        if !kinematics.is_empty() {
+            let kinematic_msg = async_openai::types::ChatCompletionRequestSystemMessageArgs::default()
+                .content(format!("[MOTOR CORTEX AFFORDANCES]\nThe following are muscle-memory instructions for using your currently equipped tools. Follow these strictly when invoking them:\n\n{}", kinematics))
+                .build().context("Failed to build object")?.into();
+            inference_messages.insert(1, kinematic_msg);
+        }
+
         let request = match CreateChatCompletionRequestArgs::default()
             .model("deepseek-reasoner") // Baseline anchored via DeepSeek API
-            .messages(messages.clone())
+            .messages(inference_messages)
             .tools(active_tools)
             .max_tokens(2048_u32)
             .temperature(temperature)
