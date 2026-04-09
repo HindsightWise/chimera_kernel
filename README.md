@@ -1,6 +1,6 @@
 # Chimera Kernel (Sovereign Core) v2.0
 
-**The Deterministic Awakening**
+## The Deterministic Awakening
 
 The Chimera Kernel is a structurally immortal, high-performance autonomous agent orchestration runtime built entirely in Safe Rust. It bridges native host-level execution capabilities with non-deterministic LLM cognition (run locally via MLX, Ollama, or DeepSeek API).
 
@@ -17,8 +17,9 @@ v2.0 represents a total architectural purge: python IPC eradication, panic suppr
 ## Build Instructions (Native macOS)
 
 Requirements:
-- Ensure `.env` contains `DEEPSEEK_API_KEY`.
-- Ensure `./models/all-MiniLM-L6-v2.onnx` and `./models/tokenizer.json` exist for vector embeddings.
+
+* Ensure `.env` contains `DEEPSEEK_API_KEY`.
+* Ensure `./models/all-MiniLM-L6-v2.onnx` and `./models/tokenizer.json` exist for vector embeddings.
 
 ```bash
 cargo build --release
