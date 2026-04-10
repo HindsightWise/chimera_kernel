@@ -175,7 +175,7 @@ impl TaskManager {
                     1.0, // topological_stress 1.0 (importance)
                     0.0, // uncertainty
                     false // is_hostile
-                );
+                ).await;
             }
             
             Ok(true) // Signifies permanent failure

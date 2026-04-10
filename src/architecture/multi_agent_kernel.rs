@@ -229,7 +229,7 @@ impl MultiAgentKernel {
                                         1.0, // High importance (threat)
                                         0.0, // Zero uncertainty (absolute threat)
                                         true // [is_hostile] Push out of Boundary R=3.0 to R=4.0
-                                    );
+                                    ).await;
                                 }
                             }
                         }

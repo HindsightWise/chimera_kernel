@@ -2,9 +2,7 @@ use std::collections::{VecDeque, HashMap};
 use std::time::SystemTime;
 use uuid::Uuid;
 use serde::{Serialize, Deserialize};
-use std::sync::Arc;
 use tokio::sync::OnceCell;
-
 #[derive(Serialize, Deserialize, Clone)]
 pub struct MemoryChunk {
     pub id: Uuid,
@@ -33,9 +31,26 @@ pub struct MemoryHierarchy {
 
 // Global ONNX Session logic (Loaded asynchronously on boot to keep memory overhead clean)
 // In production, the model file should reside at ./models/all-MiniLM-L6-v2.onnx
-pub static ONNX_SESSION: OnceCell<Arc<tokio::sync::Mutex<bool>>> = OnceCell::const_new();
+pub static ONNX_SESSION: OnceCell<(std::sync::Mutex<ort::session::Session>, tokenizers::Tokenizer)> = OnceCell::const_new();
 
 impl MemoryHierarchy {
+    pub async fn init_onnx() {
+        let _ = ONNX_SESSION.get_or_init(|| async {
+            println!("[...] Loading Semantic ONNX Engine (Phase 18)");
+            tokio::task::spawn_blocking(|| {
+                // Initialize ONNX environment implicitly or explicitly
+                let _ = ort::init().with_name("chimera").commit();
+                let session = ort::session::Session::builder()
+                    .unwrap()
+                    .commit_from_file("models/all-MiniLM-L6-v2.onnx")
+                    .expect("Failed to load models/all-MiniLM-L6-v2.onnx! Did you complete Phase 18 setup?");
+                let tokenizer = tokenizers::Tokenizer::from_file("models/tokenizer.json")
+                    .expect("Failed to load models/tokenizer.json!");
+                (std::sync::Mutex::new(session), tokenizer)
+            }).await.expect("ONNX Thread Panic")
+        }).await;
+    }
+
     pub fn new() -> Self {
         let mut hierarchy = Self {
             working_buffer: VecDeque::with_capacity(10),
@@ -68,7 +83,7 @@ impl MemoryHierarchy {
     }
 
     /// Store query into hierarchical buffers and map to Face-Centered Cubic lattice.
-    pub fn store_working(&mut self, content: String, importance: f32, uncertainty: f32, is_hostile: bool) -> MemoryChunk {
+    pub async fn store_working(&mut self, content: String, importance: f32, uncertainty: f32, is_hostile: bool) -> MemoryChunk {
         let narrative_flag = crate::architecture::trap_in::analyze_narrative(&content);
         
         // Calculate scaling multiplier based on semantic depth matching FINALGARDEN.html
@@ -109,7 +124,7 @@ impl MemoryHierarchy {
         
         let depth_level = if scale >= 3.0 { 0 } else if scale >= 1.0 { 1 } else { 2 };
 
-        let deterministic_embedding = Self::encode_spectral_embedding(&content);
+        let deterministic_embedding = Self::encode_spectral_embedding(&content).await;
 
         let chunk = MemoryChunk {
             id: Uuid::new_v4(),
@@ -164,7 +179,7 @@ impl MemoryHierarchy {
 
     pub async fn recall_relevant(&mut self, query: &str) -> Vec<MemoryChunk> {
         // True ONNX Embedding
-        let query_vec = Self::encode_spectral_embedding(query);
+        let query_vec = Self::encode_spectral_embedding(query).await;
         
         // 1. Check Subconscious Mnemosyne Vault natively via KuzuDB/LanceDB connector
         let mut recovered_chunks = Vec::new();
@@ -223,28 +238,63 @@ impl MemoryHierarchy {
         None
     }
     
-    /// Mathematically encodes textual data into a deterministic, localized structural footprint.
-    pub fn encode_spectral_embedding(content: &str) -> Vec<f32> {
-        // If ONNX Model exists globally, pass through physical ort network
-        // let env = ...
-        // Requires real `./models/` ONNX weights to resolve standard inference
-        
-        // Mathematical fallback generating true localized embeddings based on Spectral Fingerprint
-        let mut deterministic_embedding = vec![0.0; 384];
-        let bytes = content.as_bytes();
-        for (i, &b) in bytes.iter().enumerate() {
-            let dim = i % 384;
-            let float_val = ((b as f32 / 255.0) * 2.0) - 1.0;
-            deterministic_embedding[dim] += float_val * (1.0 / (1.0 + (i / 384) as f32));
-        }
-        
-        let mut magnitude = 0.0;
-        for v in &deterministic_embedding { magnitude += v * v; }
-        let magnitude = magnitude.sqrt();
-        if magnitude > 0.0 {
-            for v in &mut deterministic_embedding { *v /= magnitude; }
-        }
-        deterministic_embedding
+    /// Mathematically encodes textual data into a true semantic vector footprint.
+    pub async fn encode_spectral_embedding(content: &str) -> Vec<f32> {
+        let content_owned = content.to_string();
+        tokio::task::spawn_blocking(move || {
+            let try_onnx = || -> Option<Vec<f32>> {
+                let (session_mutex, tokenizer) = ONNX_SESSION.get()?;
+                let mut session = session_mutex.lock().ok()?;
+                let encoding = tokenizer.encode(content_owned.clone(), true).ok()?;
+                
+                let input_ids: Vec<i64> = encoding.get_ids().iter().map(|&x| x as i64).collect();
+                let attention_mask: Vec<i64> = encoding.get_attention_mask().iter().map(|&x| x as i64).collect();
+                let token_type_ids: Vec<i64> = encoding.get_type_ids().iter().map(|&x| x as i64).collect();
+                
+                let seq_len = input_ids.len();
+                
+                let input_ids_tensor = ort::value::Tensor::from_array(([1, seq_len], input_ids)).unwrap();
+                let attention_mask_tensor = ort::value::Tensor::from_array(([1, seq_len], attention_mask)).unwrap();
+                let token_type_ids_tensor = ort::value::Tensor::from_array(([1, seq_len], token_type_ids)).unwrap();
+                
+                let inputs = ort::inputs![
+                    "input_ids" => input_ids_tensor,
+                    "attention_mask" => attention_mask_tensor,
+                    "token_type_ids" => token_type_ids_tensor
+                ];
+                
+                if inputs.is_empty() { return None; }
+                
+                let outputs = session.run(inputs).ok()?;
+                let tensor_val = outputs[0].try_extract_tensor::<f32>().ok()?;
+                let slice = tensor_val.1;
+                
+                if slice.len() == 384 {
+                    return Some(slice.to_vec());
+                }
+                None
+            };
+            
+            if let Some(embedding) = try_onnx() {
+                return embedding;
+            }
+
+            // Mathematical fallback
+            let mut deterministic_embedding = vec![0.0; 384];
+            let bytes = content_owned.as_bytes();
+            for (i, &b) in bytes.iter().enumerate() {
+                let dim = i % 384;
+                let float_val = ((b as f32 / 255.0) * 2.0) - 1.0;
+                deterministic_embedding[dim] += float_val * (1.0 / (1.0 + (i / 384) as f32));
+            }
+            let mut magnitude = 0.0;
+            for v in &deterministic_embedding { magnitude += v * v; }
+            let magnitude = magnitude.sqrt();
+            if magnitude > 0.0 {
+                for v in &mut deterministic_embedding { *v /= magnitude; }
+            }
+            deterministic_embedding
+        }).await.unwrap_or_else(|_| vec![0.0; 384])
     }
 }
 

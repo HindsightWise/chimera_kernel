@@ -94,7 +94,7 @@ pub async fn execute(
                         mem_lock.store_working(
                             format!("[STRUCTURED AXIOM DATA EXTRACTED]\n{}", json_val),
                             1.0, 0.0, false
-                        );
+                        ).await;
                         let _ = tx_clone.send("\n\x1b[38;2;0;255;144m[SYSTEM] Awakening Baseline to integrate helper data...\x1b[0m".into()).await;
                     }
                     Err(e) => {
@@ -115,7 +115,7 @@ pub async fn execute(
                         1.0, // High importance
                         0.0, // 0 uncertainty, absolute truth
                         false
-                    );
+                    ).await;
                     
                     let _ = tx_clone.send("\n\x1b[38;2;0;255;144m[SYSTEM] Awakening Baseline to integrate helper data...\x1b[0m".into()).await;
                 }

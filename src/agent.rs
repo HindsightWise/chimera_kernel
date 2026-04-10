@@ -348,7 +348,7 @@ use std::sync::atomic::Ordering;
                         drop(sm);
                         
                         // Store the vocalized content automatically as a memory chunk natively in Rust
-                        let _chunk = mp.store_working(content.clone(), 0.9, current_uncertainty, false);
+                        let _chunk = mp.store_working(content.clone(), 0.9, current_uncertainty, false).await;
                         let recent_thoughts = mp.working_buffer.iter().rev().take(3).map(|c| c.content.clone()).collect::<Vec<_>>().join(" | ");
                         drop(mp);
 

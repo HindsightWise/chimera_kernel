@@ -44,6 +44,9 @@ async fn main() {
     // Load environment variables from .env file
     load_env_from_file().await;
 
+    // Phase 18: Semantic Awakening (Initialize ONNX global session on boot)
+    chimera_kernel::architecture::memory_hierarchy::MemoryHierarchy::init_onnx().await;
+
 
     let (top_tx, top_rx) = mpsc::unbounded_channel::<String>();
     if let Ok(mut g) = chimera_kernel::UI_LOG_TX.lock() {
