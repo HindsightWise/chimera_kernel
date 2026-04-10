@@ -156,6 +156,49 @@ async fn main() {
         }
     });
 
+    // PHASE 22: THE OMNISCIENCE DAEMON
+    
+    // 1. The Bulk Bootstrapper
+    if std::env::var("CHIMERA_ARXIV_BOOTSTRAP") == Ok("1".to_string()) {
+        tokio::spawn(async move {
+            chimera_kernel::log_ui!("{}", "[OMNISCIENCE] Executing CHIMERA_ARXIV_BOOTSTRAP sweep...".bright_cyan());
+            chimera_kernel::tools::omniscience::run_omniscient_sweep(
+                vec!["cs", "math", "q-bio", "physics", "q-fin", "stat", "econ", "eess"],
+                125, // 1000 / 8 categories
+                false
+            ).await;
+        });
+    }
+
+    // 2. The Hourly Pulse
+    tokio::spawn(async move {
+        let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(3600));
+        interval.tick().await; // skip immediate
+        loop {
+            interval.tick().await;
+            chimera_kernel::log_ui!("{}", "[OMNISCIENCE] Executing Hourly Pulse scrape...".bright_cyan());
+            chimera_kernel::tools::omniscience::run_omniscient_sweep(
+                vec!["cs", "math", "q-bio", "physics", "q-fin", "stat", "econ", "eess"],
+                20, 
+                true
+            ).await;
+        }
+    });
+
+    // 3. The Deep Synthesis Daemon
+    let tx_synthesis = tx.clone();
+    tokio::spawn(async move {
+        // Run every 24 hours (86400 seconds)
+        let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(86400));
+        interval.tick().await; // skip immediate
+        loop {
+            interval.tick().await;
+            chimera_kernel::log_ui!("{}", "[OMNISCIENCE] Triggering 24H Deep Synthesis Wake Event...".bright_cyan().bold());
+            let prompt = "[OMNISCIENCE ROOT_DIRECTIVE]: The Omniscience Daemon has populated Mnemosyne with global arXiv publications across all subjects. 1) Query Mnemosyne for novel cross-disciplinary intersections between Biology, Physics, and Computer Science. 2) Apply the WORCA framework to identify patterns. 3) Author a massive structural thesis combining them and save it via `archive_to_knowledge_graph`.";
+            let _ = tx_synthesis.send(prompt.to_string()).await;
+        }
+    });
+
     // Spawn standard input listener (Terminal Chat Interface) will now be handled inside UI.
     let tx_stdin = tx.clone();
 

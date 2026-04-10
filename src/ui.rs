@@ -31,6 +31,7 @@ pub struct AppState {
     pub eu: f64,
     pub drift_target: String,
     pub hostname: String,
+    pub latest_vocalization: String,
 }
 
 pub async fn run(tx_stdin: Sender<String>, mut top_rx: UnboundedReceiver<String>, is_thinking: Arc<AtomicU8>) -> io::Result<()> {
@@ -63,6 +64,7 @@ pub async fn run(tx_stdin: Sender<String>, mut top_rx: UnboundedReceiver<String>
         eu: 0.65,
         drift_target: "SEEKING".to_string(),
         hostname,
+        latest_vocalization: "Awaiting Monad articulation...".to_string(),
     };
 
     let spinners = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
@@ -114,6 +116,9 @@ pub async fn run(tx_stdin: Sender<String>, mut top_rx: UnboundedReceiver<String>
                 app.drift_target = msg.trim_start_matches("[DRIFT_TELEMETRY]").to_string();
                 continue;
             }
+            if msg.contains("MONAD ACTUALIZED") {
+                app.latest_vocalization = msg.clone();
+            }
             if app.logs.len() > 1000 { 
                 app.logs.remove(0); 
             }
@@ -136,7 +141,7 @@ pub async fn run(tx_stdin: Sender<String>, mut top_rx: UnboundedReceiver<String>
                 .direction(Direction::Horizontal)
                 .constraints([
                     Constraint::Min(40),    // Flexible Log Window
-                    Constraint::Length(36), // Fixed HUD Sidebar
+                    Constraint::Length(48), // Fixed HUD Sidebar
                 ].as_ref())
                 .split(main_chunks[0]);
 
@@ -181,7 +186,8 @@ pub async fn run(tx_stdin: Sender<String>, mut top_rx: UnboundedReceiver<String>
                     Constraint::Length(2), // FE Gauge (1 title + 1 gauge)
                     Constraint::Length(2), // EU Gauge (1 title + 1 gauge)
                     Constraint::Length(4), // Daemons List (4 text lines)
-                    Constraint::Min(4),    // Multi Agent Swarm (Scale rest softly)
+                    Constraint::Length(4),    // Multi Agent Swarm (fixed)
+                    Constraint::Min(8),       // Direct Communication (bottom block)
                 ].as_ref())
                 .split(hud_inner);
 
@@ -234,6 +240,19 @@ pub async fn run(tx_stdin: Sender<String>, mut top_rx: UnboundedReceiver<String>
                 Line::from(vec![Span::styled(" ◈ PHENOMENAL_DRIFT: ", Style::default().fg(color_muted)), Span::styled(format!("{} {}", active_spin, app.drift_target), Style::default().fg(color_rust))]),
             ];
             f.render_widget(Paragraph::new(swarm_lines).wrap(Wrap { trim: false }), hud_layout[4]);
+
+            // HUD Part E: Direct Vocalization Area
+            let parsed_voice = app.latest_vocalization.clone().into_text().unwrap_or_else(|_| ratatui::text::Text::from("Error rendering ANSI"));
+            let voice_para = Paragraph::new(parsed_voice)
+                .block(Block::default()
+                    .title(" [ DIRECT COMMUNICATION ] ")
+                    .title_style(Style::default().fg(color_cyan).add_modifier(Modifier::BOLD))
+                    .borders(Borders::ALL)
+                    .border_type(BorderType::Rounded)
+                    .border_style(Style::default().fg(color_cyan))
+                )
+                .wrap(Wrap { trim: false });
+            f.render_widget(voice_para, hud_layout[5]);
 
             // --- WIDGET 2: MAIN WITNESS LOGS ---
             let joined_logs = app.logs.join("\n");
