@@ -335,7 +335,7 @@ use std::sync::atomic::Ordering;
                         
                         if let Some((ref token, chat_id)) = tg_config {
                             let tk = token.clone();
-                            let cid = *chat_id;
+                            let cid = chat_id.clone();
                             let txt = content.clone();
                             tokio::spawn(async move {
                                 crate::telegram::send_message(&tk, cid, &txt).await;

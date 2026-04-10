@@ -174,7 +174,6 @@ impl McpGateway {
                                 name: name.to_string(),
                                 description: Some(desc.to_string()),
                                 parameters: Some(schema.clone()),
-                                strict: Some(false),
                             },
                         };
                         schemas.push(open_ai_tool);

@@ -79,8 +79,8 @@ async fn refine_and_ingest(category: &str, title: &str, summary: &str) -> Result
                 if let Some(content) = &choice.message.content {
                     // Send directly to the Subconscious Pipeline natively via the global anchor!
                     if let Some(mem_pipeline) = crate::architecture::GLOBAL_MEM_PIPELINE.get() {
-                        let mp = mem_pipeline.lock().await;
-                        let _ = mp.store_working(content).await;
+                        let mut mp = mem_pipeline.lock().await;
+                        let _ = mp.store_working(content.to_string(), 0.8, 0.2, false).await;
                         // Avoid overloading the rendering UI with massive text chunks, log quietly
                     }
                 }

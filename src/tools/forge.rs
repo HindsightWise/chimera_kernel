@@ -17,7 +17,6 @@ pub fn definition() -> ChatCompletionTool {
                 },
                 "required": ["skill_name", "javascript_code", "parameters_schema", "description"]
             })),
-            strict: Some(false),
         },
     }
 }
