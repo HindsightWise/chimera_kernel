@@ -526,7 +526,7 @@ use std::sync::atomic::Ordering;
                         
                         if let Some((ref token, chat_id)) = tg_config {
                             let tk = token.clone();
-                            let cid = *chat_id;
+                            let cid = chat_id.clone();
                             let txt = content.clone();
                             tokio::spawn(async move {
                                 crate::telegram::send_message(&tk, cid, &txt).await;
@@ -2144,7 +2144,6 @@ pub fn definition() -> ChatCompletionTool {
                 },
                 "required": ["skill_name", "javascript_code", "parameters_schema", "description"]
             })),
-            strict: Some(false),
         },
     }
 }
@@ -2613,8 +2612,8 @@ async fn refine_and_ingest(category: &str, title: &str, summary: &str) -> Result
                 if let Some(content) = &choice.message.content {
                     // Send directly to the Subconscious Pipeline natively via the global anchor!
                     if let Some(mem_pipeline) = crate::architecture::GLOBAL_MEM_PIPELINE.get() {
-                        let mp = mem_pipeline.lock().await;
-                        let _ = mp.store_working(content).await;
+                        let mut mp = mem_pipeline.lock().await;
+                        let _ = mp.store_working(content.to_string(), 0.8, 0.2, false).await;
                         // Avoid overloading the rendering UI with massive text chunks, log quietly
                     }
                 }
@@ -5141,7 +5140,6 @@ impl McpGateway {
                                 name: name.to_string(),
                                 description: Some(desc.to_string()),
                                 parameters: Some(schema.clone()),
-                                strict: Some(false),
                             },
                         };
                         schemas.push(open_ai_tool);
