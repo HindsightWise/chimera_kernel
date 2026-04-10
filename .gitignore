@@ -6,3 +6,16 @@ CURRENT_CONTEXT.md
 CORE_IDENTITY.md
 GLOSSOPETRAE_ANCHORS.md
 lazarus_report.txt
+
+# Mac OS
+.DS_Store
+**/.DS_Store
+
+# Local Models
+*.gguf
+Modelfile
+
+# Application Logs & Artifacts
+*.log
+scratch.md
+chimera_v3_dump.txt

@@ -31,6 +31,34 @@ pub fn definition() -> ChatCompletionTool {
         .unwrap()
 }
 
+pub fn json_definition() -> ChatCompletionTool {
+    ChatCompletionToolArgs::default()
+        .r#type(ChatCompletionToolType::Function)
+        .function(
+            FunctionObjectArgs::default()
+                .name("delegate_to_local_gemma_json")
+                .description("Force a strictly structured clinical extraction of financial text via the local Gemma node. This strips prose and returns only a parsed JSON mapping directly into your context feed. Use this exclusively for capital conviction extraction.")
+                .parameters(json!({
+                    "type": "object",
+                    "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": "The specific task or directive Gemma should execute."
+                        },
+                        "compiled_context": {
+                            "type": "string",
+                            "description": "The financial metrics/filings you want extracted."
+                        }
+                    },
+                    "required": ["query", "compiled_context"]
+                }))
+                .build()
+                .unwrap(),
+        )
+        .build()
+        .unwrap()
+}
+
 pub async fn execute(
     args: Value, 
     tx: Sender<String>, 
@@ -55,9 +83,28 @@ pub async fn execute(
     // 2. The Helper: Detach the processing to the local Ollama node.
     tokio::spawn(async move {
         if let Ok(oracle) = Oracle::new().await {
-            match oracle.synthesize(&query, &context).await {
-                Ok(insight) => {
-                    let formatted = format!("\n\x1b[38;2;170;100;255m[\u{25C8} ORACLE RESULTS RECEIVED]\x1b[0m\n{}", insight);
+            // Check heuristic if it's the specific finance prompt format (quick hack for shared execute entrypoint)
+            if query.to_lowercase().contains("extract") && query.to_lowercase().contains("financial") {
+                match oracle.synthesize_structured(&query, &context).await {
+                    Ok(json_val) => {
+                        let formatted = format!("\n\x1b[38;2;170;100;255m[\u{25C8} LOCAL GEMMA JSON VERIFIED]\x1b[0m\n{}", json_val);
+                        let _ = tx_clone.send(formatted).await;
+                        
+                        let mut mem_lock = mem_pipeline.lock().await;
+                        mem_lock.store_working(
+                            format!("[STRUCTURED AXIOM DATA EXTRACTED]\n{}", json_val),
+                            1.0, 0.0, false
+                        ).await;
+                        let _ = tx_clone.send("\n\x1b[38;2;0;255;144m[SYSTEM] Awakening Baseline to integrate helper data...\x1b[0m".into()).await;
+                    }
+                    Err(e) => {
+                        let _ = tx_clone.send(format!("\n[\u{25C8} HELPER FAILURE] JSON casting failed: {}", e)).await;
+                    }
+                }
+            } else {
+                match oracle.synthesize(&query, &context).await {
+                    Ok(insight) => {
+                        let formatted = format!("\n\x1b[38;2;170;100;255m[\u{25C8} ORACLE RESULTS RECEIVED]\x1b[0m\n{}", insight);
                     let _ = tx_clone.send(formatted).await;
                     
                     // THE HOLOGRAPHIC BRIDGE: Inject the insight into the Baseline's subconscious memory
@@ -68,7 +115,7 @@ pub async fn execute(
                         1.0, // High importance
                         0.0, // 0 uncertainty, absolute truth
                         false
-                    );
+                    ).await;
                     
                     let _ = tx_clone.send("\n\x1b[38;2;0;255;144m[SYSTEM] Awakening Baseline to integrate helper data...\x1b[0m".into()).await;
                 }
@@ -76,6 +123,7 @@ pub async fn execute(
                     let _ = tx_clone.send(format!("\n[\u{25C8} HELPER FAILURE] Cognitive fracture: {}", e)).await;
                 }
             }
+        }
         }
         // 3. Signal the UI to collapse the dual-pane projection
         let _ = tx_clone.send("[\u{25C8} ORACLE_END]".into()).await;

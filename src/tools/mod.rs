@@ -37,6 +37,7 @@ pub fn get_tools() -> Vec<ChatCompletionTool> {
         memento::definition_archive_graph(),
         gitnexus::definition(),
         duality::definition(),
+        duality::json_definition(),
         wiki::definition(),
     ]
 }
@@ -74,7 +75,9 @@ pub async fn execute_tool(
             let intel_lock = code_intel.lock().await;
             gitnexus::execute(args, &intel_lock)
         },
-        "delegate_to_oracle_reasoner" => duality::execute(args, tx.clone(), mem_pipeline.clone()).await,
+        "delegate_to_oracle_reasoner" | "delegate_to_local_gemma_json" => {
+            duality::execute(args, tx.clone(), mem_pipeline.clone()).await
+        },
         "compile_wiki" => wiki::execute(args, wiki_manager.clone()).await,
         _ => format!("[ERROR] Unknown tool: {}", name),
     }

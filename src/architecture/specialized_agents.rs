@@ -46,7 +46,7 @@ impl Agent for ReasoningAgent {
                     if let Some(mem_pipeline) = crate::architecture::GLOBAL_MEM_PIPELINE.get() {
                         let mp = mem_pipeline.lock().await;
                         if let Some(db) = &mp.db_connection {
-                            let encoded = crate::architecture::MemoryHierarchy::encode_spectral_embedding(&payload_str);
+                            let encoded = crate::architecture::MemoryHierarchy::encode_spectral_embedding(&payload_str).await;
                             if let Ok(res_str) = db.search_vector(encoded, 3) {
                                 crate::log_verbose!("{} NATIVE MEMORY RECALL INJECTED.", "[REASONING AGENT]".cyan().bold());
                                 historical_context = format!("Historical Context from Mnemosyne:\n{}", res_str);
@@ -105,6 +105,7 @@ impl Agent for ReasoningAgent {
                                                 timeout_secs: Some(300),
                                                 geometric_node: [x, y, z],
                                                 topological_depth: 2,
+                                                execution_attempts: 0,
                                             };
                                             
                                             crate::log_verbose!("{} DISPATCHED NEW DREAM-TASK: {}", "[REASONING AGENT]".bright_purple().bold(), desc);
@@ -312,7 +313,7 @@ impl Agent for ContextManagementAgent {
                 
                 if let Some(mem_pipeline) = crate::architecture::GLOBAL_MEM_PIPELINE.get() {
                     let mut mp = mem_pipeline.lock().await;
-                    mp.store_working(combined_dream, importance_clamped as f32, 0.5, false);
+                    mp.store_working(combined_dream, importance_clamped as f32, 0.5, false).await;
                     crate::log_ui!("{}", "[DELTA RHYTHM] Fossilization Complete. Native DB Persisted.".bright_cyan().dimmed());
                 } else {
                     crate::log_ui_err!("{}", "[DELTA RHYTHM ERROR] Memory Pipeline disconnected.".red().bold());
@@ -578,7 +579,7 @@ impl Agent for SynthesisAgent {
                                     1.0,
                                     0.0,
                                     false
-                                );
+                                ).await;
                             }
                             
                             // BROADCAST COMPLETION TO SYSTEM

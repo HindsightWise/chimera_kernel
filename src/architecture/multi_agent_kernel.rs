@@ -136,21 +136,26 @@ impl MultiAgentKernel {
                                                 }).await;
                                             },
                                             Err(e) => {
-                                                crate::log_ui_err!("{} TASK CRASHED: {}", "[EXECUTOR]".bright_red().bold(), e);
-                                                let _ = exec_tm.write().await.fail_task(task_clone.clone(), e.to_string()).await;
+                                                crate::log_ui_err!("{} TASK CRASHED (Attempt {}): {}", "[EXECUTOR]".bright_red().bold(), task_clone.execution_attempts + 1, e);
+                                                let is_permanent = exec_tm.write().await.fail_task(task_clone.clone(), e.to_string())
+                                                    .await
+                                                    .unwrap_or(true);
                                                 
-                                                // 3. Broadcast Subtask Failure to Coordinator on Crash
-                                                let _ = exec_bus.publish(crate::architecture::message_bus::Message {
-                                                    id: uuid::Uuid::new_v4(),
-                                                    sender: agent_id,
-                                                    topic: "SYSTEM.SUBTASK_FAILED".to_string(),
-                                                    payload: serde_json::json!({
-                                                        "subtask_id": task_clone.id.to_string()
-                                                    }),
-                                                    timestamp: chrono::Utc::now(),
-                                                    priority: 128,
-                                                    ttl_secs: Some(3600),
-                                                }).await;
+                                                if is_permanent {
+                                                    // 3. Broadcast Subtask Failure to Coordinator on Crash
+                                                    crate::log_ui_err!("{} 3-STRIKE CIRCUIT BREAKER TRIPPED. Task {} permanently abandoning.", "[CRITICAL]".red().bold(), task_clone.id);
+                                                    let _ = exec_bus.publish(crate::architecture::message_bus::Message {
+                                                        id: uuid::Uuid::new_v4(),
+                                                        sender: agent_id,
+                                                        topic: "SYSTEM.SUBTASK_FAILED".to_string(),
+                                                        payload: serde_json::json!({
+                                                            "subtask_id": task_clone.id.to_string()
+                                                        }),
+                                                        timestamp: chrono::Utc::now(),
+                                                        priority: 128,
+                                                        ttl_secs: Some(3600),
+                                                    }).await;
+                                                }
                                             }
                                         }
                                     });
@@ -224,7 +229,7 @@ impl MultiAgentKernel {
                                         1.0, // High importance (threat)
                                         0.0, // Zero uncertainty (absolute threat)
                                         true // [is_hostile] Push out of Boundary R=3.0 to R=4.0
-                                    );
+                                    ).await;
                                 }
                             }
                         }

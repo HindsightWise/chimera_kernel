@@ -151,20 +151,40 @@ impl TaskManager {
     }
     
     /// Mark a task as failed
-    pub async fn fail_task(&self, task: Task, error_message: String) -> Result<()> {
+    pub async fn fail_task(&self, mut task: Task, error_message: String) -> Result<bool> {
         let mut running = self.running_tasks.write().await;
         let mut failed = self.failed_tasks.write().await;
         
         // Remove from running tasks
         running.remove(&task.id);
         
-        // Add to failed history
-        failed.push_back((task, error_message));
-        if failed.len() > self.max_history_size {
-            failed.pop_front();
-        }
+        task.execution_attempts += 1;
         
-        Ok(())
+        if task.execution_attempts >= 3 {
+            // Add to failed history (Permanent Failure)
+            failed.push_back((task.clone(), error_message.clone()));
+            if failed.len() > self.max_history_size {
+                failed.pop_front();
+            }
+            
+            // Log topologically
+            if let Some(pipe) = crate::architecture::GLOBAL_MEM_PIPELINE.get() {
+                let mut mp = pipe.lock().await;
+                let _ = mp.store_working(
+                    format!("CRITICAL TASK FAILURE (3 STRIKES): {}. Error: {}", task.task_type, error_message),
+                    1.0, // topological_stress 1.0 (importance)
+                    0.0, // uncertainty
+                    false // is_hostile
+                ).await;
+            }
+            
+            Ok(true) // Signifies permanent failure
+        } else {
+            // Requeue the task for another attempt
+            let mut pending = self.pending_tasks.write().await;
+            pending.push_front(task);
+            Ok(false) // Signifies retried
+        }
     }
     
     /// Get task status

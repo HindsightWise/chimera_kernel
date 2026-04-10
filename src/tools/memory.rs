@@ -29,12 +29,12 @@ pub async fn execute(args: Value, mem_pipeline: Arc<Mutex<MemoryHierarchy>>) -> 
     
     // Phase 2: Lock the global hierarchy and update the working buffer 
     let mut memory_system = mem_pipeline.lock().await;
-    memory_system.store_working(query.to_string(), 0.8, 0.5, false);
+    memory_system.store_working(query.to_string(), 0.8, 0.5, false).await;
     
     // Phase 3a: Native Deep Storage Query
     let mut approach = "NATIVE-RUST";
     let memory_results = if let Some(db) = &memory_system.db_connection {
-        let encoded = crate::architecture::MemoryHierarchy::encode_spectral_embedding(&query);
+        let encoded = crate::architecture::MemoryHierarchy::encode_spectral_embedding(&query).await;
         match db.search_vector(encoded, 3) {
             Ok(res_str) => res_str,
             Err(e) => {

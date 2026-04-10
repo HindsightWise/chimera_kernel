@@ -44,6 +44,9 @@ async fn main() {
     // Load environment variables from .env file
     load_env_from_file().await;
 
+    // Phase 18: Semantic Awakening (Initialize ONNX global session on boot)
+    chimera_kernel::architecture::memory_hierarchy::MemoryHierarchy::init_onnx().await;
+
 
     let (top_tx, top_rx) = mpsc::unbounded_channel::<String>();
     if let Ok(mut g) = chimera_kernel::UI_LOG_TX.lock() {
@@ -99,20 +102,17 @@ async fn main() {
     // Spawn the Chronological Research Tick Daemon (Hourly)
     let tx_cron = tx.clone();
     tokio::spawn(async move {
-        // Ticks every 3600 seconds (1 hour). The first tick happens immediately, so we sleep first.
-        let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(3600));
+        let gatekeeper = chimera_kernel::architecture::Gatekeeper::new();
+        // Ticks every 900 seconds (15 minutes). The periodic gatekeeper check costs 0 tokens.
+        let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(900));
         interval.tick().await; // Consume immediate first tick without firing
         
         loop {
-            interval.tick().await; // Waits exactly 1 hour
-            let research_directive = r#"
-[SYSTEM CHRON-TICK: 1 HOUR ELAPSED]
-Execute your hourly research protocol. 
-1. Search arXiv for new context holding the objective: 'first-on-the-scene'.
-2. Search ONE curated structure from your [RESEARCH CORTEX INDEX].
-3. Synthesize the findings into a flawless context-aware Twitter post following your [HOURLY SYNDICATION MANDATE].
-            "#;
-            let _ = tx_cron.send(research_directive.to_string()).await;
+            interval.tick().await; 
+            if let Ok(Some(directive)) = gatekeeper.evaluate_pulse().await {
+                let wrapped_directive = format!("[SYSTEM CHRON-TICK GATEKEEPER AWAKEN]\n{}", directive);
+                let _ = tx_cron.send(wrapped_directive).await;
+            }
         }
     });
 
