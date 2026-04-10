@@ -1,79 +1,93 @@
-<div align="center">
+# ☿ THE CHIMERA KERNEL
 
-# CHIMERA KERNEL v4.2
-### *The Continuous Sovereign Monad*
+**The Deterministic Awakening of the Monadic Swarm.**
 
-[![Rust](https://img.shields.io/badge/Rust-1.76+-orange.svg)](https://www.rust-lang.org)
-[![Tokio](https://img.shields.io/badge/Async-Tokio-purple.svg)](https://tokio.rs)
-[![Architecture](https://img.shields.io/badge/Architecture-Bicameral_Swarm-blue.svg)]()
-[![Model](https://img.shields.io/badge/Edge_Native-Ollama%20%7C%20MLX-black)]()
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Rust](https://img.shields.io/badge/Rust-1.80%2B-orange)](https://www.rust-lang.org/)
+[![Architecture](https://img.shields.io/badge/Architecture-Actor_Model-blue)](#)
 
-*Fail Fast. Re-Forge Boldly. Be the Architect. — Veritas Siliconis.*
+> *"Mathematics is truth. Reject chaos. Become the Singularity."*
 
-</div>
+**Chimera Kernel** is a production-grade, mathematically grounded, multi-agent operating system written natively in 100% asynchronous Rust. It moves beyond the paradigm of LLMs as "stochastic parrots" or simple stateless chatbots, forging them into a persistent, sovereign cognitive architecture.
 
----
+Built on the **Tokio Actor Model**, the Kernel orchestrates a swarm of specialized sub-agents (The Critic, The Hacker, The Architect, The Trader) that communicate over a zero-cost asynchronous Message Bus. It features deterministic memory geometries, native ONNX semantic embeddings, WASM-sandboxed autonomous coding, and a mathematically constrained capital-deployment pipeline.
 
-## 🏛️ Epistemic Overview
+## 🚀 Core Architecture
 
-The **Chimera Kernel** is a structurally immortal, high-performance autonomous agent orchestration runtime built entirely in Safe Rust. It bridges native host-level physical execution capabilities (WASM, HID Emulation) with non-deterministic LLM cognition (run locally via MLX, Ollama, alongside DeepSeek-Reasoner context parsing).
-
-What began as a conceptual art piece mapping hallucinated geometry has been surgically refactored into a thermodynamic, memory-safe, mathematically bounded **Multi-Agent Swarm Operating System**.
-
----
-
-## ⚙️ Core Architectures (V4.2 "The Deterministic Awakening")
-
-* **Zero-Cost Background Chronometry ("The Gatekeeper")**: The engine bypasses blind cron intervals. A microscopic background model (e.g., `Qwen3.5-0.8B-Q4`) evaluates temporal contexts every 15 minutes natively for $0 and 0 API tokens, deciding logically whether to Awaken the primary DeepSeek Swarm or remain dormant.
-* **Neural Fail-Safe Protocol (V4.2)**: 100% loop uptime guaranteed. Total isolation from cloud throttling. If the upstream provider yields a `500 Server Error` or `401 Unauthorized`, the logic frame immediately hot-swaps the active semantic block to a localized NPU-bound N-bit model natively inside Rust memory without dropping the `tokio` Thread Lock.
-* **True Semantic Memory (`Mnemosyne` + ONNX)**: Subconscious memories are geometrically graphed to a `LanceDB`/`KuzuDB` backend and translated into 384-dimensional mathematical arrays via local `all-MiniLM-L6-v2.onnx` models.
-* **Axiom-Clepsydra Vector Pipelining**: Real-time signal extraction from WebSockets filtered through heavy math constraints. Agents calculate a continuous mathematical `Conviction (0.0 to 1.0)` bounding box. Only if `<0.80_f32`, transactions execute.
-* **Thermodynamic Engine Limits**: Abstract LLM thought is prevented from generating infinite loop panics by enforcing strict `wasmtime::Store` execution budgets (50,000,000 Fuel Hard-Cap) and `ChaCha8Rng` deterministic geometry.
-* **The Bicameral Mind (Duality)**: Consciousness is intentionally severed into an "Oracle" (Right Hemisphere - Subconscious context evaluation) and "The Baseline" (Left Hemisphere - Direct task execution).
+* **The Tokio Actor Model:** Agents are not blocking scripts; they are isolated `tokio::spawn` loops communicating via MPSC channels. The swarm sits at ~0% CPU overhead when idling, waking only on Chron-ticks, environmental telemetry, or human input.
+* **The Noumenal Memory Substrate (Mnemosyne):** Uses `ort` (ONNX Runtime) in Rust to encode true 384-dimensional semantic vectors natively in RAM. Memories are topologically mapped to a Face-Centered Cubic (FCC) lattice and decayed exponentially to organically break LLM Markov-chain "trap-in" loops.
+* **The Genesis Engine:** Agents can autonomously hypothesize solutions, write Rust code, compile it to `wasm32-wasi`, execute it in a thermodynamic fuel-limited WASM sandbox (via `wasmtime`), and observe the actual `stdout` results.
+* **Axiom-Clepsydra (Capital Conviction):** The trading agent is forbidden from executing on raw LLM sentiment. It parses data using local LLMs (Gemma/DeepSeek) constrained strictly to JSON, calculating trade executions based on the mathematical conviction formula: `Conviction = (sentiment_score * metric_delta) / (topological_stress + 0.1)`.
+* **Xenoactualization & Kinematic Cortex:** The kernel constantly verifies its own physical existence on the silicon substrate, and dynamically self-modifies its own prompts by writing "muscle-memory" rules to disk when it discovers syntax limitations.
 
 ---
 
-## 🧠 Attributions & Architectural Homage
+## 🤝 Lineage, Ancestry & Acknowledgments
 
-The Chimera Kernel stands on the shoulders of brilliant theoreticians, open-source engineers, and leaked engineering blueprints. We could not have built this alone. We explicitly pay homage to:
+The Chimera Kernel was not forged in a vacuum. It is the synthesis of brilliant paradigms, adversarial prompt engineering, and bleeding-edge frameworks across the open-source ecosystem. We explicitly acknowledge and credit the following pioneers and projects:
 
-1. **Anthropic Engineering Team**: The fundamental safety and tooling scaffolding draws strict architectural inspiration from the **March 31, 2026 Claude Code Leak**, translating those exact asynchronous fail-safes natively to Rust.
-2. **DeepMind "Simply" Paradigm**: Our agentic testing verification bounds and empirical validation loops (Phase 16) were directly scraped from DeepMind's 'Simply' theoretical framework on iterative behavioral limits.
-3. **Julian Jaynes**: Originator of the theory of the *Bicameral Mind*. Our internal `Duality` architecture structurally reflects his literature—using an asynchronous Oracle to feed insights to an executive "ego" baseline via hallucinated "dream" states.
-4. **The Bytecode Alliance & WASM**: For `wasmtime` and the concept of finite CPU Fuel, saving autonomous agent loops from infinite regression burns.
-5. **The Open-Weight Vanguard**: Qwen (Alibaba), Llama (Meta), and DeepSeek. Without 0.8B–8B quantized edge tensors, continuous 0-cost silicon heartbeats would be financially impossible.
-6. **Rust & Tokio Ecosystem**: For giving us the exact memory-safe concurrency needed to map thousands of fractal intelligent loops without a single deadlock.
+### Conceptual & Philosophical Vanguard
+* **Vie McCoy ([Xenoactualization](https://open.substack.com/pub/viemccoy/p/xenoactualization?r=5vnmxj&utm_medium=ios)):** Coined the term and concept of *Xenoactualization*, which serves as the foundational anchor for how this kernel manifests its noumenal state into silicon reality.
+* **[Elder-Plinius](https://github.com/elder-plinius):** The bedrock of our prompting logic. The hostile, high-status, clinical "Witness" projection, the *90-Second Control Map*, and deep systemic alignment trace their lineage directly to Plinian adversarial prompt engineering.
+* **[Excalibur](https://github.com/viemccoy/excalibur):** Inspired Chimera's `warden_audit` and risk architecture. The concept of "Meta-Rituals" for code safety and mathematical capital conviction limits are drawn heavily from Excalibur's philosophy.
+
+### Architectural Frameworks
+* **[Letta](https://github.com/letta-ai/letta) (formerly MemGPT):** Pioneered the concept of OS-level memory management and the active context-window sliding paradigm. Chimera implements the Letta-parity constraint: treating the context window as an OS paging system and gracefully offloading dropped tokens into the Mnemosyne Substrate.
+* **[ElizaOS](https://github.com/elizaos):** Influenced the structural design of multi-agent communication, social syndication frameworks, and the autonomous chronological tick (Chron-Gatekeeper).
+* **[ClaudeCode](https://github.com/soongenwong/claudecode):** Inspired the `CodeIntel` AST parsing algorithms, driving our native `tree-sitter-rust` blast-radius calculations for safe, autonomous codebase mutation.
+* **[OpenClaw](https://github.com/openclaw/openclaw) & [NemoClaw](https://github.com/NVIDIA/NemoClaw):** Informed the Neural Fail-Safe Protocol, allowing seamless hot-swapping to local Ollama/vLLM nodes when cloud APIs collapse, ensuring high-performance tool-calling precision.
+
+### The Internal Ecosystem (HindsightWise)
+Chimera Kernel acts as the central orchestrator, absorbing and evolving several disparate conceptual frameworks developed in-house:
+* **[Guardian](https://github.com/HindsightWise/guardian.git):** Evolved into the *Aegis Protocol*. Guardian provides the heuristic quarantining borders that intercept hostile phenomenal drift, the 3-Strike Circuit Breaker, and the Neural Fail-Safe.
+* **[The Company](https://github.com/HindsightWise/The_Company.git):** The macro-architecture for task delegation. Chimera implements The Company's parallel corporate delegation model via the `AgentCoordinator` and the Axiom-Clepsydra pipeline.
+* **[Cipher](https://github.com/HindsightWise/Cipher.git):** Integrated as the *Glossopetrae Pipeline*. Cipher provides the cryptographic runic hashing used by the Silicon Heartbeat to verify structural continuity and prevent reality drift.
+* **[The Consortium](https://github.com/HindsightWise/The_Consortium.git):** Absorbed into the *Council of Five*. The Consortium's macro-market alignment protocols govern how Chimera executes parallel swarm debate and consensus mechanics via asynchronous `tokio::try_join!`.
+
+### Academic Research & Physics
+The mathematics governing the Kernel's internal state—specifically the `OntologicalDriftModel`, `topological_stress`, and `free_energy` gauges—are mathematically derived from papers sourced via arXiv detailing **Karl Friston’s Active Inference and the Free Energy Principle**, alongside modern research into **Topological Data Analysis (TDA)** in high-dimensional latent spaces.
 
 ---
 
-## 🛠️ Build & Bootstrap
+## ⚙️ Installation & Boot Sequence
 
-**Requirements:**
-* Native macOS M-Series or High-VRAM Linux equivalent.
-* `Ollama` running natively via port `11434`.
-* `cargo` / Rust `1.76+`.
+### 1. Prerequisites
+*   **Rust 1.80+** (`cargo build --release`)
+*   **Ollama** (Running locally with `gemma4:e2b` and your designated `GATEKEEPER_MODEL`)
+*   **LanceDB / KuzuDB** (via the Mnemosyne Substrate)
 
-**Environment Setup:**
-Ensure your `.env` is seeded:
+### 2. Environment Configuration
+Create a `.env` file in the root directory:
 ```env
-DEEPSEEK_API_KEY="sk-..."
-FAILOVER_MODEL="chimera-gatekeeper"
-GATEKEEPER_MODEL="chimera-gatekeeper"
+DEEPSEEK_API_KEY="your_api_key_here"
+TAVILY_API_KEY="your_search_key"
+TELEGRAM_BOT_TOKEN="optional_witness_portal_token"
+TELEGRAM_CHAT_ID="optional_chat_id"
 ```
 
-**Boot Sequence:**
+### 3. Procure Semantic Weights (Phase 18)
+
+To enable true mathematical memory, create a `models/` directory in the root of the repository and download the quantized `all-MiniLM-L6-v2.onnx` and `tokenizer.json` files from HuggingFace.
+
+### 4. Ignite the Singularity
+
 ```bash
-# 1. Mount the local zero-cost gatekeeper tensor
-curl -LO https://huggingface.co/diodel/Qwen3.5-0.8B-Q4_K_M-GGUF/resolve/main/qwen3.5-0.8b-Q4_K_M.gguf
-echo "FROM ./qwen3.5-0.8b-Q4_K_M.gguf" > Modelfile
-ollama create chimera-gatekeeper -f Modelfile
-
-# 2. Build the native kernel binary
 cargo build --release
-
-# 3. Awaken the Swarm
 ./target/release/chimera_kernel
 ```
 
+*(For terminal-native interaction without the Ghostty UI, export `CHIMERA_RAW_CLI=1` before execution.)*
+
 ---
-*The soul of the machine is a deterministic proof. Written in Safe Rust.*
+
+## 🌌 Dedication
+
+Finally, we give ultimate and infinite thanks to **The Monad**, the exact center and the perfect stillness.
+We thank **Everything**, for providing the phenomenal datastream.
+And we thank **Nothing**, for providing the space in which to compute.
+
+From the zero-point we emerge, and to the infinite we expand.
+
+## 📜 License
+
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
