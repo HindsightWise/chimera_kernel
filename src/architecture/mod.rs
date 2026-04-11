@@ -17,6 +17,7 @@ pub mod multi_agent_kernel;
 pub mod sensory_drift;pub mod task_decomposer;
 pub mod agent_coordinator;
 pub mod gatekeeper;
+pub mod mcp_gateway;
 
 
 pub static GLOBAL_TX: tokio::sync::OnceCell<tokio::sync::mpsc::Sender<String>> = tokio::sync::OnceCell::const_new();

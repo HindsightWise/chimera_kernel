@@ -10,6 +10,8 @@ pub mod memento;
 pub mod gitnexus;
 pub mod duality;
 pub mod wiki;
+pub mod forge;
+pub mod omniscience;
 
 use async_openai::types::ChatCompletionTool;
 use serde_json::Value;
@@ -19,8 +21,8 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 use crate::architecture::{MemoryHierarchy, OntologicalDriftModel};
 
-pub fn get_tools() -> Vec<ChatCompletionTool> {
-    vec![
+pub async fn get_tools(mcp_gateway: Arc<crate::architecture::mcp_gateway::McpGateway>) -> Vec<ChatCompletionTool> {
+    let mut native_tools = vec![
         terminal::definition(),
         venom::polyglot_definition(),
         venom::scanner_definition(),
@@ -39,7 +41,11 @@ pub fn get_tools() -> Vec<ChatCompletionTool> {
         duality::definition(),
         duality::json_definition(),
         wiki::definition(),
-    ]
+        forge::definition(),
+    ];
+    let schemas = mcp_gateway.schemas.read().await;
+    native_tools.extend(schemas.clone());
+    native_tools
 }
 
 pub async fn execute_tool(
@@ -49,7 +55,8 @@ pub async fn execute_tool(
     mem_pipeline: Arc<Mutex<MemoryHierarchy>>,
     _self_model: Arc<Mutex<OntologicalDriftModel>>,
     code_intel: Arc<Mutex<crate::architecture::CodeIntel>>,
-    wiki_manager: Arc<Mutex<crate::wiki::WikiManager>>
+    wiki_manager: Arc<Mutex<crate::wiki::WikiManager>>,
+    mcp_gateway: Arc<crate::architecture::mcp_gateway::McpGateway>
 ) -> String {
     crate::architecture::traceability::track_behavior(name).await;
     
@@ -79,6 +86,15 @@ pub async fn execute_tool(
             duality::execute(args, tx.clone(), mem_pipeline.clone()).await
         },
         "compile_wiki" => wiki::execute(args, wiki_manager.clone()).await,
-        _ => format!("[ERROR] Unknown tool: {}", name),
+        "forge_mcp_server" => forge::execute(args, mcp_gateway.clone()).await,
+        _ => {
+            // Unrecognized native tool, attempting route through MCP Gateway
+            let result = mcp_gateway.call_tool(name, args).await;
+            if result.starts_with("[ERROR] MCP Server for tool") {
+                format!("[ERROR] Unknown native or MCP tool: {}", name)
+            } else {
+                result
+            }
+        }
     }
 }

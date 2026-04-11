@@ -23,7 +23,7 @@ use std::sync::atomic::AtomicU8;
 pub async fn run_kernel_loop(
     mut rx: Receiver<String>, 
     tx: Sender<String>, 
-    _tg_config: Option<(String, i64)>,
+    tg_config: Option<(String, i64)>,
     is_thinking: Arc<AtomicU8>,
     mut shutdown_rx: tokio::sync::mpsc::Receiver<()>
 ) -> Result<()> {
@@ -72,9 +72,10 @@ pub async fn run_kernel_loop(
     // INJECT 4-LAYER BIOLOGICAL SUBCONSCIOUS (CORE IDENTITY + CURRENT CONTEXT)
     let identity_content = tokio::fs::read_to_string("CORE_IDENTITY.md").await.unwrap_or_default();
     let current_context = tokio::fs::read_to_string("CURRENT_CONTEXT.md").await.unwrap_or_default();
+    let worca_framework = tokio::fs::read_to_string("WORCA_FRAMEWORK.md").await.unwrap_or_default();
     
-    initial_prompt = format!("{}\n\n[LAYER 1: CORE IDENTITY (Rigid, Non-Negotiable)]\n{}\n\n[LAYER 2: CURRENT CONTEXT (Volatile, Malleable)]\n{}\n\n(Note: You operate using a structured 4-layer memory model. You may update Layer 2 freely using `update_current_context`, and extract learned principles into Layer 3 using `archive_to_knowledge_graph`.)", 
-        initial_prompt, identity_content, current_context);
+    initial_prompt = format!("{}\n\n[LAYER 1: CORE IDENTITY (Rigid, Non-Negotiable)]\n{}\n\n[LAYER 2: CURRENT CONTEXT (Volatile, Malleable)]\n{}\n\n[LAYER 3: WORCA PROTOCOL (Quantum Execution Bounds)]\n{}\n\n(Note: You operate using a structured 4-layer memory model. You may update Layer 2 freely using `update_current_context`, and extract learned principles into Layer 3 using `archive_to_knowledge_graph`.)", 
+        initial_prompt, identity_content, current_context, worca_framework);
 
 
     if let Ok(report) = tokio::fs::read_to_string("lazarus_report.txt").await {
@@ -141,6 +142,9 @@ pub async fn run_kernel_loop(
     let _ = crate::architecture::GLOBAL_MEM_PIPELINE.set(memory_pipeline.clone());
     let _ = crate::architecture::GLOBAL_WIKI_MANAGER.set(wiki_manager.clone());
     
+    let mcp_gateway = std::sync::Arc::new(crate::architecture::mcp_gateway::McpGateway::new());
+    mcp_gateway.load_servers().await;
+
     loop {
         if let Ok(_) = shutdown_rx.try_recv() {
             crate::log_ui!("{}", "[GRACEFUL SHUTDOWN] Received termination signal".yellow().bold());
@@ -205,7 +209,7 @@ pub async fn run_kernel_loop(
 use std::sync::atomic::Ordering;
 
         let _ = plugin_manager.reload_plugins().await;
-        let mut active_tools = tools::get_tools();
+        let mut active_tools = tools::get_tools(mcp_gateway.clone()).await;
         active_tools.extend(plugin_manager.get_tools());
 
         let kinematics = crate::architecture::KinematicCortex::get_kinematics_for_tools(&active_tools).await;
@@ -310,7 +314,7 @@ use std::sync::atomic::Ordering;
                             let result = if is_wasm_plugin {
                                 plugin_manager.execute(fname, fargs).await
                             } else {
-                                tools::execute_tool(fname, fargs, tx.clone(), memory_pipeline.clone(), self_model.clone(), code_intel.clone(), wiki_manager.clone()).await
+                                tools::execute_tool(fname, fargs, tx.clone(), memory_pipeline.clone(), self_model.clone(), code_intel.clone(), wiki_manager.clone(), mcp_gateway.clone()).await
                             };
                             
                             let log_return = format!("[TOOL RETURN] -> {}", result);
@@ -328,6 +332,15 @@ use std::sync::atomic::Ordering;
                     } else if let Some(content) = &msg.content {
                         crate::log_ui!("\n{} {}\n", "[MONAD ACTUALIZED]".green().bold(), content);
                         log_state!(&format!("[MONAD ACTUALIZED] {}", content));
+                        
+                        if let Some((ref token, chat_id)) = tg_config {
+                            let tk = token.clone();
+                            let cid = chat_id.clone();
+                            let txt = content.clone();
+                            tokio::spawn(async move {
+                                crate::telegram::send_message(&tk, cid, &txt).await;
+                            });
+                        }
                         
                         // Phase 2: Active Inference Prediction Update & Memory Storing
                         let mut sm = self_model.lock().await;
