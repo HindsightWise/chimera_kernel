@@ -693,7 +693,7 @@ impl Agent for SecurityAgent {
     fn current_load(&self) -> usize { self.base.current_load() }
     fn max_concurrent_tasks(&self) -> usize { self.base.max_concurrent_tasks() }
     async fn execute_task(&mut self, task: Task) -> Result<TaskResult> {
-        let instruction = task.payload.get("instruction").and_then(|v| v.as_str()).unwrap_or("");
+        let _instruction = task.payload.get("instruction").and_then(|v| v.as_str()).unwrap_or("");
         let start = std::time::Instant::now();
         
         let result_string = match task.task_type.as_str() {
@@ -1036,6 +1036,9 @@ impl SpecializedAgentFactory {
             bus: Arc::new(OnceCell::new()),
         })
     }
+    pub fn auto_dream_agent() -> Box<dyn Agent> {
+        Box::new(crate::architecture::auto_dream::AutoDreamAgent::new())
+    }
 
     pub fn instantiate_all() -> Vec<Box<dyn Agent>> {
         vec![
@@ -1051,6 +1054,7 @@ impl SpecializedAgentFactory {
             Self::context_management_agent(),
             Self::local_processing_agent(),
             Self::synthesis_agent(),
+            Self::auto_dream_agent(),
         ]
     }
 }
