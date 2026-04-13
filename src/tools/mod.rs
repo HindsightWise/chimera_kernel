@@ -41,8 +41,11 @@ pub async fn get_tools(mcp_gateway: Arc<crate::architecture::mcp_gateway::McpGat
         research::definition_tavily_search(),
         research::definition_browser_actuation(),
         research::definition_vision_parsing(),
-        memento::definition_update_context(),
-        memento::definition_archive_graph(),
+        memento::definition_read_note(),
+        memento::definition_search_vault(),
+        memento::definition_reduce(),
+        memento::definition_reflect(),
+        memento::definition_reweave(),
         gitnexus::definition(),
         duality::definition(),
         duality::json_definition(),
@@ -89,8 +92,11 @@ pub async fn execute_tool(
         "tavily_search" => research::execute_tavily_search(args).await,
         "browser_actuation" => research::execute_browser_actuation(args).await,
         "vision_parsing" => research::execute_vision_parsing(args).await,
-        "update_current_context" => memento::execute_update_context(args).await,
-        "archive_to_knowledge_graph" => memento::execute_archive_graph(args).await,
+        "read_note" => memento::execute_read_note(args).await,
+        "search_vault" => memento::execute_search_vault(args).await,
+        "reduce" => memento::execute_reduce(args).await,
+        "reflect" => memento::execute_reflect(args).await,
+        "reweave" => memento::execute_reweave(args).await,
         "gitnexus_blast_radius" => {
             let intel_lock = code_intel.lock().await;
             gitnexus::execute(args, &intel_lock)

@@ -20,6 +20,8 @@ pub mod plugins;
 pub mod trap_in;
 pub mod kinematics;
 pub mod graph_rag;
+pub mod auto_dream;
+
 
 
 pub static GLOBAL_TX: tokio::sync::OnceCell<tokio::sync::mpsc::Sender<String>> = tokio::sync::OnceCell::const_new();
@@ -44,3 +46,4 @@ pub use multi_agent_kernel::MultiAgentKernel;
 pub use task_decomposer::{TaskDecomposer, DecompositionPattern, CapabilityGraph};
 pub use agent_coordinator::{AgentCoordinator, SubtaskStatus};
 pub use gatekeeper::Gatekeeper;
+pub use auto_dream::AutoDreamAgent;
