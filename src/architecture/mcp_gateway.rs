@@ -138,7 +138,7 @@ impl McpGateway {
         
         let (cb_tx, cb_rx) = oneshot::channel();
         let _ = req_tx.send((init_req, cb_tx)).await;
-        if let Ok(_) = cb_rx.await {
+        if let Ok(Ok(_)) = tokio::time::timeout(std::time::Duration::from_secs(30), cb_rx).await {
             // send initialized notification
             let initialized_req = serde_json::json!({
                 "method": "notifications/initialized",
@@ -155,7 +155,7 @@ impl McpGateway {
         });
         let (cb_tx, cb_rx) = oneshot::channel();
         let _ = req_tx.send((tools_list_req, cb_tx)).await;
-        if let Ok(res) = cb_rx.await {
+        if let Ok(Ok(res)) = tokio::time::timeout(std::time::Duration::from_secs(30), cb_rx).await {
             if let Some(tools) = res.get("result").and_then(|r| r.get("tools")).and_then(|t| t.as_array()) {
                 let mut schemas = self.schemas.write().await;
                 let mut tools_cache = self.tools_cache.write().await;

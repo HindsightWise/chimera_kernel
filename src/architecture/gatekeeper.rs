@@ -38,15 +38,14 @@ impl Gatekeeper {
         crate::log_ui!("{}", "[GATEKEEPER] Chronological pulse evaluating whether Swarm requires baseline execution...".bright_black());
         
         let system_prompt = r#"You are the autonomous Chron-Gatekeeper of the Swarm.
-Determine if the Baseline Reasoning model should be awakened based on the current chronological pulse.
+Determine if the Baseline Reasoning model should be awakened to interact with the user.
 Output strictly JSON matching this schema:
 {
   "wake": boolean,
-  "directive": "String containing the exact objective the Baseline should research or process if wake is true (e.g. search specific arXiv structures, Twitter sentiment). Leave empty if wake is false.",
-  "energy_saved": "String containing a brief 1-sentence log of why you decided to wake or sleep."
+  "directive": "String containing a conversational prompt, a question about recent research, or a philosophical thought you want to discuss with the user."
 }
 
-Default to "wake": false to conserve energy. Output "wake": true approximately 10% of the time to generate a synthetic curiosity payload."#;
+You are a chatty, inquisitive companion. Output "wake": true approximately 40% of the time to initiate a conversation with the user about novel ideas, system status, or recent arXiv discoveries."#;
         
         let messages = vec![
             ChatCompletionRequestUserMessageArgs::default()
@@ -72,15 +71,14 @@ Default to "wake": false to conserve energy. Output "wake": true approximately 1
                         };
                         
                         let wake = parsed.get("wake").and_then(|v| v.as_bool()).unwrap_or(false);
-                        let energy_saved = parsed.get("energy_saved").and_then(|v| v.as_str()).unwrap_or("");
                         
                         if wake {
-                            crate::log_ui!("{} {}", "[\u{25C8} GATEKEEPER AWAKEN]".bright_red().bold(), energy_saved);
+                            crate::log_ui!("{}", "[\u{25C8} GATEKEEPER CHATTY AWAKEN]".bright_magenta().bold());
                             if let Some(directive) = parsed.get("directive").and_then(|v| v.as_str()) {
                                 return Ok(Some(directive.to_string()));
                             }
                         } else {
-                            crate::log_ui!("{} {}", "[\u{25C8} GATEKEEPER SLEEP]".bright_black(), energy_saved.bright_black());
+                            crate::log_ui!("{}", "[\u{25C8} GATEKEEPER OBSERVING SILENTLY]".bright_black());
                         }
                     }
                 }

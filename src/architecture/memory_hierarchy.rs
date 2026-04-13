@@ -167,8 +167,9 @@ impl MemoryHierarchy {
                         }),
                         version: 1,
                     };
-                    
-                    let _ = db.persist(&entry);
+                    tokio::task::block_in_place(|| {
+                        let _ = db.persist(&entry);
+                    });
                 }
                 self.short_term_cache.insert(evicted.id, evicted);
             }
@@ -184,7 +185,11 @@ impl MemoryHierarchy {
         // 1. Check Subconscious Mnemosyne Vault natively via KuzuDB/LanceDB connector
         let mut recovered_chunks = Vec::new();
         if let Some(db) = &self.db_connection {
-             if let Ok(hits_str) = db.search_vector(query_vec, 10) {
+             let bounds_result = tokio::task::block_in_place(|| {
+                 db.search_vector(query_vec, 10)
+             });
+             
+             if let Ok(hits_str) = bounds_result {
                  let lambda_decay: f32 = 0.25; // Decay rate
                  
                  // Apply time access penalty to solve 3.2 Time-Decayed Loop Breaking

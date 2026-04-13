@@ -20,9 +20,9 @@ impl Default for WikiConfig {
     fn default() -> Self {
         Self {
             name: "ChimeraWiki".to_string(),
-            raw_dir: PathBuf::from("raw"),
-            wiki_dir: PathBuf::from("wiki"),
-            schema_file: PathBuf::from("SCHEMA.md"),
+            raw_dir: PathBuf::from("data/raw_sources"),
+            wiki_dir: PathBuf::from("data/llm-wiki"),
+            schema_file: PathBuf::from("data/llm-wiki/AGENTS.md"),
             conventions: HashMap::from([
                 ("summary_format".to_string(), "## Summary\n\n".to_string()),
                 ("backlink_format".to_string(), "[[{title}]]".to_string()),
@@ -99,6 +99,27 @@ impl WikiManager {
         }
         
         Ok(index)
+    }
+
+    pub async fn log_operation(&self, message: &str) -> Result<(), String> {
+        use tokio::io::AsyncWriteExt;
+        let log_path = self.config.wiki_dir.join("log.md");
+        let timestamp = chrono::Utc::now().format("%Y-%m-%d").to_string();
+        
+        let log_entry = format!("## [{}] {}\n", timestamp, message);
+        
+        let mut file = tokio::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(&log_path)
+            .await
+            .map_err(|e| format!("Failed to open log file: {}", e))?;
+            
+        file.write_all(log_entry.as_bytes())
+            .await
+            .map_err(|e| format!("Failed to write to log file: {}", e))?;
+            
+        Ok(())
     }
 }
 

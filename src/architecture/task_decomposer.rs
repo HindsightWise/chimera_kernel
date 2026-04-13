@@ -1,11 +1,8 @@
-use uuid::Uuid;
-use std::collections::{VecDeque, HashSet};
 use crate::architecture::agent_trait::{AgentCapability, Task};
 use chrono::Utc;
-use rand::{Rng, SeedableRng};
-use rand_chacha::ChaCha8Rng;
-use std::hash::{Hash, Hasher};
-use std::collections::hash_map::DefaultHasher;
+use colored::Colorize;
+use std::collections::{HashSet, VecDeque};
+use uuid::Uuid;
 
 pub struct DecompositionPattern {
     pub keyword: String,
@@ -32,97 +29,183 @@ impl TaskDecomposer {
         // Seed patterns
         tg.historical_patterns.push_back(DecompositionPattern {
             keyword: "audit repo".to_string(),
-            subtask_types: vec!["stealth_scan".to_string(), "gitnexus_blast_radius".to_string(), "tavily_search".to_string()],
+            subtask_types: vec![
+                "stealth_scan".to_string(),
+                "gitnexus_blast_radius".to_string(),
+                "tavily_search".to_string(),
+            ],
         });
         tg.historical_patterns.push_back(DecompositionPattern {
             keyword: "market analysis".to_string(),
-            subtask_types: vec!["tavily_search".to_string(), "axiom_clepsydra_extract".to_string()],
+            subtask_types: vec![
+                "tavily_search".to_string(),
+                "axiom_clepsydra_extract".to_string(),
+            ],
         });
         tg
     }
 
-    pub fn decompose(&self, instruction: &str, parent_priority: u8) -> Vec<Task> {
+    pub async fn decompose(&self, instruction: &str, parent_priority: u8) -> Vec<Task> {
         let mut subtasks = Vec::new();
-        let mut previous_id: Option<Uuid> = None;
 
         let instruction_lower = instruction.to_lowercase();
-        
-        let mut string_hasher = DefaultHasher::new();
-        instruction_lower.hash(&mut string_hasher);
-        let mut base_seed = string_hasher.finish();
-        
-        for pattern in &self.historical_patterns {
-            if instruction_lower.contains(&pattern.keyword) {
-                for stype in &pattern.subtask_types {
-                    let task_id = Uuid::new_v4();
-                    
-                    let mut reqs = HashSet::new();
-                    match stype.as_str() {
-                        "stealth_scan" | "run_terminal_command" | "generate_polyglot" => { reqs.insert(AgentCapability::ToolExecution); }
-                        "gitnexus_blast_radius" => { reqs.insert(AgentCapability::Security); }
-                        "tavily_search" | "spider_rss" | "deep_read_url" => { reqs.insert(AgentCapability::Reasoning); }
-                        "axiom_clepsydra_extract" => { reqs.insert(AgentCapability::Trading); }
-                        "delegate_to_local_gemma" => { reqs.insert(AgentCapability::Reasoning); }
-                        _ => {}
+
+        // Fast path for trivially simple known instructions
+        if instruction_lower.contains("hello") || instruction_lower.contains("echo") {
+            let mut reqs = HashSet::new();
+            reqs.insert(AgentCapability::Communication);
+            let task_id = Uuid::new_v4();
+            subtasks.push(Task {
+                id: task_id,
+                task_type: "basic_echo".to_string(),
+                payload: serde_json::json!({"instruction": instruction}),
+                required_capabilities: reqs,
+                priority: parent_priority,
+                dependencies: vec![],
+                created_at: Utc::now(),
+                timeout_secs: Some(300),
+                geometric_node: [0.0, 0.0, 1.0],
+                topological_depth: 1,
+                execution_attempts: 0,
+            });
+            return subtasks;
+        }
+
+        // FULL ORACLE ASYNC DECOMPOSITION DAG
+        if let Ok(oracle) = crate::architecture::Oracle::new().await {
+            let prompt = format!(
+                r#"
+You are the Swarm Task Decomposer. Break down the following user intent into an array of concrete subtasks.
+Instruction: {}
+
+Return ONLY raw JSON conforming to this array format:
+[
+  {{
+    "task_type": "string (e.g. tavily_search, python_execution, code_review)",
+    "capability": "ToolExecution|Reasoning|Security|MemoryManagement|Trading|Communication",
+    "depends_on": [] // array of integers referencing the index of prerequisites. Leave empty if root node.
+  }}
+]
+"#,
+                instruction
+            );
+
+            if let Ok(parsed) = oracle
+                .synthesize_structured("Decompose Subtasks into Semantic DAG", &prompt)
+                .await
+            {
+                if let Some(arr) = parsed.as_array() {
+                    let mut ref_map = std::collections::HashMap::new();
+                    for (idx, _) in arr.iter().enumerate() {
+                        ref_map.insert(idx, Uuid::new_v4());
                     }
-                    
-                    let mut dependencies = Vec::new();
-                    if let Some(pid) = previous_id {
-                        dependencies.push(pid);
+
+                    for (idx, item) in arr.iter().enumerate() {
+                        let t_type = item
+                            .get("task_type")
+                            .and_then(|v| v.as_str())
+                            .unwrap_or("research_basic");
+                        let cap_str = item
+                            .get("capability")
+                            .and_then(|v| v.as_str())
+                            .unwrap_or("Reasoning");
+                        let empty_vec = Vec::new();
+                        let depends = item
+                            .get("depends_on")
+                            .and_then(|v| v.as_array())
+                            .unwrap_or(&empty_vec);
+
+                        let mut reqs = HashSet::new();
+                        match cap_str {
+                            "ToolExecution" => {
+                                reqs.insert(AgentCapability::ToolExecution);
+                            }
+                            "Reasoning" => {
+                                reqs.insert(AgentCapability::Reasoning);
+                            }
+                            "Security" => {
+                                reqs.insert(AgentCapability::Security);
+                            }
+                            "MemoryManagement" => {
+                                reqs.insert(AgentCapability::MemoryManagement);
+                            }
+                            "Trading" => {
+                                reqs.insert(AgentCapability::Trading);
+                            }
+                            "Communication" => {
+                                reqs.insert(AgentCapability::Communication);
+                            }
+                            _ => {
+                                reqs.insert(AgentCapability::Reasoning);
+                            }
+                        }
+
+                        let mut dependencies = Vec::new();
+                        for dep_val in depends {
+                            if let Some(dep_idx) = dep_val.as_u64() {
+                                if let Some(dep_uuid) = ref_map.get(&(dep_idx as usize)) {
+                                    dependencies.push(*dep_uuid);
+                                }
+                            }
+                        }
+
+                        let topological_depth = if dependencies.is_empty() { 1 } else { 2 };
+                        let radius = if topological_depth == 1 { 1.0 } else { 0.33 };
+
+                        let (mut x, mut y, mut z) = (0.0, 0.0, 0.0);
+                        if reqs.contains(&AgentCapability::ToolExecution) {
+                            x = radius;
+                        } else if reqs.contains(&AgentCapability::Reasoning) {
+                            x = -radius;
+                        } else if reqs.contains(&AgentCapability::Security) {
+                            y = radius;
+                        } else if reqs.contains(&AgentCapability::Trading) {
+                            y = -radius;
+                        } else {
+                            z = radius;
+                        }
+
+                        let task_id = ref_map.get(&idx).unwrap();
+                        subtasks.push(Task {
+                            id: *task_id,
+                            task_type: t_type.to_string(),
+                            payload: serde_json::json!({"instruction": instruction}),
+                            required_capabilities: reqs,
+                            priority: parent_priority,
+                            dependencies,
+                            created_at: Utc::now(),
+                            timeout_secs: Some(300),
+                            geometric_node: [x, y, z],
+                            topological_depth,
+                            execution_attempts: 0,
+                        });
                     }
-                    
-                    // Deterministic seed mapping
-                    if let Some(pid) = previous_id {
-                        base_seed = base_seed.wrapping_add(pid.as_u128() as u64);
-                    }
-                    let mut prng = ChaCha8Rng::seed_from_u64(base_seed);
-                    
-                    let topological_depth = if previous_id.is_some() { 2 } else { 1 };
-                    
-                    let radius = if topological_depth == 1 { 1.0 } else { 0.33 };
-                    let theta = prng.gen::<f32>() * std::f32::consts::TAU;
-                    let phi = (prng.gen::<f32>() * 2.0 - 1.0).acos();
-                    
-                    let x = radius * phi.sin() * theta.cos();
-                    let y = radius * phi.sin() * theta.sin();
-                    let z = radius * phi.cos();
-                    
-                    let stask = Task {
-                        id: task_id,
-                        task_type: stype.to_string(),
-                        payload: serde_json::json!({"instruction": instruction}),
-                        required_capabilities: reqs,
-                        priority: parent_priority,
-                        dependencies,
-                        created_at: Utc::now(),
-                        timeout_secs: Some(300),
-                        geometric_node: [x, y, z],
-                        topological_depth,
-                        execution_attempts: 0,
-                    };
-                    subtasks.push(stask);
-                    previous_id = Some(task_id); // Chain linearly for default parsing
+                    crate::log_ui!(
+                        "{}",
+                        format!(
+                            "[DECOMPOSER] Extracted {} tasks from Oracle generation.",
+                            subtasks.len()
+                        )
+                        .magenta()
+                        .bold()
+                    );
+                    return subtasks;
+                } else {
+                    crate::log_ui_err!(
+                        "{}",
+                        "[DECOMPOSER] JSON parse structure failed: not an array or invalid format"
+                    );
                 }
-                return subtasks; // Early return for matched pattern
             }
         }
-        
-        // Generic fallback - just push back a basic reasoning task if no pattern matches
-        let task_id = Uuid::new_v4();
+
+        crate::log_ui_err!("{}", "[DECOMPOSER] Oracle unavailable or parsing failed. Falling back to simple default map.");
+
         let mut reqs = HashSet::new();
         reqs.insert(AgentCapability::Reasoning);
-        
-        let mut prng = ChaCha8Rng::seed_from_u64(base_seed);
-        let theta = prng.gen::<f32>() * std::f32::consts::TAU;
-        let phi = (prng.gen::<f32>() * 2.0 - 1.0).acos();
-        
-        // Level 1 baseline mapping
-        let x = phi.sin() * theta.cos();
-        let y = phi.sin() * theta.sin();
-        let z = phi.cos();
 
         subtasks.push(Task {
-            id: task_id,
+            id: Uuid::new_v4(),
             task_type: "research_basic".to_string(),
             payload: serde_json::json!({"instruction": instruction}),
             required_capabilities: reqs,
@@ -130,11 +213,11 @@ impl TaskDecomposer {
             dependencies: vec![],
             created_at: Utc::now(),
             timeout_secs: Some(300),
-            geometric_node: [x, y, z],
+            geometric_node: [-1.0, 0.0, 0.0],
             topological_depth: 1,
             execution_attempts: 0,
         });
-        
+
         subtasks
     }
 }

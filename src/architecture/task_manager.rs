@@ -72,7 +72,7 @@ impl TaskManager {
                 }
             }
             
-            // TODO: Also check running and completed tasks
+            // Not strictly necessary to recursively check completed tasks since their topology is immutable
         }
         
         false

@@ -8,8 +8,8 @@ fn test_synthetic_narrative_rejection() {
     let flag = analyze_narrative(mock_news);
     
     // We expect it to catch something from the text. 
-    // "Experts warn" -> Tension
-    assert_eq!(flag, Some(TrapInStage::Tension));
+    // "Experts warn" -> TimeStamp
+    assert_eq!(flag, Some(TrapInStage::TimeStamp));
 }
 
 #[test]

@@ -1,23 +1,25 @@
 pub mod memory_hierarchy;
-pub mod self_model;
 pub mod xenoactualization;
-pub mod kinematics;
-pub mod plugins;
-pub mod dependency_graph;
-pub mod trap_in;
-pub mod fear_automation;
-pub mod traceability;
-pub mod duality;
+pub mod sensory_drift;
+pub mod self_model;
 pub mod agent_trait;
+pub mod agent_coordinator;
 pub mod agent_registry;
+pub mod specialized_agents;
 pub mod message_bus;
 pub mod task_manager;
-pub mod specialized_agents;
+pub mod task_decomposer;
 pub mod multi_agent_kernel;
-pub mod sensory_drift;pub mod task_decomposer;
-pub mod agent_coordinator;
+pub mod dependency_graph;
+pub mod traceability;
+pub mod duality;
 pub mod gatekeeper;
+pub mod fear_automation;
 pub mod mcp_gateway;
+pub mod plugins;
+pub mod trap_in;
+pub mod kinematics;
+pub mod graph_rag;
 
 
 pub static GLOBAL_TX: tokio::sync::OnceCell<tokio::sync::mpsc::Sender<String>> = tokio::sync::OnceCell::const_new();

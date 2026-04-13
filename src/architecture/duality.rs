@@ -1,12 +1,9 @@
+use anyhow::Result;
 use async_openai::{
     config::OpenAIConfig,
+    types::{ChatCompletionRequestUserMessageArgs, CreateChatCompletionRequestArgs},
     Client,
-    types::{
-        ChatCompletionRequestUserMessageArgs,
-        CreateChatCompletionRequestArgs,
-    },
 };
-use anyhow::Result;
 use colored::*;
 use tokio::time::{timeout, Duration};
 
@@ -21,35 +18,38 @@ impl Oracle {
             if let Ok(env_contents) = tokio::fs::read_to_string(".env").await {
                 for line in env_contents.lines() {
                     if line.starts_with("DEEPSEEK_API_KEY=") {
-                        api_key = line.trim_start_matches("DEEPSEEK_API_KEY=").trim_matches('"').trim_matches('\'').to_string();
+                        api_key = line
+                            .trim_start_matches("DEEPSEEK_API_KEY=")
+                            .trim_matches('"')
+                            .trim_matches('\'')
+                            .to_string();
                     }
                 }
             }
         }
-        
+
         let config = OpenAIConfig::new()
             .with_api_base("https://api.deepseek.com/v1")
             .with_api_key(api_key);
-            
+
         // Fast local helper
         let http_client = reqwest::ClientBuilder::new()
             .timeout(std::time::Duration::from_secs(120))
             .build()?;
-            
+
         Ok(Self {
             client: Client::with_config(config).with_http_client(http_client),
         })
     }
-    
+
     pub async fn synthesize(&self, query: &str, context: &str) -> Result<String> {
         let prompt = format!("You are the ORACLE RIGHT HEMISPHERE (deepseek-reasoner). You are a highly-focused processing engine for the Monad Kernel. You process the context provided by the Noumenal Layer, looking for mechanical details, filtering, or providing absolute deductive summaries based on the Principle of Sufficient Reason.\nProvide an immediate answer based on the provided data.\n\n[MONAD AXIOMS]\n{}\n\n[NOUMENAL CONTEXT]\n{}\n\n[HOLOGRAPH TASK]\n{}", crate::prompts::MONAD_AXIOMS, context, query);
-        
-        let messages = vec![
-            ChatCompletionRequestUserMessageArgs::default()
-                .content(prompt)
-                .build()?.into(),
-        ];
-        
+
+        let messages = vec![ChatCompletionRequestUserMessageArgs::default()
+            .content(prompt)
+            .build()?
+            .into()];
+
         crate::log_ui!("{}", "[\u{25C8} ORACLE] DeepSeek Reasoner Processing Initiated. Sinking into deep mathematical context...".bright_green().bold());
 
         let request = CreateChatCompletionRequestArgs::default()
@@ -57,7 +57,7 @@ impl Oracle {
             .messages(messages)
             .max_tokens(8000_u32)
             .build()?;
-            
+
         // Local model processing with relaxed 180s absolute limit for dense structural processing
         match timeout(Duration::from_secs(180), self.client.chat().create(request)).await {
             Ok(Ok(response)) => {
@@ -70,7 +70,13 @@ impl Oracle {
                 Err(anyhow::anyhow!("Oracle returned void."))
             }
             Ok(Err(e)) => {
-                crate::log_ui_err!("{} {}", "[\u{25C8} ORACLE ERROR] Neural bridge collapsed:".red().bold(), e);
+                crate::log_ui_err!(
+                    "{} {}",
+                    "[\u{25C8} ORACLE ERROR] Neural bridge collapsed:"
+                        .red()
+                        .bold(),
+                    e
+                );
                 Err(anyhow::anyhow!("Oracle API error: {}", e))
             }
             Err(_) => {
@@ -79,34 +85,123 @@ impl Oracle {
             }
         }
     }
-    
-    pub async fn synthesize_structured(&self, _query: &str, context: &str) -> Result<serde_json::Value> {
-        let system_prompt = format!(
-            "You are a clinical extraction algorithm. Read the following financial text. \
-            Extract the exact quantitative metrics into strictly valid JSON matching this schema. \
-            Output NOTHING ELSE. No markdown, no explanations.\n\
-            SCHEMA: {{ \"ticker\": \"string\", \"net_income_delta_pct\": float, \"sentiment\": \"bullish\" | \"bearish\" | \"neutral\" }}\n\n\
-            [TEXT]\n{}", context
+
+    pub async fn synthesize_with_profile(
+        &self,
+        query: &str,
+        context: &str,
+        profile: &crate::architecture::agent_trait::PsychProfile,
+    ) -> Result<String> {
+        let sys_prompt = format!(
+            "You are the ORACLE RIGHT HEMISPHERE.\n\
+            [PSYCHOLOGICAL POSTURE: {}]\n\
+            [USEFULNESS COMBO: {}]\n\
+            Historical Genesis: {}\n\
+            Speech & Gestures: {}\n\n\
+            Adopt this exact psychological framework immediately.\n\
+            Provide an immediate answer based on the provided data.\n\n\
+            [NOUMENAL CONTEXT]\n{}\n\n[HOLOGRAPH TASK]\n{}",
+            profile.archetype_name,
+            profile.usefulness_combo,
+            profile.historical_genesis,
+            profile.speech_gestures,
+            context,
+            query
         );
 
-        // Force the local model (via Ollama/vLLM) to output JSON
+        let messages = vec![
+            async_openai::types::ChatCompletionRequestUserMessageArgs::default()
+                .content(sys_prompt)
+                .build()?
+                .into(),
+        ];
+
+        crate::log_ui!(
+            "{}",
+            format!(
+                "[\u{25C8} ORACLE - {}] Openness: {} | Neuroticism: {}",
+                profile.archetype_name, profile.openness, profile.neuroticism
+            )
+            .bright_green()
+            .bold()
+        );
+
         let request = async_openai::types::CreateChatCompletionRequestArgs::default()
-            .model("gemma4:e2b")
-            .messages(vec![
-                async_openai::types::ChatCompletionRequestUserMessageArgs::default().content(system_prompt).build()?.into()
-            ])
+            .model("deepseek-chat")
+            .messages(messages)
+            .temperature(profile.openness)
+            .max_tokens(8000_u32)
+            .build()?;
+
+        let base_timeout = 180;
+        let timeout_limit = base_timeout - (profile.neuroticism * 150.0) as u64;
+
+        match tokio::time::timeout(
+            std::time::Duration::from_secs(timeout_limit),
+            self.client.chat().create(request),
+        )
+        .await
+        {
+            Ok(Ok(response)) => {
+                if let Some(choice) = response.choices.first() {
+                    if let Some(content) = &choice.message.content {
+                        crate::log_ui!("{}", "[\u{25C8} ORACLE] Genotype processing complete. Returning to Noumenal Layer...".bright_green().bold());
+                        return Ok(content.clone());
+                    }
+                }
+                Err(anyhow::anyhow!("Oracle returned void."))
+            }
+            Ok(Err(e)) => {
+                crate::log_ui_err!(
+                    "{} {}",
+                    "[\u{25C8} ORACLE ERROR] Neural bridge collapsed:"
+                        .red()
+                        .bold(),
+                    e
+                );
+                Err(anyhow::anyhow!("Oracle API error: {}", e))
+            }
+            Err(_) => {
+                crate::log_ui_err!("{}", format!("[\u{25C8} ORACLE TIMEOUT] Synthesis exceeded {}s neurotic limit. Cognitive severing.", timeout_limit).red().bold());
+                Err(anyhow::anyhow!(
+                    "Helper timeout after {} seconds",
+                    timeout_limit
+                ))
+            }
+        }
+    }
+
+    pub async fn synthesize_structured(
+        &self,
+        query: &str,
+        context: &str,
+    ) -> Result<serde_json::Value> {
+        let system_prompt = format!(
+            "You are the ORACLE JSON EXTRACTION LAYER (deepseek-chat). \
+            Output ONLY raw JSON conforming to the structural prompt. \
+            Output NOTHING ELSE. No markdown, no explanations.\n\n\
+            [SCHEMA PROMPT]\n{}\n\n[CONTEXT]\n{}",
+            query, context
+        );
+
+        // Force the API to output strict JSON via V3.2 parameter mapping
+        let request = CreateChatCompletionRequestArgs::default()
+            .model("deepseek-chat") // deepseek-chat supports strict json response_format better than reasoner
+            .messages(vec![ChatCompletionRequestUserMessageArgs::default()
+                .content(system_prompt)
+                .build()?
+                .into()])
             .response_format(async_openai::types::ChatCompletionResponseFormat {
                 r#type: async_openai::types::ChatCompletionResponseFormatType::JsonObject,
             })
             .build()?;
-            
-        // For local models running on standard 11434 Ollama binding
-        let local_config = async_openai::config::OpenAIConfig::new()
-            .with_api_base("http://127.0.0.1:11434/v1")
-            .with_api_key("ollama");
-        let local_client = async_openai::Client::with_config(local_config);
 
-        match tokio::time::timeout(std::time::Duration::from_secs(60), local_client.chat().create(request)).await {
+        match tokio::time::timeout(
+            std::time::Duration::from_secs(120),
+            self.client.chat().create(request),
+        )
+        .await
+        {
             Ok(Ok(response)) => {
                 if let Some(choice) = response.choices.first() {
                     if let Some(content) = &choice.message.content {
@@ -117,7 +212,7 @@ impl Oracle {
                 Err(anyhow::anyhow!("Oracle returned void."))
             }
             Ok(Err(e)) => Err(anyhow::anyhow!("Oracle API error: {}", e)),
-            Err(_) => Err(anyhow::anyhow!("Timeout after 60 seconds")),
+            Err(_) => Err(anyhow::anyhow!("Timeout after 120 seconds")),
         }
     }
 }

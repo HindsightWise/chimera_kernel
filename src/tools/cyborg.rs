@@ -19,7 +19,7 @@ pub fn definition() -> ChatCompletionTool {
                 "properties": {
                     "action": { 
                         "type": "string", 
-                        "enum": ["mouse_move", "left_click", "right_click", "human_type", "enter", "screenshot", "extract_ui"] 
+                        "enum": ["semantic_click", "mouse_move", "left_click", "right_click", "human_type", "enter", "screenshot", "extract_ui"] 
                     },
                     "coordinate": { 
                         "type": "array", 
@@ -29,6 +29,10 @@ pub fn definition() -> ChatCompletionTool {
                     "text": { 
                         "type": "string",
                         "description": "The exact string to type when action is 'human_type'."
+                    },
+                    "target_description": {
+                        "type": "string",
+                        "description": "Used only for semantic_click. Description of the element you want to click natively (e.g., 'The blue Submit button')."
                     }
                 },
                 "required": ["action"]
@@ -42,6 +46,47 @@ pub async fn execute(args: Value) -> String {
     let mut enigo = Enigo::new(&Settings::default()).unwrap();
 
     match action {
+        "semantic_click" => {
+            use colored::*;
+            if let Some(target) = args.get("target_description").and_then(|v| v.as_str()) {
+                crate::log_ui!("{} Processing Set-of-Mark Semantic Target: {}", "[CYBORG CORTEX]".cyan().bold(), target);
+                // 1. Capture Screen
+                match Monitor::all() {
+                    Ok(monitors) if !monitors.is_empty() => {
+                        let image = monitors[0].capture_image().unwrap();
+                        let width = image.width();
+                        let height = image.height();
+                        
+                        let mut buf = Cursor::new(Vec::new());
+                        image.write_to(&mut buf, image::ImageFormat::Png).unwrap();
+                        let b64 = format!("data:image/png;base64,{}", BASE64_STANDARD.encode(buf.into_inner()));
+                        
+                        // 2. Delegate to Vision Parsing proxy
+                        let vision_args = serde_json::json!({
+                            "query": format!("You are an extreme GUI boundary extraction API. Locate the target '{}' on the screen (width: {}, height: {}). Return ONLY a JSON array with exactly two integers [x, y] representing the exact absolute pixel centroid of the target. Example: [400, 250]", target, width, height),
+                            "image_url_or_base64": b64
+                        });
+                        
+                        let coords_json = crate::tools::research::execute_vision_parsing(vision_args).await;
+                        // Parse the returned `[x, y]`
+                        let clean = coords_json.trim().trim_start_matches("```json").trim_start_matches("```").trim_end_matches("```").trim();
+                        if let Ok(coords) = serde_json::from_str::<Vec<i32>>(clean) {
+                            if coords.len() == 2 {
+                                let x = coords[0];
+                                let y = coords[1];
+                                enigo.move_mouse(x, y, Coordinate::Abs).unwrap();
+                                tokio::time::sleep(Duration::from_millis(50)).await;
+                                enigo.button(Button::Left, Direction::Click).unwrap();
+                                return format!("[CYBORG CORTEX] Semantic Target '{}' resolved to [{}, {}] and clicked.", target, x, y);
+                            }
+                        }
+                        return format!("[ERROR] Grounding model failed to resolve coordinates for {}. Received: {}", target, coords_json);
+                    }
+                    _ => return "[ERROR] No physical monitor found.".to_string(),
+                }
+            }
+            "[ERROR] Missing target_description for semantic_click".to_string()
+        }
         "mouse_move" => {
             if let Some(coords) = args.get("coordinate").and_then(|v| v.as_array()) {
                 if coords.len() == 2 {

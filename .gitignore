@@ -18,4 +18,13 @@ Modelfile
 # Application Logs & Artifacts
 *.log
 scratch.md
-chimera_v3_dump.txt
+*dump.txt
+*dump*.txt
+*.backup
+*.backup.*
+*.db
+*.html
+.github_token
+test_env.txt
+test_telemetry
+tests/diagnostic*
