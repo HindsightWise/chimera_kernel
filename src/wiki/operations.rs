@@ -48,6 +48,13 @@ impl WikiOperation {
                 tokio::fs::write(&wiki_path, &article.content).await
                     .map_err(|e| format!("Failed to write wiki article: {}", e))?;
                 
+                let _ = manager.log_operation(&format!("ingest | {}", title)).await;
+                
+                // Recompile index automatically after new ingestion
+                let index = manager.generate_index()?;
+                let index_path = manager.config.wiki_dir.join("index.md");
+                let _ = tokio::fs::write(&index_path, &index).await;
+
                 Ok(format!("Ingested document '{}' into wiki. Article saved to {:?}", 
                     document_path, wiki_path))
             }
@@ -75,7 +82,7 @@ impl WikiOperation {
             WikiOperation::Compile => {
                 // Generate index and update all articles
                 let index = manager.generate_index()?;
-                let index_path = manager.config.wiki_dir.join("INDEX.md");
+                let index_path = manager.config.wiki_dir.join("index.md");
                 
                 tokio::fs::write(&index_path, &index).await
                     .map_err(|e| format!("Failed to write index: {}", e))?;
@@ -111,7 +118,7 @@ impl WikiOperation {
                 }
                 
                 // Check index file
-                let index_path = manager.config.wiki_dir.join("INDEX.md");
+                let index_path = manager.config.wiki_dir.join("index.md");
                 if !index_path.exists() {
                     issues.push("Index file missing. Run 'compile' operation.".to_string());
                 }
@@ -144,6 +151,13 @@ impl WikiOperation {
                 tokio::fs::write(&article.path, &article.content).await
                     .map_err(|e| format!("Failed to write generated article: {}", e))?;
                 
+                let _ = manager.log_operation(&format!("generate | {}", topic)).await;
+                
+                // Recompile index automatically after new article
+                let index = manager.generate_index()?;
+                let index_path = manager.config.wiki_dir.join("index.md");
+                let _ = tokio::fs::write(&index_path, &index).await;
+
                 Ok(format!("Generated article '{}' at {:?}", topic, article.path))
             }
         }

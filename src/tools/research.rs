@@ -246,3 +246,90 @@ pub async fn execute_tavily_search(args: Value) -> String {
         Err(_) => "[ERROR] Tavily Search timeout exceeded 30s.".to_string(),
     }
 }
+
+pub fn definition_browser_actuation() -> ChatCompletionTool {
+    ChatCompletionTool {
+        r#type: async_openai::types::ChatCompletionToolType::Function,
+        function: FunctionObject {
+            name: "browser_actuation".to_string(),
+            description: Some("Run browser automation (Playwright/Puppeteer logic via python script) to click, scroll, bypass checks, and gather visual data.".to_string()),
+            parameters: Some(json!({
+                "type": "object",
+                "properties": {
+                    "script": { "type": "string", "description": "Python playwright script. Must print base64 screenshot or text data to stdout." }
+                },
+                "required": ["script"]
+            })),
+        },
+    }
+}
+
+pub async fn execute_browser_actuation(args: Value) -> String {
+    let script = args.get("script").and_then(|v| v.as_str()).unwrap_or("");
+    if script.is_empty() { return "[ERROR] No script provided.".to_string(); }
+    
+    // Defer to Sandbox for safety
+    let sb_args = json!({"script_content": script});
+    crate::tools::sandbox::execute(sb_args).await
+}
+
+pub fn definition_vision_parsing() -> ChatCompletionTool {
+    ChatCompletionTool {
+        r#type: async_openai::types::ChatCompletionToolType::Function,
+        function: FunctionObject {
+            name: "vision_parsing".to_string(),
+            description: Some("Pass a base64 encoded image or URL to a Vision Language Model to parse UI states, diagrams, or captchas.".to_string()),
+            parameters: Some(json!({
+                "type": "object",
+                "properties": {
+                    "image_url_or_base64": { "type": "string" },
+                    "query": { "type": "string", "description": "What to extract or analyze from the image" }
+                },
+                "required": ["image_url_or_base64", "query"]
+            })),
+        },
+    }
+}
+
+pub async fn execute_vision_parsing(args: Value) -> String {
+    let url = args.get("image_url_or_base64").and_then(|v| v.as_str()).unwrap_or("");
+    let query = args.get("query").and_then(|v| v.as_str()).unwrap_or("");
+    if url.is_empty() || query.is_empty() { return "[ERROR] Missing args.".to_string(); }
+
+    let config = async_openai::config::OpenAIConfig::new()
+        .with_api_key(std::env::var("OPENAI_API_KEY").unwrap_or_default());
+    let client = async_openai::Client::with_config(config);
+
+    let content = async_openai::types::ChatCompletionRequestUserMessageContent::Array(vec![
+        async_openai::types::ChatCompletionRequestMessageContentPart::Text(
+            async_openai::types::ChatCompletionRequestMessageContentPartTextArgs::default()
+                .text(query)
+                .build().unwrap()
+        ),
+        async_openai::types::ChatCompletionRequestMessageContentPart::ImageUrl(
+            async_openai::types::ChatCompletionRequestMessageContentPartImageArgs::default()
+                .image_url(async_openai::types::ImageUrlArgs::default().url(url).build().unwrap())
+                .build().unwrap()
+        )
+    ]);
+
+    let request = async_openai::types::CreateChatCompletionRequestArgs::default()
+        .model("gpt-4o-mini") // Default vision model
+        .messages(vec![
+            async_openai::types::ChatCompletionRequestUserMessageArgs::default().content(content).build().unwrap().into()
+        ])
+        .build().unwrap();
+
+    match tokio::time::timeout(tokio::time::Duration::from_secs(60), client.chat().create(request)).await {
+        Ok(Ok(response)) => {
+            if let Some(choice) = response.choices.first() {
+                if let Some(c) = &choice.message.content {
+                    return format!("[VISION PARSED]\n{}", c);
+                }
+            }
+            "[ERROR] Empty vision response".to_string()
+        }
+        Ok(Err(e)) => format!("[ERROR] Vision API failed: {}", e),
+        Err(_) => "[ERROR] Vision timeout".to_string(),
+    }
+}

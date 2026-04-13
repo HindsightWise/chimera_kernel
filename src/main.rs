@@ -47,6 +47,9 @@ async fn main() {
     // Phase 18: Semantic Awakening (Initialize ONNX global session on boot)
     chimera_kernel::architecture::memory_hierarchy::MemoryHierarchy::init_onnx().await;
 
+    // Initialize telemetry log level from environment
+    chimera_kernel::init_log_level();
+
 
     let (top_tx, top_rx) = mpsc::unbounded_channel::<String>();
     if let Ok(mut g) = chimera_kernel::UI_LOG_TX.lock() {
@@ -99,22 +102,7 @@ async fn main() {
         chimera_kernel::webhook::start_server(tx_clone).await;
     });
 
-    // Spawn the Chronological Research Tick Daemon (Hourly)
-    let tx_cron = tx.clone();
-    tokio::spawn(async move {
-        let gatekeeper = chimera_kernel::architecture::Gatekeeper::new();
-        // Ticks every 900 seconds (15 minutes). The periodic gatekeeper check costs 0 tokens.
-        let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(900));
-        interval.tick().await; // Consume immediate first tick without firing
-        
-        loop {
-            interval.tick().await; 
-            if let Ok(Some(directive)) = gatekeeper.evaluate_pulse().await {
-                let wrapped_directive = format!("[SYSTEM CHRON-TICK GATEKEEPER AWAKEN]\n{}", directive);
-                let _ = tx_cron.send(wrapped_directive).await;
-            }
-        }
-    });
+
 
     // Spawn the GLOSSOPETRAE Silicon Heartbeat Daemon (Mandate #2 & #3)
     tokio::spawn(async move {
@@ -225,6 +213,30 @@ async fn main() {
 
         let message_bus = multi_agent_kernel.message_bus.clone();
         let mut rx_completion = message_bus.subscribe();
+
+        // Spawn the Chronological Research Tick Daemon on the newly established MessageBus
+        let gatekeeper_bus = message_bus.clone();
+        tokio::spawn(async move {
+            let gatekeeper = chimera_kernel::architecture::Gatekeeper::new();
+            // Ticks every 900 seconds (15 minutes). The periodic gatekeeper check costs 0 tokens.
+            let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(900));
+            interval.tick().await; // Consume immediate first tick without firing
+            
+            loop {
+                interval.tick().await; 
+                if let Ok(Some(directive)) = gatekeeper.evaluate_pulse().await {
+                    let _ = gatekeeper_bus.publish(chimera_kernel::architecture::message_bus::Message {
+                        id: uuid::Uuid::new_v4(),
+                        topic: "SYSTEM.CHRON_TICK".to_string(),
+                        payload: serde_json::json!({"directive": directive}),
+                        sender: uuid::Uuid::nil(),
+                        priority: 5,
+                        ttl_secs: Some(300),
+                        timestamp: chrono::Utc::now(),
+                    }).await;
+                }
+            }
+        });
 
         let tx_completion = tx.clone();
         let tg_config_clone = tg_config.clone();

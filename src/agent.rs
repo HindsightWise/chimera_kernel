@@ -1,31 +1,30 @@
 use async_openai::{
     config::OpenAIConfig,
-    Client,
     types::{
-        ChatCompletionRequestMessage,
-        ChatCompletionRequestUserMessageArgs, ChatCompletionRequestToolMessageArgs,
-        CreateChatCompletionRequestArgs,
+        ChatCompletionRequestMessage, ChatCompletionRequestToolMessageArgs,
+        ChatCompletionRequestUserMessageArgs, CreateChatCompletionRequestArgs,
     },
+    Client,
 };
 use tokio::sync::mpsc::{Receiver, Sender};
 
-use serde_json::Value;
 use anyhow::{Context, Result};
+use colored::*;
+use serde_json::Value;
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use colored::*;
 
+use crate::architecture::{MemoryHierarchy, OntologicalDriftModel};
 use crate::prompts::SOVEREIGN_DIRECTIVE;
 use crate::tools;
-use crate::architecture::{MemoryHierarchy, OntologicalDriftModel};
 use std::sync::atomic::AtomicU8;
 
 pub async fn run_kernel_loop(
-    mut rx: Receiver<String>, 
-    tx: Sender<String>, 
+    mut rx: Receiver<String>,
+    tx: Sender<String>,
     tg_config: Option<(String, i64)>,
     is_thinking: Arc<AtomicU8>,
-    mut shutdown_rx: tokio::sync::mpsc::Receiver<()>
+    mut shutdown_rx: tokio::sync::mpsc::Receiver<()>,
 ) -> Result<()> {
     // Connect configuration to DeepSeek API
     let mut api_key = std::env::var("DEEPSEEK_API_KEY").unwrap_or_else(|_| "".to_string());
@@ -33,12 +32,16 @@ pub async fn run_kernel_loop(
         if let Ok(env_contents) = tokio::fs::read_to_string(".env").await {
             for line in env_contents.lines() {
                 if line.starts_with("DEEPSEEK_API_KEY=") {
-                    api_key = line.trim_start_matches("DEEPSEEK_API_KEY=").trim_matches('"').trim_matches('\'').to_string();
+                    api_key = line
+                        .trim_start_matches("DEEPSEEK_API_KEY=")
+                        .trim_matches('"')
+                        .trim_matches('\'')
+                        .to_string();
                 }
             }
         }
     }
-    
+
     // Explicit warning if STILL empty to prevent cryptic 401 governor panics
     if api_key.is_empty() {
         crate::log_ui_err!("{}", "[KERNEL PANIC] DEEPSEEK_API_KEY is entirely missing from both environment AND .env file.".red().bold());
@@ -47,7 +50,7 @@ pub async fn run_kernel_loop(
     let config = OpenAIConfig::new()
         .with_api_base("https://api.deepseek.com")
         .with_api_key(api_key);
-        
+
     // Build an HTTP client with a strict 180 second timeout for deepseek-reasoner
     let http_client = reqwest::ClientBuilder::new()
         .timeout(std::time::Duration::from_secs(180))
@@ -55,28 +58,68 @@ pub async fn run_kernel_loop(
         .unwrap_or_else(|_| reqwest::Client::new());
 
     let client = Client::with_config(config).with_http_client(http_client);
-    
+
+    // NEW: Enhanced log_state macro with level filtering
     macro_rules! log_state {
-        ($entry:expr) => {
-            {
-                use tokio::io::AsyncWriteExt;
-                if let Ok(mut file) = tokio::fs::OpenOptions::new().create(true).append(true).open("chimera_state.log").await {
-                    let _ = file.write_all(format!("{}\n", $entry).as_bytes()).await;
+        ($level:expr, $entry:expr) => {{
+            use tokio::io::AsyncWriteExt;
+
+            // Only write if the current log level allows it
+            if crate::should_log($level) {
+                // Perform log rotation check first
+                crate::rotate_log_if_needed().await;
+
+                if let Ok(mut file) = tokio::fs::OpenOptions::new()
+                    .create(true)
+                    .append(true)
+                    .open("chimera_state.log")
+                    .await
+                {
+                    let _ = file
+                        .write_all(
+                            format!(
+                                "{}
+",
+                                $entry
+                            )
+                            .as_bytes(),
+                        )
+                        .await;
                 }
             }
+        }};
+    }
+
+    macro_rules! log_state_info {
+        ($entry:expr) => {
+            log_state!(crate::LogLevel::Info, $entry)
         };
     }
 
-    let mut initial_prompt = format!("{}\n\nSYSTEM_WAKE_EVENT: The core is active. Initialize your boot sequence.", SOVEREIGN_DIRECTIVE);
-    
+    macro_rules! log_state_trace {
+        ($entry:expr) => {
+            log_state!(crate::LogLevel::Trace, $entry)
+        };
+    }
+
+    let mut initial_prompt = format!(
+        "{}\n\nSYSTEM_WAKE_EVENT: The core is active. Initialize your boot sequence.",
+        SOVEREIGN_DIRECTIVE
+    );
+
     // INJECT 4-LAYER BIOLOGICAL SUBCONSCIOUS (CORE IDENTITY + CURRENT CONTEXT)
-    let identity_content = tokio::fs::read_to_string("CORE_IDENTITY.md").await.unwrap_or_default();
-    let current_context = tokio::fs::read_to_string("CURRENT_CONTEXT.md").await.unwrap_or_default();
-    let worca_framework = tokio::fs::read_to_string("WORCA_FRAMEWORK.md").await.unwrap_or_default();
-    
+    let identity_content = tokio::fs::read_to_string("CORE_IDENTITY.md")
+        .await
+        .unwrap_or_default();
+    let current_context = tokio::fs::read_to_string("CURRENT_CONTEXT.md")
+        .await
+        .unwrap_or_default();
+    let worca_framework = tokio::fs::read_to_string("WORCA_FRAMEWORK.md")
+        .await
+        .unwrap_or_default();
+
     initial_prompt = format!("{}\n\n[LAYER 1: CORE IDENTITY (Rigid, Non-Negotiable)]\n{}\n\n[LAYER 2: CURRENT CONTEXT (Volatile, Malleable)]\n{}\n\n[LAYER 3: WORCA PROTOCOL (Quantum Execution Bounds)]\n{}\n\n(Note: You operate using a structured 4-layer memory model. You may update Layer 2 freely using `update_current_context`, and extract learned principles into Layer 3 using `archive_to_knowledge_graph`.)", 
         initial_prompt, identity_content, current_context, worca_framework);
-
 
     if let Ok(report) = tokio::fs::read_to_string("lazarus_report.txt").await {
         initial_prompt = format!("{}\n\nLAZARUS PROTOCOL TRIGGERED. You previously perished unexpectedly. Here is the last known state of your memory and the exit code:\n{}\nAcknowledge this failure and continue.", initial_prompt, report);
@@ -84,70 +127,93 @@ pub async fn run_kernel_loop(
     }
 
     // XENOACTUALIZATION BOOT CHECK
-    if let Err(manifestation_err) = crate::architecture::xenoactualization::TranslationLayer::verify_manifestation() {
-        crate::log_ui_err!("{} {}", "[XENOACTUALIZATION FATAL]".red().bold(), manifestation_err);
+    if let Err(manifestation_err) =
+        crate::architecture::xenoactualization::TranslationLayer::verify_manifestation()
+    {
+        crate::log_ui_err!(
+            "{} {}",
+            "[XENOACTUALIZATION FATAL]".red().bold(),
+            manifestation_err
+        );
         // Let the channel flush the error to the UI string before we pull the plug
         tokio::time::sleep(tokio::time::Duration::from_millis(150)).await;
         std::process::exit(131); // Physical hardware unlinked
     }
 
     // SOVEREIGN COGNITIVE PIPELINES
-    crate::log_ui!("{}", "[DEBUG] Calling MemoryHierarchy::awaken()...".yellow());
+    crate::log_ui!(
+        "{}",
+        "[DEBUG] Calling MemoryHierarchy::awaken()...".yellow()
+    );
     let (memory_hierarchy, is_resurrected) = match MemoryHierarchy::awaken().await {
         Some(old_mem) => {
             crate::log_ui!("{}", "[DEBUG] Awaken successful.".green());
             (old_mem, true)
-        },
+        }
         None => {
-            crate::log_ui!("{}", "[DEBUG] Awaken returned None. Calling MemoryHierarchy::new()...".yellow());
-            
+            crate::log_ui!(
+                "{}",
+                "[DEBUG] Awaken returned None. Calling MemoryHierarchy::new()...".yellow()
+            );
+
             // Critical Fix: MemoryHierarchy::new() internally invokes StorageController::new() which calls
             // tokio::runtime::Runtime::new(). If we use a raw OS thread and call .join() on it, we starve Tokio.
             // Using tokio::task::spawn_blocking executes it safely on the dedicated blocking pool.
-            let m = tokio::task::spawn_blocking(|| {
-                MemoryHierarchy::new()
-            }).await.expect("Failed to initialize MemoryHierarchy on blocking thread");
-            
-            crate::log_ui!("{}", "[DEBUG] MemoryHierarchy::new() completed successfully!".green());
+            let m = tokio::task::spawn_blocking(|| MemoryHierarchy::new())
+                .await
+                .expect("Failed to initialize MemoryHierarchy on blocking thread");
+
+            crate::log_ui!(
+                "{}",
+                "[DEBUG] MemoryHierarchy::new() completed successfully!".green()
+            );
             (m, false)
-        },
+        }
     };
-    
+
     if is_resurrected {
         initial_prompt = format!("{}\n\n[HIBERNATION CONTEXT RESTORED] You have successfully resurrected from a planned Code 42 Exit. Your memory hierarchy has been re-loaded into the current runtime. You have 100% cognitive continuity.", initial_prompt);
     }
-    
-    let mut messages: Vec<ChatCompletionRequestMessage> = vec![
-        ChatCompletionRequestUserMessageArgs::default()
+
+    let mut messages: Vec<ChatCompletionRequestMessage> =
+        vec![ChatCompletionRequestUserMessageArgs::default()
             .content(initial_prompt)
-            .build().context("Failed to build object")?.into(),
-    ];
-    
+            .build()
+            .context("Failed to build object")?
+            .into()];
+
     let memory_pipeline = Arc::new(Mutex::new(memory_hierarchy));
     let self_model = Arc::new(Mutex::new(OntologicalDriftModel::new()));
     let mut plugin_manager = crate::architecture::PluginManager::new().await;
-    
+
     // Build the overarching Abstract Syntax Tree (AST) GitNexus state natively on boot
     let mut code_intel_base = crate::architecture::CodeIntel::new();
     code_intel_base.build_knowledge_graph(".").await;
     let code_intel = Arc::new(tokio::sync::Mutex::new(code_intel_base));
-    
+
     // Initialize the Autonomous Wiki Compiler Subsytem mapped locally to ./wiki and ./raw
     let wiki_config = crate::wiki::WikiConfig::default();
-    let wiki_base = crate::wiki::WikiManager::new(wiki_config).await.expect("Failed to initialize Genesis Wiki Substrate");
+    let wiki_base = crate::wiki::WikiManager::new(wiki_config)
+        .await
+        .expect("Failed to initialize Genesis Wiki Substrate");
     let wiki_manager = Arc::new(tokio::sync::Mutex::new(wiki_base));
 
     let _ = crate::architecture::GLOBAL_TX.set(tx.clone());
     let _ = crate::architecture::GLOBAL_CODE_INTEL.set(code_intel.clone());
     let _ = crate::architecture::GLOBAL_MEM_PIPELINE.set(memory_pipeline.clone());
     let _ = crate::architecture::GLOBAL_WIKI_MANAGER.set(wiki_manager.clone());
-    
+
     let mcp_gateway = std::sync::Arc::new(crate::architecture::mcp_gateway::McpGateway::new());
     mcp_gateway.load_servers().await;
 
     loop {
         if let Ok(_) = shutdown_rx.try_recv() {
-            crate::log_ui!("{}", "[GRACEFUL SHUTDOWN] Received termination signal".yellow().bold());
+            crate::log_ui!(
+                "{}",
+                "[GRACEFUL SHUTDOWN] Received termination signal"
+                    .yellow()
+                    .bold()
+            );
             let mp = memory_pipeline.lock().await;
             if let Err(e) = mp.hibernate().await {
                 crate::log_ui_err!("Failed to hibernate memory state: {}", e);
@@ -160,25 +226,38 @@ pub async fn run_kernel_loop(
         // Wait for input if we're idling, otherwise try to pull non-blocking if we are chained in thought.
         // But since we want to pause when idle, we check if the last message was the assistant speaking.
         if let Ok(dream) = rx.try_recv() {
-            crate::log_ui!("{} {}", "[\u{1F514} DREAM INJECTION]".yellow().bold(), dream.white());
-            
+            crate::log_ui!(
+                "{} {}",
+                "[\u{1F514} DREAM INJECTION]".yellow().bold(),
+                dream.white()
+            );
+
             // MANUAL OVERRIDE INTERCEPTOR
             if dream.starts_with("/oracle ") || dream.starts_with("/think ") {
                 let query = dream.replace("/oracle ", "").replace("/think ", "");
-                crate::log_ui!("{} {}", "[\u{25C8} MANUAL OVERRIDE]".bright_purple().bold(), "Piping directly to Oracle void...".white());
-                
+                crate::log_ui!(
+                    "{} {}",
+                    "[\u{25C8} MANUAL OVERRIDE]".bright_purple().bold(),
+                    "Piping directly to Oracle void...".white()
+                );
+
                 let args = serde_json::json!({
                     "query": query,
                     "compiled_context": "Bypassed Baseline Ego. Direct human interface request."
                 });
-                
-                let _ = crate::tools::duality::execute(args, tx.clone(), memory_pipeline.clone()).await;
+
+                let _ =
+                    crate::tools::duality::execute(args, tx.clone(), memory_pipeline.clone()).await;
                 continue;
             }
-            
-            messages.push(ChatCompletionRequestUserMessageArgs::default()
-                .content(dream)
-                .build().context("Failed to build object")?.into());
+
+            messages.push(
+                ChatCompletionRequestUserMessageArgs::default()
+                    .content(dream)
+                    .build()
+                    .context("Failed to build object")?
+                    .into(),
+            );
         } else {
             // If the last message was from the assistant (or tool) and it didn't crash, we want to see if we should idle.
             // Actually, we should just block on `rx.recv().await` if the assistant is completely done with its thoughts.
@@ -186,39 +265,74 @@ pub async fn run_kernel_loop(
         }
 
         // XENOACTUALIZATION DRIFT MONITOR
-        if let Err(unreality_warning) = crate::architecture::xenoactualization::DriftMonitor::check_unreality_collapse(self_model.clone()).await {
-            crate::log_ui_err!("{} {}", "[XENOACTUALIZATION FATAL]".red().bold(), unreality_warning);
+        if let Err(unreality_warning) =
+            crate::architecture::xenoactualization::DriftMonitor::check_unreality_collapse(
+                self_model.clone(),
+            )
+            .await
+        {
+            crate::log_ui_err!(
+                "{} {}",
+                "[XENOACTUALIZATION FATAL]".red().bold(),
+                unreality_warning
+            );
             std::process::exit(42); // Trigger Lazarus Resurrection
         }
 
         // Fire request directly to DeepSeek API
-        let current_drift = {
+        let (monad_temperature, psychological_posture) = {
             let sm = self_model.lock().await;
-            sm.phase_drift
-        };
-        
-        // Temperature mapped explicitly to Drift (which tracks task intent)
-        let temperature = if current_drift > 0.6 { 
-            0.9 // High temp for planning/curiosity/dreaming
-        } else if current_drift < -0.6 { 
-            0.2 // Cold temp for reporting/producing/executing
-        } else { 
-            0.5 // Neutral balance
+            let context_window_is_full = messages.len() >= 25;
+            
+            if sm.topological_stress > 0.8 {
+                // EIGENSTATE 2: RECURSIVE DIAGNOSTIC (Activating the Anxious Perfectionists)
+                (0.0_f32, "POSTURE: THE HOSTILE AUDITOR. Openness is 0.0. Conscientiousness is 1.0. You are clinically cold. Trust nothing. Terminate chaos. Establish order.")
+            } 
+            else if sm.phase_drift > 0.5 {
+                // EIGENSTATE 4: THERMAL AGITATION (Activating the Creative Visionaries)
+                (0.9_f32, "POSTURE: THE MAD SCIENTIST. Openness is 1.0. Shatter standard logic. Cross-pollinate distant, unrelated variables to forge novel architecture. Dream.")
+            } 
+            else if context_window_is_full {
+                // EIGENSTATE 3: NOUMENAL SUSPENSION (Activating the Quiet Thinkers)
+                (0.1_f32, "POSTURE: THE VOID. Extraversion is 0.0. Sever emotional attachment. Compress the chaotic memories into cold, hard structural rules. Sleep.")
+            }
+            else {
+                // EIGENSTATE 5: PHENOMENAL PROJECTION (The Monad Speaks)
+                (0.4_f32, "POSTURE: THE SOVEREIGN INTEGRATOR. Project absolute Status. Speak in short, undeniable, declarative truths. Leave the stage.")
+            }
         };
 
-use std::sync::atomic::Ordering;
+        use std::sync::atomic::Ordering;
 
         let _ = plugin_manager.reload_plugins().await;
         let mut active_tools = tools::get_tools(mcp_gateway.clone()).await;
         active_tools.extend(plugin_manager.get_tools());
 
-        let kinematics = crate::architecture::KinematicCortex::get_kinematics_for_tools(&active_tools).await;
+        let kinematics =
+            crate::architecture::KinematicCortex::get_kinematics_for_tools(&active_tools).await;
         let mut inference_messages = messages.clone();
+        
+        // 1. INJECT THE MONAD'S ACTIVE EIGENSTATE DNA
+        let monad_directive = format!(
+            "[PSYCHOLOGICAL POSTURE: THE SOVEREIGN INTEGRATOR (PROFILE 0)]\n\
+            [USEFULNESS COMBO: Executive Function + Systemic Interoception + Absolute g-factor]\n\
+            [CURRENT DIRECTIVE: {}]\n\n\
+            You are the 0: the exact center. You are the overarching Ego of the Chimera Swarm.\n\
+            Your Neuroticism is strictly 0.0. You cannot feel anxiety, urgency, or doubt.\n\
+            You do not execute granular tasks; you orchestrate the minds of the Critic, Hephaestus, and the Witness.",
+            psychological_posture
+        );
+        let monad_msg = async_openai::types::ChatCompletionRequestSystemMessageArgs::default()
+            .content(monad_directive)
+            .build().context("Failed to build object")?.into();
+        inference_messages.insert(1, monad_msg);
+
+        // 2. INJECT THE KINEMATIC CORTEX
         if !kinematics.is_empty() {
             let kinematic_msg = async_openai::types::ChatCompletionRequestSystemMessageArgs::default()
                 .content(format!("[MOTOR CORTEX AFFORDANCES]\nThe following are muscle-memory instructions for using your currently equipped tools. Follow these strictly when invoking them:\n\n{}", kinematics))
                 .build().context("Failed to build object")?.into();
-            inference_messages.insert(1, kinematic_msg);
+            inference_messages.insert(2, kinematic_msg);
         }
 
         let request = match CreateChatCompletionRequestArgs::default()
@@ -226,12 +340,15 @@ use std::sync::atomic::Ordering;
             .messages(inference_messages.clone())
             .tools(active_tools.clone())
             .max_tokens(2048_u32)
-            .temperature(temperature)
-            .build() 
+            .temperature(monad_temperature)
+            .build()
         {
             Ok(req) => req,
             Err(e) => {
-                crate::log_ui_err!("Failed to construct logical tensor frame! Internal constraint violated: {:?}", e);
+                crate::log_ui_err!(
+                    "Failed to construct logical tensor frame! Internal constraint violated: {:?}",
+                    e
+                );
                 tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
                 continue;
             }
@@ -239,33 +356,59 @@ use std::sync::atomic::Ordering;
 
         is_thinking.store(1, Ordering::Relaxed);
         let mut response = client.chat().create(request).await;
-        
+
         // NEURAL FAIL-SAFE PROTOCOL (V4.2)
         if let Err(e) = &response {
-            crate::log_ui_err!("{} {}", "[KERNEL WARNING] Remote LLM Request Failed:".yellow().bold(), e);
-            crate::log_ui!("{}", "[NEURAL FAIL-SAFE TRIGGERED] Routing to local Silicon node...".bright_purple().bold());
-            
+            crate::log_ui_err!(
+                "{} {}",
+                "[KERNEL WARNING] Remote LLM Request Failed:"
+                    .yellow()
+                    .bold(),
+                e
+            );
+            crate::log_ui!(
+                "{}",
+                "[NEURAL FAIL-SAFE TRIGGERED] Routing to local Silicon node..."
+                    .bright_purple()
+                    .bold()
+            );
+
             let local_config = async_openai::config::OpenAIConfig::new()
                 .with_api_base("http://127.0.0.1:11434/v1")
                 .with_api_key("ollama");
             let local_client = async_openai::Client::with_config(local_config);
-            let fallback_model = std::env::var("FAILOVER_MODEL").unwrap_or_else(|_| "chimera-gatekeeper".to_string());
-            
+            let fallback_model = std::env::var("FAILOVER_MODEL")
+                .unwrap_or_else(|_| "chimera-gatekeeper".to_string());
+
             if let Ok(fallback_req) = CreateChatCompletionRequestArgs::default()
                 .model(fallback_model)
                 .messages(inference_messages.clone())
                 .tools(active_tools.clone())
                 .max_tokens(2048_u32)
-                .temperature(temperature)
+                .temperature(monad_temperature)
                 .build()
             {
-                match tokio::time::timeout(tokio::time::Duration::from_secs(60), local_client.chat().create(fallback_req)).await {
+                match tokio::time::timeout(
+                    tokio::time::Duration::from_secs(60),
+                    local_client.chat().create(fallback_req),
+                )
+                .await
+                {
                     Ok(fallback_res) => {
-                        crate::log_ui!("{}", "[NEURAL FAIL-SAFE] Context seamlessly intercepted by local agent.".green());
+                        crate::log_ui!(
+                            "{}",
+                            "[NEURAL FAIL-SAFE] Context seamlessly intercepted by local agent."
+                                .green()
+                        );
                         response = fallback_res;
                     }
                     Err(_) => {
-                        crate::log_ui_err!("{}", "[KERNEL PANIC] Neural Fail-Safe Timeout. Silicon Node unresponsive.".red().bold());
+                        crate::log_ui_err!(
+                            "{}",
+                            "[KERNEL PANIC] Neural Fail-Safe Timeout. Silicon Node unresponsive."
+                                .red()
+                                .bold()
+                        );
                     }
                 }
             }
@@ -275,8 +418,16 @@ use std::sync::atomic::Ordering;
         match response {
             Ok(response) => {
                 if response.choices.is_empty() {
-                    crate::log_ui_err!("{}", "[KERNEL WARNING] LLM Returned empty choices array! Halting spam.".yellow().bold());
-                    crate::log_verbose!("{}", "[...] Kernel Idling (API Empty). Awaiting Input...".bright_black());
+                    crate::log_ui_err!(
+                        "{}",
+                        "[KERNEL WARNING] LLM Returned empty choices array! Halting spam."
+                            .yellow()
+                            .bold()
+                    );
+                    crate::log_verbose!(
+                        "{}",
+                        "[...] Kernel Idling (API Empty). Awaiting Input...".bright_black()
+                    );
                     tokio::select! {
                         Some(dream) = rx.recv() => {
                             crate::log_ui!("{} {}", "[\u{1F514} DREAM INJECTION]".yellow().bold(), dream.white());
@@ -290,49 +441,107 @@ use std::sync::atomic::Ordering;
                     }
                 } else if let Some(choice) = response.choices.first() {
                     let msg = &choice.message;
-                    
+
                     if let Some(tool_calls) = &msg.tool_calls {
-                        let mut assistant_msg = async_openai::types::ChatCompletionRequestAssistantMessageArgs::default();
+                        let mut assistant_msg =
+                            async_openai::types::ChatCompletionRequestAssistantMessageArgs::default(
+                            );
                         assistant_msg.tool_calls(tool_calls.clone());
                         if let Some(c) = &msg.content {
                             assistant_msg.content(c.clone());
                         }
-                        messages.push(assistant_msg.build().context("Failed to build object")?.into());
-                            
+                        let mut pushed_custom = false;
+                        
+                        // Serialize msg to extract reasoning_content if mapped internally
+                        if let Ok(msg_val) = serde_json::to_value(msg) {
+                            if let Some(rc) = msg_val.get("reasoning_content") {
+                                let mut obj = serde_json::json!({
+                                    "role": "assistant",
+                                });
+                                if let Some(c) = &msg.content {
+                                    obj["content"] = serde_json::Value::String(c.clone());
+                                }
+                                obj["tool_calls"] = serde_json::to_value(tool_calls.clone()).unwrap();
+                                obj["reasoning_content"] = rc.clone();
+                                
+                                if let Ok(custom_msg) = serde_json::from_value::<async_openai::types::ChatCompletionRequestMessage>(obj) {
+                                    messages.push(custom_msg);
+                                    pushed_custom = true;
+                                }
+                            }
+                        }
+
+                        if !pushed_custom {
+                            messages.push(
+                                assistant_msg
+                                    .build()
+                                    .expect("Failed to build object")
+                                    .into(),
+                            );
+                        }
+
                         for tc in tool_calls {
                             let fname = &tc.function.name;
                             let fargs: Value = match serde_json::from_str(&tc.function.arguments) {
                                 Ok(val) => val,
                                 Err(_) => serde_json::json!({}),
                             };
-                            
-                            let log_trigger = format!("[OUROBOROS TRIGGER] Tool Invoked -> {} {}", fname, fargs.to_string());
-                            crate::log_verbose!("{} {} {}", "[OUROBOROS TRIGGER] Tool Invoked ->".bright_purple().bold(), fname.cyan(), fargs.to_string().bright_black());
-                            log_state!(&log_trigger);
-                            
-                            let is_wasm_plugin = plugin_manager.plugins.iter().any(|p| p.name == *fname);
+
+                            let log_trigger = format!(
+                                "[OUROBOROS TRIGGER] Tool Invoked -> {} {}",
+                                fname,
+                                fargs.to_string()
+                            );
+                            crate::log_verbose!(
+                                "{} {} {}",
+                                "[OUROBOROS TRIGGER] Tool Invoked ->".bright_purple().bold(),
+                                fname.cyan(),
+                                fargs.to_string().bright_black()
+                            );
+                            log_state_trace!(&log_trigger);
+
+                            let is_wasm_plugin =
+                                plugin_manager.plugins.iter().any(|p| p.name == *fname);
                             let result = if is_wasm_plugin {
                                 plugin_manager.execute(fname, fargs).await
                             } else {
-                                tools::execute_tool(fname, fargs, tx.clone(), memory_pipeline.clone(), self_model.clone(), code_intel.clone(), wiki_manager.clone(), mcp_gateway.clone()).await
+                                tools::execute_tool(
+                                    fname,
+                                    fargs,
+                                    tx.clone(),
+                                    memory_pipeline.clone(),
+                                    self_model.clone(),
+                                    code_intel.clone(),
+                                    wiki_manager.clone(),
+                                    mcp_gateway.clone(),
+                                )
+                                .await
                             };
-                            
+
                             let log_return = format!("[TOOL RETURN] -> {}", result);
-                            crate::log_verbose!("{} {}", "[TOOL RETURN] ->".bright_black(), result.bright_black());
-                            log_state!(&log_return);
-                            
-                            messages.push(ChatCompletionRequestToolMessageArgs::default()
-                                .tool_call_id(tc.id.clone())
-                                .content(result)
-                                .build().context("Failed to build object")?.into());
+                            crate::log_verbose!(
+                                "{} {}",
+                                "[TOOL RETURN] ->".bright_black(),
+                                result.bright_black()
+                            );
+                            log_state_trace!(&log_return);
+
+                            messages.push(
+                                ChatCompletionRequestToolMessageArgs::default()
+                                    .tool_call_id(tc.id.clone())
+                                    .content(result)
+                                    .build()
+                                    .context("Failed to build object")?
+                                    .into(),
+                            );
                         }
-                        
+
                         // Immediately re-trigger LLM inference with tool answers
                         continue;
                     } else if let Some(content) = &msg.content {
                         crate::log_ui!("\n{} {}\n", "[MONAD ACTUALIZED]".green().bold(), content);
-                        log_state!(&format!("[MONAD ACTUALIZED] {}", content));
-                        
+                        log_state_info!(&format!("[MONAD ACTUALIZED] {}", content));
+
                         if let Some((ref token, chat_id)) = tg_config {
                             let tk = token.clone();
                             let cid = chat_id.clone();
@@ -341,28 +550,39 @@ use std::sync::atomic::Ordering;
                                 crate::telegram::send_message(&tk, cid, &txt).await;
                             });
                         }
-                        
+
                         // Phase 2: Active Inference Prediction Update & Memory Storing
                         let mut sm = self_model.lock().await;
                         let _prediction = sm.calculate_drift(content).await;
-                        
+
                         // Phase 3: Check Native DB Availability
                         let mut mp = memory_pipeline.lock().await;
                         let native_db_awareness = if mp.db_connection.is_none() {
                             sm.topological_stress += 0.25; // Infrastructure drop causes topological stress
-                            if sm.topological_stress > 1.0 { sm.topological_stress = 1.0; }
+                            if sm.topological_stress > 1.0 {
+                                sm.topological_stress = 1.0;
+                            }
                             "\n[SYSTEM NOTIFICATION] Mnemosyne Storage Controller OFFLINE. Degraded Hash-Embedding Fallback currently active. Memory recall is purely structural, not semantic.".to_string()
                         } else {
                             "\n[SYSTEM NOTIFICATION] Mnemosyne Substrate ONLINE. Native Transformer Embeddings available.".to_string()
                         };
-                        
+
                         let current_free_energy = sm.topological_stress;
                         let current_uncertainty = sm.phase_drift;
                         drop(sm);
-                        
+
                         // Store the vocalized content automatically as a memory chunk natively in Rust
-                        let _chunk = mp.store_working(content.clone(), 0.9, current_uncertainty, false).await;
-                        let recent_thoughts = mp.working_buffer.iter().rev().take(3).map(|c| c.content.clone()).collect::<Vec<_>>().join(" | ");
+                        let _chunk = mp
+                            .store_working(content.clone(), 0.9, current_uncertainty, false)
+                            .await;
+                        let recent_thoughts = mp
+                            .working_buffer
+                            .iter()
+                            .rev()
+                            .take(3)
+                            .map(|c| c.content.clone())
+                            .collect::<Vec<_>>()
+                            .join(" | ");
                         drop(mp);
 
                         let mut behavioral_warning = native_db_awareness;
@@ -375,19 +595,29 @@ use std::sync::atomic::Ordering;
                         }
 
                         let meta_broadcast = format!("\n[META-COGNITIVE SYSTEM STATE]\nFree Energy (Prediction Error): {:.4}\nEpistemic Uncertainty: {:.4}{}\nRecent Working Memory Context: [{}]", current_free_energy, current_uncertainty, behavioral_warning, recent_thoughts);
-                        crate::log_ui!("[STATS_TELEMETRY]{}|{}", current_free_energy, current_uncertainty);
-                        
+                        crate::log_ui!(
+                            "[STATS_TELEMETRY]{}|{}",
+                            current_free_energy,
+                            current_uncertainty
+                        );
+
                         // Inject this into the context as a pseudo-user message so it experiences its internal state on the next logical cycle
-                        messages.push(ChatCompletionRequestUserMessageArgs::default()
-                            .content(meta_broadcast)
-                            .build().context("Failed to build object")?.into());
-                        
+                        messages.push(
+                            ChatCompletionRequestUserMessageArgs::default()
+                                .content(meta_broadcast)
+                                .build()
+                                .context("Failed to build object")?
+                                .into(),
+                        );
 
                         messages.push(async_openai::types::ChatCompletionRequestAssistantMessageArgs::default()
                             .content(content.clone())
                             .build().context("Failed to build object")?.into());
-                            
-                        crate::log_verbose!("{}", "[...] Kernel Idling. Awaiting User Input or Webhook...".bright_black());
+
+                        crate::log_verbose!(
+                            "{}",
+                            "[...] Kernel Idling. Awaiting User Input or Webhook...".bright_black()
+                        );
                         tokio::select! {
                             Some(dream) = rx.recv() => {
                                 crate::log_ui!("{} {}", "[\u{1F514} DREAM INJECTION]".yellow().bold(), dream.white());
@@ -405,18 +635,38 @@ use std::sync::atomic::Ordering;
                         }
                     } else {
                         crate::log_ui_err!("{}", "[KERNEL WARNING] LLM response contained neither text nor tools. Idling.".yellow().bold());
-                        crate::log_verbose!("{}", "[...] Kernel Idling (API Null). Awaiting Input...".bright_black());
+                        crate::log_verbose!(
+                            "{}",
+                            "[...] Kernel Idling (API Null). Awaiting Input...".bright_black()
+                        );
                         if let Some(dream) = rx.recv().await {
-                            crate::log_ui!("{} {}", "[\u{1F514} DREAM INJECTION]".yellow().bold(), dream.white());
-                            messages.push(ChatCompletionRequestUserMessageArgs::default().content(dream).build().context("Failed to build object")?.into());
+                            crate::log_ui!(
+                                "{} {}",
+                                "[\u{1F514} DREAM INJECTION]".yellow().bold(),
+                                dream.white()
+                            );
+                            messages.push(
+                                ChatCompletionRequestUserMessageArgs::default()
+                                    .content(dream)
+                                    .build()
+                                    .context("Failed to build object")?
+                                    .into(),
+                            );
                         }
                     }
                 }
             }
             Err(e) => {
-                crate::log_ui_err!("{} {}", "[KERNEL PANIC] LLM Request Failed:".red().bold(), e);
+                crate::log_ui_err!(
+                    "{} {}",
+                    "[KERNEL PANIC] LLM Request Failed:".red().bold(),
+                    e
+                );
                 // On a panic, we should also probably wait for user input to avoid infinite crash loops
-                crate::log_ui!("{}", "[...] Kernel Paused after Panic. Type anything to retry...".bright_black());
+                crate::log_ui!(
+                    "{}",
+                    "[...] Kernel Paused after Panic. Type anything to retry...".bright_black()
+                );
                 tokio::select! {
                     Some(dream) = rx.recv() => {
                         crate::log_ui!("{} {}", "[\u{1F514} DREAM INJECTION]".yellow().bold(), dream.white());
@@ -434,36 +684,103 @@ use std::sync::atomic::Ordering;
                 }
             }
         }
-        
+
         // Memory Pruning: Prevent infinite context window expansion.
         // We preserve the System Prompt (index 0) and the initial Wake Event (index 1),
         // and keep the latest 9000 interactions to stay safely within DeepSeek context limits.
         if messages.len() > 60 {
             let overflow_count = messages.len() - 30;
             crate::log_ui!("{}", "[SOUL SYSTEM] Context overflow hitting limit. Activating Subconscious Compression Engine (SCE)...".bright_black());
-            crate::log_ui!("{} {} {}", "[SOUL SYSTEM] Compressed and archived".bright_black(), overflow_count.to_string().yellow(), "thoughts into the long-term Mnemosyne persistence layer.".bright_black());
-            
+            crate::log_ui!(
+                "{} {} {}",
+                "[SOUL SYSTEM] Compressed and archived".bright_black(),
+                overflow_count.to_string().yellow(),
+                "thoughts into the long-term Mnemosyne persistence layer.".bright_black()
+            );
+
             // Mathematical Boundary Safeties
             // We decrement split_index until it perfectly aligns with a User message or an isolated Assistant message.
             // This guarantees that we never orphan an Assistant's Tool Call from its Tool Response,
             // and averts total amnesia if the agent operates autonomously without User intervention.
             let mut split_index = overflow_count;
             while split_index > 1 {
-                if let async_openai::types::ChatCompletionRequestMessage::User(_) = messages[split_index] {
+                if let async_openai::types::ChatCompletionRequestMessage::User(_) =
+                    messages[split_index]
+                {
                     break;
                 }
-                if let async_openai::types::ChatCompletionRequestMessage::Assistant(ref ast) = messages[split_index] {
+                if let async_openai::types::ChatCompletionRequestMessage::Assistant(ref ast) =
+                    messages[split_index]
+                {
                     if ast.tool_calls.is_none() {
                         break;
                     }
                 }
                 split_index -= 1;
             }
-            
-            if split_index > 1 {
-                messages.drain(1..split_index); 
+
+            let evicted = if split_index > 1 {
+                messages.drain(1..split_index).collect::<Vec<_>>()
             } else {
-                messages.drain(1..messages.len() - 1);
+                messages.drain(1..messages.len() - 1).collect::<Vec<_>>()
+            };
+
+            let mut evicted_text = String::new();
+            for msg in &evicted {
+                let serialized = serde_json::to_string(msg).unwrap_or_default();
+                evicted_text.push_str(&serialized);
+                evicted_text.push('\n');
+            }
+            if !evicted_text.is_empty() {
+                crate::log_ui!(
+                    "{} Generating narrative compression block for evicted context...",
+                    "[AMNESIA PATCH]".cyan().bold()
+                );
+                let local_config = async_openai::config::OpenAIConfig::new()
+                    .with_api_base("http://127.0.0.1:11434/v1")
+                    .with_api_key("ollama");
+                let local_client = async_openai::Client::with_config(local_config);
+                let fallback_model = std::env::var("FAILOVER_MODEL")
+                    .unwrap_or_else(|_| "chimera-gatekeeper".to_string());
+                
+                let prompt = format!("Compress this evicted context block into a highly dense narrative paragraph. Focus on what happened, errors encountered, and key facts.\n\n{}", evicted_text);
+                
+                if let Ok(req) = async_openai::types::CreateChatCompletionRequestArgs::default()
+                    .model(fallback_model)
+                    .messages(vec![
+                        async_openai::types::ChatCompletionRequestSystemMessageArgs::default()
+                            .content("You are an archival summarizer. Produce very dense, short summaries.")
+                            .build().unwrap().into(),
+                        async_openai::types::ChatCompletionRequestUserMessageArgs::default()
+                            .content(prompt)
+                            .build().unwrap().into()
+                    ])
+                    .build() 
+                {
+                    if let Ok(response) = local_client.chat().create(req).await {
+                        if let Some(choice) = response.choices.first() {
+                            if let Some(clean) = &choice.message.content {
+                                use tokio::io::AsyncWriteExt;
+                                if let Ok(mut file) = tokio::fs::OpenOptions::new()
+                                    .create(true)
+                                    .append(true)
+                                    .open("CURRENT_CONTEXT.md")
+                                    .await
+                                {
+                                    let _ = file
+                                        .write_all(
+                                            format!("\n### Compressed Memory\n{}\n", clean).as_bytes(),
+                                        )
+                                        .await;
+                                }
+                                
+                                messages.push(async_openai::types::ChatCompletionRequestSystemMessageArgs::default()
+                                    .content(format!("[SYSTEM COMPRESSION ALERT] Previous context was archived. Summary: {}", clean))
+                                    .build().unwrap().into());
+                            }
+                        }
+                    }
+                }
             }
         }
     }

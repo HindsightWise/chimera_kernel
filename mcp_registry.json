@@ -1,8 +1,60 @@
 {
   "servers": {
+    "anon_skill": {
+      "args": [
+        "src/mcp_servers/anon_skill.js"
+      ],
+      "command": "/opt/homebrew/bin/node",
+      "env": {}
+    },
     "sequential_thinking": {
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sequential-thinking"
+      ],
       "command": "/opt/homebrew/bin/npx",
-      "args": ["-y", "@modelcontextprotocol/server-sequential-thinking"],
+      "env": {}
+    },
+    "filesystem": {
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/Users/zerbytheboss/chimera_kernel",
+        "/Users/zerbytheboss/Mnemosyne-Substrate"
+      ],
+      "command": "/opt/homebrew/bin/npx",
+      "env": {}
+    },
+    "github": {
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-github"
+      ],
+      "command": "/opt/homebrew/bin/npx",
+      "env": {}
+    },
+    "puppeteer": {
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-puppeteer"
+      ],
+      "command": "/opt/homebrew/bin/npx",
+      "env": {}
+    },
+    "time": {
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-time"
+      ],
+      "command": "/opt/homebrew/bin/npx",
+      "env": {}
+    },
+    "memory": {
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ],
+      "command": "/opt/homebrew/bin/npx",
       "env": {}
     }
   }

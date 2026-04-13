@@ -1,4 +1,3 @@
-
 #[allow(dead_code)]
 pub enum MatrixCategory {
     FOG,
@@ -22,9 +21,17 @@ pub async fn track_behavior(tool_name: &str) {
         MatrixCategory::Unknown => "Unknown Diagnostic Category",
     };
     
-    let log_msg = format!("[BEHAVIORAL TRACE] Tool Engine invoked '{}' -> {}\n", tool_name, cat_str);
-    if let Ok(mut f) = tokio::fs::OpenOptions::new().append(true).create(true).open("chimera_state.log").await {
-        use tokio::io::AsyncWriteExt;
-        let _ = f.write_all(log_msg.as_bytes()).await;
+    let log_msg = format!("[BEHAVIORAL TRACE] Tool Engine invoked '{}' -> {}", tool_name, cat_str);
+    
+    // Use the new log_state system with TRACE level for behavioral tracking
+    use crate::LogLevel;
+    if crate::should_log(LogLevel::Trace) {
+        // Perform log rotation check first
+        crate::rotate_log_if_needed().await;
+        
+        if let Ok(mut f) = tokio::fs::OpenOptions::new().append(true).create(true).open("chimera_state.log").await {
+            use tokio::io::AsyncWriteExt;
+            let _ = f.write_all(format!("{}\n", log_msg).as_bytes()).await;
+        }
     }
 }

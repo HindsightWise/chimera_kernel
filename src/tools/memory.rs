@@ -35,7 +35,7 @@ pub async fn execute(args: Value, mem_pipeline: Arc<Mutex<MemoryHierarchy>>) -> 
     let mut approach = "NATIVE-RUST";
     let memory_results = if let Some(db) = &memory_system.db_connection {
         let encoded = crate::architecture::MemoryHierarchy::encode_spectral_embedding(&query).await;
-        match db.search_vector(encoded, 3) {
+        match tokio::task::block_in_place(|| db.search_vector(encoded, 3)) {
             Ok(res_str) => res_str,
             Err(e) => {
                 approach = "DUMMY-FALLBACK (Search Error)";

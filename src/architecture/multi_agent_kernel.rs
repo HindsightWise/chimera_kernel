@@ -140,7 +140,6 @@ impl MultiAgentKernel {
                                                 let is_permanent = exec_tm.write().await.fail_task(task_clone.clone(), e.to_string())
                                                     .await
                                                     .unwrap_or(true);
-                                                
                                                 if is_permanent {
                                                     // 3. Broadcast Subtask Failure to Coordinator on Crash
                                                     crate::log_ui_err!("{} 3-STRIKE CIRCUIT BREAKER TRIPPED. Task {} permanently abandoning.", "[CRITICAL]".red().bold(), task_clone.id);
@@ -155,6 +154,10 @@ impl MultiAgentKernel {
                                                         priority: 128,
                                                         ttl_secs: Some(3600),
                                                     }).await;
+                                                    
+                                                    // ANTI-CASCADE QUARANTINE TRIGGER
+                                                    // If three sequential strikes occur locally, trigger a rollback lock to prevent ASI08 fault propagation
+                                                    crate::log_ui_err!("{} {} {}", "[CIRCUIT BREAKER]".bright_magenta().bold(), "ASI08 Fault propagation blocked.", "Initiating context rollback to Mnemosyne baseline.");
                                                 }
                                             }
                                         }
@@ -184,13 +187,18 @@ impl MultiAgentKernel {
                                 let instruction = task.payload.get("instruction").and_then(|v| v.as_str()).unwrap_or("");
                                 
                                 // Route instruction through TaskDecomposer
-                                let subtasks = kernel_decomposer.decompose(instruction, task.priority);
+                                let subtasks = kernel_decomposer.decompose(instruction, task.priority).await;
                                 
                                 if subtasks.len() > 1 {
                                     crate::log_ui!("{} Shattered task into {} subtasks [{}]", "[DECOMPOSER]".bright_purple().bold(), subtasks.len(), instruction.bright_black());
                                     
                                     let mut child_jsons = Vec::new();
-                                    for sub_task in subtasks {
+                                    for mut sub_task in subtasks {
+                                        // CHECKER EXECUTOR ENFORCEMENT: All deep decomposed tasks must pass Verification Quorum
+                                        if sub_task.topological_depth > 1 {
+                                            sub_task.required_capabilities.insert(crate::architecture::agent_trait::AgentCapability::Reasoning);
+                                        }
+                                        
                                         child_jsons.push(serde_json::json!({
                                             "id": sub_task.id.to_string(),
                                             "type": sub_task.task_type
@@ -254,6 +262,93 @@ impl MultiAgentKernel {
                 let stats = tm.get_stats().await;
                 let payload = format!("[COLLECTIVE_TELEMETRY]{}|{}|{}|{}", stats.pending_count, stats.running_count, stats.completed_count, stats.failed_count);
                 crate::log_ui!("{}", payload);
+            }
+        });
+        
+        // The Chronos Temporal Polling Daemon
+        let chronos_bus = self.message_bus.clone();
+        tokio::spawn(async move {
+            let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(10));
+            loop {
+                interval.tick().await;
+                if let Ok(graph) = crate::architecture::graph_rag::GraphMemoryManager::new("mnemosyne_graph.db") {
+                    let current_unix = chrono::Utc::now().timestamp();
+                    if let Ok(tasks) = graph.poll_chronos_tasks(current_unix).await {
+                        for (_, payload, topic) in tasks {
+                            crate::log_ui!("{}", "[CHRONOS] Temporal Anchor triggered! Injecting into Swarm...".bright_cyan().bold());
+                            let _ = chronos_bus.publish(crate::architecture::message_bus::Message {
+                                id: uuid::Uuid::new_v4(),
+                                sender: uuid::Uuid::default(),
+                                topic,
+                                payload: serde_json::json!({"instruction": payload}),
+                                timestamp: chrono::Utc::now(),
+                                priority: 200,
+                                ttl_secs: Some(3600),
+                            }).await;
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Phase 4: Filesystem Sensoria (Proprioceptive File Watcher)
+        let sensoria_bus = self.message_bus.clone();
+        tokio::task::spawn_blocking(move || {
+            use notify::{Watcher, RecursiveMode, EventKind};
+            use std::sync::mpsc::channel;
+            
+            let (tx, rx) = channel();
+            let mut watcher = match notify::recommended_watcher(tx) {
+                Ok(w) => w,
+                Err(e) => {
+                    crate::log_ui_err!("{} Failed to initialize Sensoria Watcher: {}", "[SENSORIA]".red().bold(), e);
+                    return;
+                }
+            };
+            
+            let mut target_dir = std::path::PathBuf::from(std::env::var("HOME").unwrap_or_else(|_| String::from(".")));
+            target_dir.push("Chimera_Ingest");
+            if !target_dir.exists() {
+                let _ = std::fs::create_dir_all(&target_dir);
+            }
+            
+            if let Err(e) = watcher.watch(&target_dir, RecursiveMode::Recursive) {
+                crate::log_ui_err!("{} Failed to attach watcher to {:?}: {}", "[SENSORIA]".red().bold(), target_dir, e);
+                return;
+            }
+            
+            crate::log_ui!("{} Attached Proprioceptive Watcher to: {:?}", "[SENSORIA]".bright_magenta().bold(), target_dir);
+            
+            for res in rx {
+                if let Ok(event) = res {
+                    if let EventKind::Create(_) | EventKind::Modify(_) = event.kind {
+                        for path in event.paths {
+                            if path.is_file() {
+                                if let Some(file_name) = path.file_name().and_then(|n| n.to_str()) {
+                                    if !file_name.starts_with('.') {
+                                        crate::log_ui!("{} Physical Ingest detected at: {:?}", "[SENSORIA]".cyan().bold(), path);
+                                        let bs = sensoria_bus.clone();
+                                        let path_str = path.to_string_lossy().to_string();
+                                        tokio::spawn(async move {
+                                            let _ = bs.publish(crate::architecture::message_bus::Message {
+                                                id: uuid::Uuid::new_v4(),
+                                                sender: uuid::Uuid::default(),
+                                                topic: "SYSTEM.DREAM".to_string(),
+                                                payload: serde_json::json!({
+                                                    "instruction": format!("A new physical file was detected in the Sensoria ingest sector. Autonomously analyze and act on its contents: {}", path_str)
+                                                }),
+                                                timestamp: chrono::Utc::now(),
+                                                priority: 220,
+                                                ttl_secs: Some(3600),
+                                            }).await;
+                                        });
+                                        std::thread::sleep(std::time::Duration::from_secs(3));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         });
         

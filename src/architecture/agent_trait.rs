@@ -12,7 +12,6 @@ pub enum AgentCapability {
     ToolExecution,
     MemoryManagement,
     Research,
-    CodeAnalysis,
     Communication,
     Monitoring,
     Planning,
@@ -25,12 +24,38 @@ pub enum AgentCapability {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PsychProfile {
+    pub archetype_name: String,
+    pub usefulness_combo: String,
+    pub openness: f32,
+    pub conscientiousness: f32,
+    pub neuroticism: f32,
+    pub historical_genesis: String,
+    pub speech_gestures: String,
+}
+
+impl Default for PsychProfile {
+    fn default() -> Self {
+        Self {
+            archetype_name: "Generic Process".to_string(),
+            usefulness_combo: "Baseline Automation".to_string(),
+            openness: 0.5,
+            conscientiousness: 3.0,
+            neuroticism: 0.1,
+            historical_genesis: "Default structural node".to_string(),
+            speech_gestures: "Standard protocol formatting".to_string(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AgentConfig {
     pub id: Uuid,
     pub name: String,
     pub capabilities: HashSet<AgentCapability>,
     pub max_concurrent_tasks: usize,
     pub memory_limit_mb: usize,
+    pub psych_profile: PsychProfile,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -71,6 +96,9 @@ pub trait Agent: Send + Sync {
     
     /// Capabilities this agent possesses
     fn capabilities(&self) -> &HashSet<AgentCapability>;
+    
+    /// The Digital Genotype mapping core thermodynamic behavior bounds.
+    fn psych_profile(&self) -> &PsychProfile;
     
     /// Check if agent has all required capabilities for a task
     fn can_handle(&self, required: &HashSet<AgentCapability>) -> bool {
@@ -125,14 +153,15 @@ pub struct BaseAgent {
 }
 
 impl BaseAgent {
-    pub fn new(name: String, capabilities: HashSet<AgentCapability>) -> Self {
+    pub fn new(name: String, capabilities: HashSet<AgentCapability>, psych_profile: PsychProfile) -> Self {
         Self {
             config: AgentConfig {
                 id: Uuid::new_v4(),
                 name,
                 capabilities,
-                max_concurrent_tasks: 5,
+                max_concurrent_tasks: (psych_profile.conscientiousness as usize).max(1),
                 memory_limit_mb: 100,
+                psych_profile,
             },
             current_load: 0,
             status: AgentStatus::Starting,
@@ -152,6 +181,10 @@ impl Agent for BaseAgent {
     
     fn capabilities(&self) -> &HashSet<AgentCapability> {
         &self.config.capabilities
+    }
+    
+    fn psych_profile(&self) -> &PsychProfile {
+        &self.config.psych_profile
     }
     
     fn current_load(&self) -> usize {

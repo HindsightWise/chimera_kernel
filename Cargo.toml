@@ -25,6 +25,8 @@ ort = "2.0.0-alpha.6"
 tokenizers = "0.19"
 rand_chacha = "0.3"
 regex = "1.10"
+rusqlite = "0.31.0"
+notify = "6.1.1"
 
 mnemosyne = { path = "../Mnemosyne-Substrate/mnemosyne" }
 parseltongue = { path = "../Venom-Arsenal/crates/parseltongue" }

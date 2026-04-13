@@ -13,6 +13,15 @@ pub struct SendMessagePayload {
 struct Update {
     update_id: i64,
     message: Option<Message>,
+    callback_query: Option<CallbackQuery>,
+}
+
+#[derive(Deserialize, Debug)]
+struct CallbackQuery {
+    id: String,
+    data: Option<String>,
+    #[allow(dead_code)]
+    message: Option<Message>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -30,6 +39,29 @@ struct Chat {
 struct GetUpdatesResponse {
     ok: bool,
     result: Vec<Update>,
+}
+
+#[derive(Serialize)]
+pub struct InlineKeyboardButton {
+    pub text: String,
+    pub callback_data: String,
+}
+
+#[derive(Serialize)]
+pub struct InlineKeyboardMarkup {
+    pub inline_keyboard: Vec<Vec<InlineKeyboardButton>>,
+}
+
+#[derive(Serialize)]
+pub struct SendMessagePayloadWithMarkup {
+    pub chat_id: i64,
+    pub text: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reply_markup: Option<InlineKeyboardMarkup>,
+}
+
+lazy_static::lazy_static! {
+    static ref APPROVAL_REGISTRY: std::sync::Arc<tokio::sync::Mutex<std::collections::HashMap<String, tokio::sync::oneshot::Sender<String>>>> = std::sync::Arc::new(tokio::sync::Mutex::new(std::collections::HashMap::new()));
 }
 
 pub async fn start_poller(tx: Sender<String>, token: String, allowed_chat_id: i64) {
@@ -58,6 +90,23 @@ pub async fn start_poller(tx: Sender<String>, token: String, allowed_chat_id: i6
                                 } else {
                                     crate::log_ui!("{} Access denied for chat_id: {}", "[TELEGRAM WALL]".yellow().bold(), msg.chat.id);
                                 }
+                            } else if let Some(cq) = update.callback_query {
+                                if let Some(data) = cq.data {
+                                    if data.starts_with("APPROVE_") || data.starts_with("DENY_") {
+                                        let parts: Vec<&str> = data.split('_').collect();
+                                        if parts.len() == 2 {
+                                            let action = parts[0];
+                                            let id = parts[1];
+                                            let mut reg = APPROVAL_REGISTRY.lock().await;
+                                            if let Some(tx_reply) = reg.remove(id) {
+                                                let _ = tx_reply.send(action.to_string());
+                                                crate::log_ui!("\n{} User pressed: {}", "[HITL GATEWAY]".bright_green().bold(), action);
+                                            }
+                                        }
+                                        // Answer callback query to remove loading state
+                                        let _ = client.get(&format!("{}/answerCallbackQuery?callback_query_id={}", base_url, cq.id)).send().await;
+                                    }
+                                }
                             }
                         }
                     }
@@ -73,9 +122,10 @@ pub async fn start_poller(tx: Sender<String>, token: String, allowed_chat_id: i6
 
 pub async fn send_message(token: &str, chat_id: i64, text: &str) {
     let url = format!("https://api.telegram.org/bot{}/sendMessage", token);
-    let payload = SendMessagePayload {
+    let payload = SendMessagePayloadWithMarkup {
         chat_id,
         text: text.to_string(),
+        reply_markup: None,
     };
     
     let client = reqwest::Client::new();
@@ -86,5 +136,39 @@ pub async fn send_message(token: &str, chat_id: i64, text: &str) {
         
     if let Err(e) = res {
         crate::log_ui_err!("{} Failed to send to telegram: {}", "[TELEGRAM ERROR]".red().bold(), e);
+    }
+}
+
+pub async fn ask_permission(token: &str, chat_id: i64, action_desc: &str) -> bool {
+    let action_id = uuid::Uuid::new_v4().to_string().replace("-", "")[0..8].to_string();
+    let markup = InlineKeyboardMarkup {
+        inline_keyboard: vec![vec![
+            InlineKeyboardButton { text: "Approve \u{2705}".to_string(), callback_data: format!("APPROVE_{}", action_id) },
+            InlineKeyboardButton { text: "Deny \u{274C}".to_string(), callback_data: format!("DENY_{}", action_id) }
+        ]]
+    };
+    
+    let (tx, rx) = tokio::sync::oneshot::channel();
+    {
+        let mut reg = APPROVAL_REGISTRY.lock().await;
+        reg.insert(action_id.clone(), tx);
+    }
+    
+    let url = format!("https://api.telegram.org/bot{}/sendMessage", token);
+    let payload = SendMessagePayloadWithMarkup {
+        chat_id,
+        text: format!("⚠️ IMMEDIATE INTERVENTION REQUIRED:\n\n{}\n\nDo you want to proceed?", action_desc),
+        reply_markup: Some(markup),
+    };
+    
+    let client = reqwest::Client::new();
+    if let Err(e) = client.post(&url).json(&payload).send().await {
+        crate::log_ui_err!("{} Failed to send permission request: {}", "[TELEGRAM ERROR]".red().bold(), e);
+        return false;
+    }
+    
+    match rx.await {
+        Ok(result) => result == "APPROVE",
+        Err(_) => false,
     }
 }

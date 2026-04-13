@@ -12,7 +12,11 @@ pub mod duality;
 pub mod wiki;
 pub mod forge;
 pub mod omniscience;
-
+pub mod genesis;
+pub mod sandbox;
+pub mod chronos;
+pub mod patcher;
+pub mod reversing;
 use async_openai::types::ChatCompletionTool;
 use serde_json::Value;
 
@@ -35,6 +39,8 @@ pub async fn get_tools(mcp_gateway: Arc<crate::architecture::mcp_gateway::McpGat
         research::definition_spider(),
         research::definition_deep_read(),
         research::definition_tavily_search(),
+        research::definition_browser_actuation(),
+        research::definition_vision_parsing(),
         memento::definition_update_context(),
         memento::definition_archive_graph(),
         gitnexus::definition(),
@@ -42,6 +48,11 @@ pub async fn get_tools(mcp_gateway: Arc<crate::architecture::mcp_gateway::McpGat
         duality::json_definition(),
         wiki::definition(),
         forge::definition(),
+        genesis::definition(),
+        sandbox::definition(),
+        chronos::definition(),
+        patcher::definition(),
+        reversing::definition(),
     ];
     let schemas = mcp_gateway.schemas.read().await;
     native_tools.extend(schemas.clone());
@@ -76,6 +87,8 @@ pub async fn execute_tool(
         "spider_rss" => research::execute_spider(args).await,
         "deep_read_url" => research::execute_deep_read(args).await,
         "tavily_search" => research::execute_tavily_search(args).await,
+        "browser_actuation" => research::execute_browser_actuation(args).await,
+        "vision_parsing" => research::execute_vision_parsing(args).await,
         "update_current_context" => memento::execute_update_context(args).await,
         "archive_to_knowledge_graph" => memento::execute_archive_graph(args).await,
         "gitnexus_blast_radius" => {
@@ -87,6 +100,11 @@ pub async fn execute_tool(
         },
         "compile_wiki" => wiki::execute(args, wiki_manager.clone()).await,
         "forge_mcp_server" => forge::execute(args, mcp_gateway.clone()).await,
+        "genesis_compile_rust" => genesis::execute(args).await,
+        "ephemeral_docker_sandbox" => sandbox::execute(args).await,
+        "schedule_temporal_anchor" => chronos::execute(args).await,
+        "mutate_source_code" => patcher::execute(args).await,
+        "binary_introspection" => reversing::execute(args).await,
         _ => {
             // Unrecognized native tool, attempting route through MCP Gateway
             let result = mcp_gateway.call_tool(name, args).await;
