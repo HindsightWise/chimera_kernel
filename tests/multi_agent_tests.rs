@@ -1,7 +1,7 @@
-use chimera_kernel::cognitive_loop::agent_trait::{AgentCapability, BaseAgent, PsychProfile};
 use chimera_kernel::cognitive_loop::agent_registry::AgentRegistry;
-use chimera_kernel::cognitive_loop::task_manager::{Task, TaskManager, TaskStatus};
-use chimera_kernel::cognitive_loop::message_bus::{MessageBus, Message};
+use chimera_kernel::cognitive_loop::agent_trait::{AgentCapability, BaseAgent, PsychProfile, Task};
+use chimera_kernel::cognitive_loop::message_bus::{Message, MessageBus};
+use chimera_kernel::cognitive_loop::task_manager::{TaskManager, TaskStatus};
 use std::collections::HashSet;
 use uuid::Uuid;
 
