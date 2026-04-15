@@ -1,9 +1,11 @@
-pub mod agent;
 pub mod webhook;
 pub mod prompts;
 pub mod tools;
 pub mod telegram;
-pub mod architecture;
+pub mod cognitive_loop;
+pub mod memory_substrate;
+pub mod sensory_inputs;
+pub mod core_identity;
 pub mod ui;
 pub mod raw_cli;
 pub mod wiki;
@@ -140,3 +142,8 @@ macro_rules! log_ui_err {
         }
     }};
 }
+
+pub static GLOBAL_TX: tokio::sync::OnceCell<tokio::sync::mpsc::Sender<String>> = tokio::sync::OnceCell::const_new();
+pub static GLOBAL_CODE_INTEL: tokio::sync::OnceCell<std::sync::Arc<tokio::sync::Mutex<crate::cognitive_loop::dependency_graph::CodeIntel>>> = tokio::sync::OnceCell::const_new();
+pub static GLOBAL_MEM_PIPELINE: tokio::sync::OnceCell<std::sync::Arc<tokio::sync::Mutex<crate::memory_substrate::memory_hierarchy::MemoryHierarchy>>> = tokio::sync::OnceCell::const_new();
+pub static GLOBAL_WIKI_MANAGER: tokio::sync::OnceCell<std::sync::Arc<tokio::sync::Mutex<crate::wiki::WikiManager>>> = tokio::sync::OnceCell::const_new();

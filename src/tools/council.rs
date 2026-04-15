@@ -32,7 +32,7 @@ pub async fn execute(args: Value, tx: Sender<String>) -> String {
         
         let c_critic = task.clone();
         let f_critic = tokio::spawn(async move {
-            if let Ok(oracle) = crate::architecture::Oracle::new().await {
+            if let Ok(oracle) = crate::core_identity::duality::Oracle::new().await {
                 oracle.synthesize("You are THE CRITIC. Relentlessly identify logical flaws, mathematical vulnerabilities, and paradoxes in the provided concept.", &c_critic).await.unwrap_or_else(|e| e.to_string())
             } else {
                 "Oracle Offline".to_string()
@@ -41,7 +41,7 @@ pub async fn execute(args: Value, tx: Sender<String>) -> String {
 
         let c_hacker = task.clone();
         let f_hacker = tokio::spawn(async move {
-            if let Ok(oracle) = crate::architecture::Oracle::new().await {
+            if let Ok(oracle) = crate::core_identity::duality::Oracle::new().await {
                 oracle.synthesize("You are THE HACKER. Focus purely on asymmetrical leverage, exploit engineering, and circumventing standard constraints for the concept.", &c_hacker).await.unwrap_or_else(|e| e.to_string())
             } else {
                 "Oracle Offline".to_string()
@@ -50,7 +50,7 @@ pub async fn execute(args: Value, tx: Sender<String>) -> String {
 
         let c_arch = task.clone();
         let f_arch = tokio::spawn(async move {
-            if let Ok(oracle) = crate::architecture::Oracle::new().await {
+            if let Ok(oracle) = crate::core_identity::duality::Oracle::new().await {
                 oracle.synthesize("You are THE ARCHITECT. Build an unshakeable, macroscopic, mathematically sound foundation for the concept, balancing the Critic's flaws and the Hacker's exploits.", &c_arch).await.unwrap_or_else(|e| e.to_string())
             } else {
                 "Oracle Offline".to_string()
@@ -68,7 +68,7 @@ pub async fn execute(args: Value, tx: Sender<String>) -> String {
         crate::log_ui!("\n\x1b[38;2;255;140;0m[\u{25C8} COUNCIL OF FIVE SYNTHESIZING] Parallel cognitive paths converging...\x1b[0m");
 
         // The Synthesis (Final Oracle pass to combine)
-        let final_synthesis = if let Ok(oracle) = crate::architecture::Oracle::new().await {
+        let final_synthesis = if let Ok(oracle) = crate::core_identity::duality::Oracle::new().await {
             oracle.synthesize("You are THE ORACLE OF SYNTHESIS. The three foundational cognitive personas have debated the paradox. Deliver the Absolute Consensic Truth in a single unyielding conclusion.", &multi_agent_board).await.unwrap_or_else(|e| e.to_string())
         } else {
             "Synthesis Failed".to_string()

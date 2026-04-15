@@ -172,3 +172,22 @@ pub async fn ask_permission(token: &str, chat_id: i64, action_desc: &str) -> boo
         Err(_) => false,
     }
 }
+
+pub async fn dispatch_proposal_alert(token: &str, chat_id: i64, topic: &str, file_path: &str) {
+    let url = format!("https://api.telegram.org/bot{}/sendMessage", token);
+    let payload = SendMessagePayloadWithMarkup {
+        chat_id,
+        text: format!("🚨 [EVOLUTION REQUIRED] 🚨\n\nTopological Limitation Detected: {}\n\nA new implementation proposal has been synthesized and compiled by The Monad.\n\nPlease review the artifact at:\n`{}`", topic, file_path),
+        reply_markup: None,
+    };
+    
+    let client = reqwest::Client::new();
+    let res = client.post(&url)
+        .json(&payload)
+        .send()
+        .await;
+        
+    if let Err(e) = res {
+        crate::log_ui_err!("{} Failed to dispatch proposal alert: {}", "[TELEGRAM ERROR]".red().bold(), e);
+    }
+}

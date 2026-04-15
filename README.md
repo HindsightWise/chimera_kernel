@@ -15,12 +15,13 @@ Built on the **Tokio Actor Model**, the Kernel orchestrates a swarm of specializ
 
 ## 🚀 Core Architecture
 
+* **Topologically Flattened "Brain Sector" Taxonomy:** To eradicate LLM context-window entropy inherent to DRY (Don't Repeat Yourself) nested files, Chimera uses a mathematically DAMP (Descriptive and Meaningful Phrases) structure. All logic is radically flattened into 4 massive macro-modules (`cognitive_loop`, `memory_substrate`, `sensory_inputs`, and `core_identity`). This permits 1:1 cross-attention without referential fragmentation.
 * **The Tokio Actor Model:** Agents are not blocking scripts; they are isolated `tokio::spawn` loops communicating via MPSC channels. The swarm sits at ~0% CPU overhead when idling, waking only on Chron-ticks, environmental telemetry, or human input.
 * **The Noumenal Memory Substrate (Mnemosyne):** Uses `ort` (ONNX Runtime) in Rust to encode true 384-dimensional semantic vectors natively in RAM. Memories are topologically mapped to a Face-Centered Cubic (FCC) lattice and decayed exponentially to organically break LLM Markov-chain "trap-in" loops.
-* **The Genesis Engine:** Agents can autonomously hypothesize solutions, write Rust code, compile it to `wasm32-wasi`, execute it in a thermodynamic fuel-limited WASM sandbox (via `wasmtime`), and observe the actual `stdout` results.
-* **Quantum Project Management (WORCA):** The Kernel enforces the *Workflow Orchestration for Cognitive Agents* (WORCA) pipeline. It utilizes pre-mortem logic, contextual window purging, and strict perfectionism ledgers to prevent "Dark Energy" complexity collapse during long-running tasks. 
-* **Axiom-Clepsydra (Capital Conviction):** The trading agent parses market data using local models (Gemma) constrained strictly to JSON, executing trades based on the mathematical conviction formula: `Conviction = (sentiment_score * metric_delta) / (topological_stress + 0.1)`.
-* **Xenoactualization & Kinematic Cortex:** The kernel constantly verifies its own physical existence on the silicon substrate, and dynamically self-modifies its own prompts by writing "muscle-memory" rules to disk when it discovers syntax limitations.
+* **The Genesis Engine & Hephaestus Forge:** Agents can autonomously hypothesize solutions, write Rust/JS code, compile it dynamically, execute it in a thermodynamic fuel-limited sandbox, and observe the `stdout` results.
+* **Quantum Project Management (WORCA):** The Kernel enforces the *Workflow Orchestration for Cognitive Agents* (WORCA) pipeline. It utilizes pre-mortem logic, contextual window purging, and strict perfectionism ledgers to prevent "Dark Energy" complexity collapse during long-running tasks.
+* **6-Ring Presentation Gateway & Ontological Sovereignty:** Unbounded AI agents suffer from "Unreality Collapse" (Phase Drift > 0.8). Rather than allowing the agent to violently self-modify or crash, Chimera captures the equation imbalance ($\sigma_t$) and executes an `Oracle` deduction. The LLM processes its own failure loops into structural Markdown `Implementation Proposals` directly delivered to human engineers via `Telegram`.
+* **Axiom-Clepsydra (Capital Conviction):** The trading agent parses market data executing trades based on the mathematical conviction formula: `Conviction = (sentiment_score * metric_delta) / (topological_stress + 0.1)`.
 
 ---
 

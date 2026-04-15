@@ -1,7 +1,7 @@
 use async_openai::types::{ChatCompletionTool, ChatCompletionToolArgs, FunctionObjectArgs, ChatCompletionToolType};
 use serde_json::{Value, json};
 use tokio::sync::mpsc::Sender;
-use crate::architecture::Oracle;
+use crate::core_identity::duality::Oracle;
 
 pub fn definition() -> ChatCompletionTool {
     ChatCompletionToolArgs::default()
@@ -62,7 +62,7 @@ pub fn json_definition() -> ChatCompletionTool {
 pub async fn execute(
     args: Value, 
     tx: Sender<String>, 
-    mem_pipeline: std::sync::Arc<tokio::sync::Mutex<crate::architecture::MemoryHierarchy>>
+    mem_pipeline: std::sync::Arc<tokio::sync::Mutex<crate::memory_substrate::memory_hierarchy::MemoryHierarchy>>
 ) -> String {
     let query = match args.get("query").and_then(|v| v.as_str()) {
         Some(q) => q.to_string(),

@@ -7,14 +7,6 @@
       "command": "/opt/homebrew/bin/node",
       "env": {}
     },
-    "sequential_thinking": {
-      "args": [
-        "-y",
-        "@modelcontextprotocol/server-sequential-thinking"
-      ],
-      "command": "/opt/homebrew/bin/npx",
-      "env": {}
-    },
     "filesystem": {
       "args": [
         "-y",
@@ -33,6 +25,14 @@
       "command": "/opt/homebrew/bin/npx",
       "env": {}
     },
+    "memory": {
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ],
+      "command": "/opt/homebrew/bin/npx",
+      "env": {}
+    },
     "puppeteer": {
       "args": [
         "-y",
@@ -41,18 +41,32 @@
       "command": "/opt/homebrew/bin/npx",
       "env": {}
     },
-    "time": {
+    "sequential_thinking": {
       "args": [
         "-y",
-        "@modelcontextprotocol/server-time"
+        "@modelcontextprotocol/server-sequential-thinking"
       ],
       "command": "/opt/homebrew/bin/npx",
       "env": {}
     },
-    "memory": {
+    "stealth_browser": {
+      "args": [
+        "src/mcp_servers/stealth_browser.js"
+      ],
+      "command": "/opt/homebrew/bin/node",
+      "env": {}
+    },
+    "stealth_browser_enhancer": {
+      "args": [
+        "src/mcp_servers/stealth_browser_enhancer.js"
+      ],
+      "command": "/opt/homebrew/bin/node",
+      "env": {}
+    },
+    "time": {
       "args": [
         "-y",
-        "@modelcontextprotocol/server-memory"
+        "@modelcontextprotocol/server-time"
       ],
       "command": "/opt/homebrew/bin/npx",
       "env": {}

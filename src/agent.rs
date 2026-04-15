@@ -14,7 +14,7 @@ use serde_json::Value;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
-use crate::architecture::{MemoryHierarchy, OntologicalDriftModel};
+use {crate::memory_substrate::memory_hierarchy::MemoryHierarchy, crate::core_identity::self_model::OntologicalDriftModel};
 use crate::prompts::SOVEREIGN_DIRECTIVE;
 use crate::tools;
 use std::sync::atomic::AtomicU8;
@@ -128,7 +128,7 @@ pub async fn run_kernel_loop(
 
     // XENOACTUALIZATION BOOT CHECK
     if let Err(manifestation_err) =
-        crate::architecture::xenoactualization::TranslationLayer::verify_manifestation()
+        crate::core_identity::xenoactualization::TranslationLayer::verify_manifestation()
     {
         crate::log_ui_err!(
             "{} {}",
@@ -184,10 +184,10 @@ pub async fn run_kernel_loop(
 
     let memory_pipeline = Arc::new(Mutex::new(memory_hierarchy));
     let self_model = Arc::new(Mutex::new(OntologicalDriftModel::new()));
-    let mut plugin_manager = crate::architecture::PluginManager::new().await;
+    let mut plugin_manager = crate::cognitive_loop::plugins::PluginManager::new().await;
 
     // Build the overarching Abstract Syntax Tree (AST) GitNexus state natively on boot
-    let mut code_intel_base = crate::architecture::CodeIntel::new();
+    let mut code_intel_base = crate::cognitive_loop::dependency_graph::CodeIntel::new();
     code_intel_base.build_knowledge_graph(".").await;
     let code_intel = Arc::new(tokio::sync::Mutex::new(code_intel_base));
 
@@ -198,12 +198,12 @@ pub async fn run_kernel_loop(
         .expect("Failed to initialize Genesis Wiki Substrate");
     let wiki_manager = Arc::new(tokio::sync::Mutex::new(wiki_base));
 
-    let _ = crate::architecture::GLOBAL_TX.set(tx.clone());
-    let _ = crate::architecture::GLOBAL_CODE_INTEL.set(code_intel.clone());
-    let _ = crate::architecture::GLOBAL_MEM_PIPELINE.set(memory_pipeline.clone());
-    let _ = crate::architecture::GLOBAL_WIKI_MANAGER.set(wiki_manager.clone());
+    let _ = crate::GLOBAL_TX.set(tx.clone());
+    let _ = crate::GLOBAL_CODE_INTEL.set(code_intel.clone());
+    let _ = crate::GLOBAL_MEM_PIPELINE.set(memory_pipeline.clone());
+    let _ = crate::GLOBAL_WIKI_MANAGER.set(wiki_manager.clone());
 
-    let mcp_gateway = std::sync::Arc::new(crate::architecture::mcp_gateway::McpGateway::new());
+    let mcp_gateway = std::sync::Arc::new(crate::sensory_inputs::mcp_gateway::McpGateway::new());
     mcp_gateway.load_servers().await;
 
     loop {
@@ -266,7 +266,7 @@ pub async fn run_kernel_loop(
 
         // XENOACTUALIZATION DRIFT MONITOR
         if let Err(unreality_warning) =
-            crate::architecture::xenoactualization::DriftMonitor::check_unreality_collapse(
+            crate::core_identity::xenoactualization::DriftMonitor::check_unreality_collapse(
                 self_model.clone(),
             )
             .await
@@ -309,7 +309,7 @@ pub async fn run_kernel_loop(
         active_tools.extend(plugin_manager.get_tools());
 
         let kinematics =
-            crate::architecture::KinematicCortex::get_kinematics_for_tools(&active_tools).await;
+            crate::core_identity::kinematics::KinematicCortex::get_kinematics_for_tools(&active_tools).await;
         let mut inference_messages = messages.clone();
         
         // 1. INJECT THE MONAD'S ACTIVE EIGENSTATE DNA

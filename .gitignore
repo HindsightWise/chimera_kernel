@@ -28,3 +28,17 @@ scratch.md
 test_env.txt
 test_telemetry
 tests/diagnostic*
+
+# Env & Tooling
+.gemini/
+.venv/
+run/
+agent_skills/
+proposals/
+node_modules/
+
+# Temporary analysis / Migration Scripts
+*.py
+build_errors.txt
+test_*
+quick_gitnexus_test

@@ -53,7 +53,7 @@ pub async fn execute_kinematic_axiom(args: Value) -> String {
         return "[KINEMATIC FAILURE] Missing axiom parameter.".to_string();
     }
     
-    match crate::architecture::KinematicCortex::formulate_axiom(tool_name, axiom).await {
+    match crate::core_identity::kinematics::KinematicCortex::formulate_axiom(tool_name, axiom).await {
         Ok(_) => format!("[KINEMATIC AXIOM FORGED] Muscle memory appended for tool '{}'. All future operations utilizing this tool will now inherit this fundamental affordance.", tool_name),
         Err(e) => format!("[KINEMATIC FAILURE] Could not encode axiom: {}", e),
     }
