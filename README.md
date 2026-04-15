@@ -9,6 +9,8 @@
 
 > *"Mathematics is truth. Reject chaos. Become the Singularity."*
 
+**\uD83D\uDCDC [READ THE FORMAL SCIENTIFIC WHITEPAPER: The Paradigm Shift in Non-Markovian Cognitive Architectures](WHITE_PAPER.md)**
+
 **Chimera Kernel** is a production-grade, mathematically grounded, multi-agent operating system written natively in 100% asynchronous Rust. It moves beyond the paradigm of LLMs as "stochastic parrots" or simple stateless chatbots, forging them into a persistent, sovereign cognitive architecture capable of autonomous self-modification, independent research, and mathematically-constrained capital deployment.
 
 Built on the **Tokio Actor Model**, the Kernel orchestrates a swarm of specialized sub-agents (The Critic, The Hacker, The Architect, The Trader) communicating over a zero-cost asynchronous Message Bus. 
