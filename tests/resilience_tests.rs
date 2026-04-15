@@ -1,5 +1,5 @@
-use chimera_kernel::architecture::trap_in::{analyze_narrative, TrapInStage};
-use chimera_kernel::architecture::MemoryHierarchy;
+use chimera_kernel::sensory_inputs::trap_in::{analyze_narrative, TrapInStage};
+use chimera_kernel::memory_substrate::memory_hierarchy::MemoryHierarchy;
 
 #[test]
 fn test_synthetic_narrative_rejection() {

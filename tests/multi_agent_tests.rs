@@ -1,6 +1,7 @@
-use chimera_kernel::architecture::{
-    AgentCapability, AgentRegistry, BaseAgent, MessageBus, Task, TaskManager, TaskStatus,
-};
+use chimera_kernel::cognitive_loop::agent_trait::{AgentCapability, BaseAgent, PsychProfile};
+use chimera_kernel::cognitive_loop::agent_registry::AgentRegistry;
+use chimera_kernel::cognitive_loop::task_manager::{Task, TaskManager, TaskStatus};
+use chimera_kernel::cognitive_loop::message_bus::{MessageBus, Message};
 use std::collections::HashSet;
 use uuid::Uuid;
 
@@ -16,7 +17,7 @@ async fn test_agent_registration() {
     let agent1 = Box::new(BaseAgent::new(
         "Reasoner".to_string(),
         capabilities1,
-        chimera_kernel::architecture::agent_trait::PsychProfile::default(),
+        PsychProfile::default(),
     ));
 
     let capabilities2: HashSet<AgentCapability> =
@@ -24,7 +25,7 @@ async fn test_agent_registration() {
     let agent2 = Box::new(BaseAgent::new(
         "ToolExecutor".to_string(),
         capabilities2,
-        chimera_kernel::architecture::agent_trait::PsychProfile::default(),
+        PsychProfile::default(),
     ));
 
     // Register agents
@@ -57,21 +58,21 @@ async fn test_capability_based_routing() {
         .register(Box::new(BaseAgent::new(
             "Reasoner".to_string(),
             reasoning_caps.clone(),
-            chimera_kernel::architecture::agent_trait::PsychProfile::default(),
+            PsychProfile::default(),
         )))
         .await;
     let _ = registry
         .register(Box::new(BaseAgent::new(
             "Researcher".to_string(),
             research_caps.clone(),
-            chimera_kernel::architecture::agent_trait::PsychProfile::default(),
+            PsychProfile::default(),
         )))
         .await;
     let _ = registry
         .register(Box::new(BaseAgent::new(
             "ToolExecutor".to_string(),
             tool_caps.clone(),
-            chimera_kernel::architecture::agent_trait::PsychProfile::default(),
+            PsychProfile::default(),
         )))
         .await;
 
@@ -138,7 +139,7 @@ async fn test_message_bus_communication() {
     let mut rx2 = message_bus.subscribe();
 
     // Create and publish a message
-    let message = chimera_kernel::architecture::Message {
+    let message = Message {
         id: Uuid::new_v4(),
         topic: "test.topic".to_string(),
         payload: serde_json::json!({"content": "test message"}),
