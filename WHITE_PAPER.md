@@ -124,7 +124,7 @@ While sophisticated Python implementations utilizing asyncio can occasionally ac
 The performance characteristics of the Chimera Kernel, as demonstrated by the repository's documentation and driven by Rust's zero-cost abstractions, the `tokio` runtime, and the flattened DAMP topology, outclass traditional Markovian Python frameworks across all critical systemic metrics:
 
 | System Metric | Traditional Frameworks | Chimera Kernel (Rust) | Factor of Improvement |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | **Idle Memory Consumption** | ~400 MB (Interpreter overhead) | 14 MB (Zero-cost memory abstractions) | ~28x Reduction |
 | **Concurrency Ceiling** | ~50 threads (Constrained by GIL) | 100,000+ lightweight async tasks | ~2000x Increase |
 | **Code Orchestration Hallucinations** | ~35% failure rate on complex targets | < 1% failure rate (Context colocation) | ~35x Improvement |
