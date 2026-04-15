@@ -2,6 +2,7 @@
 name = "chimera_kernel"
 version = "0.1.0"
 edition = "2021"
+default-run = "chimera_kernel"
 
 [dependencies]
 async-openai = "0.23.0"
@@ -27,6 +28,8 @@ rand_chacha = "0.3"
 regex = "1.10"
 rusqlite = "0.31.0"
 notify = "6.1.1"
+sha2 = "0.10"
+futures = "0.3"
 
 mnemosyne = { path = "../Mnemosyne-Substrate/mnemosyne" }
 parseltongue = { path = "../Venom-Arsenal/crates/parseltongue" }

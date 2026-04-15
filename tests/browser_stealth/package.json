@@ -1,0 +1,21 @@
+{
+  "name": "browser-stealth-test",
+  "version": "1.0.0",
+  "description": "Test stealth browser capabilities against bot.sannysoft.com",
+  "main": "test_stealth.js",
+  "scripts": {
+    "test": "node test_stealth.js"
+  },
+  "dependencies": {
+    "puppeteer": "^23.11.1",
+    "puppeteer-extra": "^3.3.6",
+    "puppeteer-extra-plugin-stealth": "^2.11.2"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}

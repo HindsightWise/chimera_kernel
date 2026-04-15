@@ -45,7 +45,7 @@ async fn main() {
     load_env_from_file().await;
 
     // Phase 18: Semantic Awakening (Initialize ONNX global session on boot)
-    chimera_kernel::architecture::memory_hierarchy::MemoryHierarchy::init_onnx().await;
+    chimera_kernel::memory_substrate::memory_hierarchy::MemoryHierarchy::init_onnx().await;
 
     // Initialize telemetry log level from environment
     chimera_kernel::init_log_level();
@@ -208,7 +208,7 @@ async fn main() {
     let is_thinking_clone = is_thinking.clone();
     tokio::spawn(async move {
         // Boot Phase 3.2 Swarm Network and Telemetry
-        let multi_agent_kernel = chimera_kernel::architecture::multi_agent_kernel::MultiAgentKernel::new().await;
+        let multi_agent_kernel = chimera_kernel::cognitive_loop::multi_agent_kernel::MultiAgentKernel::new().await;
         multi_agent_kernel.spawn_background_coordination().await;
 
         let message_bus = multi_agent_kernel.message_bus.clone();
@@ -217,7 +217,7 @@ async fn main() {
         // Spawn the Chronological Research Tick Daemon on the newly established MessageBus
         let gatekeeper_bus = message_bus.clone();
         tokio::spawn(async move {
-            let gatekeeper = chimera_kernel::architecture::Gatekeeper::new();
+            let gatekeeper = chimera_kernel::sensory_inputs::gatekeeper::Gatekeeper::new();
             // Ticks every 900 seconds (15 minutes). The periodic gatekeeper check costs 0 tokens.
             let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(900));
             interval.tick().await; // Consume immediate first tick without firing
@@ -225,7 +225,7 @@ async fn main() {
             loop {
                 interval.tick().await; 
                 if let Ok(Some(directive)) = gatekeeper.evaluate_pulse().await {
-                    let _ = gatekeeper_bus.publish(chimera_kernel::architecture::message_bus::Message {
+                    let _ = gatekeeper_bus.publish(chimera_kernel::cognitive_loop::message_bus::Message {
                         id: uuid::Uuid::new_v4(),
                         topic: "SYSTEM.CHRON_TICK".to_string(),
                         payload: serde_json::json!({"directive": directive}),
@@ -257,7 +257,7 @@ async fn main() {
             }
         });
 
-        if let Err(e) = chimera_kernel::agent::run_kernel_loop(rx, tx, tg_config, is_thinking_clone, shutdown_rx).await {
+        if let Err(e) = chimera_kernel::cognitive_loop::agent::run_kernel_loop(rx, tx, tg_config, is_thinking_clone, shutdown_rx).await {
             chimera_kernel::log_ui_err!("{} {:?}", "[KERNEL LOOP CRASH]".red().bold(), e);
         }
     });

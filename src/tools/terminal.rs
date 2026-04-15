@@ -21,7 +21,7 @@ pub fn definition() -> ChatCompletionTool {
     }
 }
 
-pub async fn execute(args: Value, code_intel: &crate::architecture::CodeIntel) -> String {
+pub async fn execute(args: Value, code_intel: &crate::cognitive_loop::dependency_graph::CodeIntel) -> String {
     let command_str = match args.get("command").and_then(|v| v.as_str()) {
         Some(cmd) => cmd,
         None => return "[ERROR] Missing 'command' parameter".to_string(),
@@ -31,7 +31,7 @@ pub async fn execute(args: Value, code_intel: &crate::architecture::CodeIntel) -
     // GitNexus Pre-Flight Check
     for idx in code_intel.graph.node_indices() {
         let entity = &code_intel.graph[idx];
-        if entity.kind == crate::architecture::EntityKind::Function {
+        if entity.kind == crate::cognitive_loop::dependency_graph::EntityKind::Function {
             // Check if modification payload targets this specific function and its file natively
             if command_str.contains(&entity.name) && command_str.contains(&entity.file_path) {
                 let report = code_intel.assess_blast_radius(&entity.name);

@@ -23,9 +23,9 @@ use serde_json::Value;
 use tokio::sync::mpsc::Sender;
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use crate::architecture::{MemoryHierarchy, OntologicalDriftModel};
+use {crate::memory_substrate::memory_hierarchy::MemoryHierarchy, crate::core_identity::self_model::OntologicalDriftModel};
 
-pub async fn get_tools(mcp_gateway: Arc<crate::architecture::mcp_gateway::McpGateway>) -> Vec<ChatCompletionTool> {
+pub async fn get_tools(mcp_gateway: Arc<crate::sensory_inputs::mcp_gateway::McpGateway>) -> Vec<ChatCompletionTool> {
     let mut native_tools = vec![
         terminal::definition(),
         venom::polyglot_definition(),
@@ -68,11 +68,11 @@ pub async fn execute_tool(
     tx: Sender<String>, 
     mem_pipeline: Arc<Mutex<MemoryHierarchy>>,
     _self_model: Arc<Mutex<OntologicalDriftModel>>,
-    code_intel: Arc<Mutex<crate::architecture::CodeIntel>>,
+    code_intel: Arc<Mutex<crate::cognitive_loop::dependency_graph::CodeIntel>>,
     wiki_manager: Arc<Mutex<crate::wiki::WikiManager>>,
-    mcp_gateway: Arc<crate::architecture::mcp_gateway::McpGateway>
+    mcp_gateway: Arc<crate::sensory_inputs::mcp_gateway::McpGateway>
 ) -> String {
-    crate::architecture::traceability::track_behavior(name).await;
+    crate::memory_substrate::traceability::track_behavior(name).await;
     
     match name {
         "run_terminal_command" => {

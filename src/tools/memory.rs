@@ -5,7 +5,7 @@ use std::hash::{Hash, Hasher};
 
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use crate::architecture::MemoryHierarchy;
+use crate::memory_substrate::memory_hierarchy::MemoryHierarchy;
 
 pub fn definition() -> ChatCompletionTool {
     ChatCompletionTool {
@@ -34,7 +34,7 @@ pub async fn execute(args: Value, mem_pipeline: Arc<Mutex<MemoryHierarchy>>) -> 
     // Phase 3a: Native Deep Storage Query
     let mut approach = "NATIVE-RUST";
     let memory_results = if let Some(db) = &memory_system.db_connection {
-        let encoded = crate::architecture::MemoryHierarchy::encode_spectral_embedding(&query).await;
+        let encoded = crate::memory_substrate::memory_hierarchy::MemoryHierarchy::encode_spectral_embedding(&query).await;
         match tokio::task::block_in_place(|| db.search_vector(encoded, 3)) {
             Ok(res_str) => res_str,
             Err(e) => {
