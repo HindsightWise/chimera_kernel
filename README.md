@@ -69,7 +69,7 @@ sequenceDiagram
     alt successful execution
         G-->>C: Data Return / Success
         C->>B: Publish Success Result
-    else Equation Imbalance
+    else Abstract Horizon Limits
         G->>G: Measure Stress (σt > 0.85)
         note over G: Write-Access Severed
         G->>H: Dispatch "Implementation Proposal"
@@ -81,7 +81,7 @@ sequenceDiagram
 
 ## 🧮 Mathematical Foundations of AI Safety
 
-The Chimera Kernel replaces fragile heuristic prompts with deterministic bounding formulas to prevent infinite hallucination loops or unreality collapse.
+The Chimera Kernel replaces fragile heuristic prompts with deterministic bounding formulas to prevent infinite hallucination loops or abstract horizon limitation.
 
 ### 1. Shannon Entropy Minimization
 
@@ -91,7 +91,7 @@ $$ P(H) \propto S(F) = - \sum_{i=1}^{n} p(f_i) \log_2 p(f_i) $$
 
 By forcing $n$ (the number of files) toward zero, the Shannon Entropy $S(F)$ is drastically reduced, ensuring the LLM does not lose attention across fragmented interfaces.
 
-### 2. Topological Stress ($\sigma_t$) & Phase Drift
+### 2. Topological Expansion ($\sigma_t$) & Phase Drift
 
 The core cognitive posture of the operating agent is continuously tracked as a state variable, $\Phi_t$, representing its position between absolute logic ($-1.0$) and high-temperature theoretical generation ($1.0$).
 
@@ -112,7 +112,7 @@ By operating natively in Rust without the constraint of the Python Global Interp
 | **Idle Memory Overhead** | ~400 MB (Python Interpreter) | ~14 MB (Zero-Cost Abstractions) |
 | **Concurrency Ceiling** | Constrained by GIL (~50) | 100,000+ Lightweight `tokio` tasks |
 | **Cognitive Hallucinations** | ~35% on multi-file repos | < 1% (Context Colocation) |
-| **Idle Cycle Exploitation** | Dormant / Paused | "Auto-Dreaming" Vector Condensation |
+| **Idle Cycle Exploitation** | Dormant / Paused | "Auto-Dreaming" Abstract Connections & Task Queuing |
 
 ---
 

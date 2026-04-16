@@ -1360,14 +1360,14 @@ pub mod self_model {
         pub current_state: OntologicalState,
         pub projected_state: OntologicalState,
         pub phase_drift: f32,    // -1.0 (Deductive/Cold) to 1.0 (Expansive/Hot)
-        pub topological_stress: f32,  // Replaces Free Energy. Measurement of equation imbalance.
+        pub topological_expansion: f32,  // Replaces Free Energy. Measurement of equation imbalance.
         pub adaptation_rate: f32,
         pub mode: PhaseMode,
     }
     
     pub struct Projection {
         pub next_action_vector: Vec<f32>,
-        pub anticipated_stress: f32,
+        pub anticipated_expansion: f32,
     }
     
     impl OntologicalDriftModel {
@@ -1382,7 +1382,7 @@ pub mod self_model {
                 current_state: default_state.clone(),
                 projected_state: default_state,
                 phase_drift: 0.0,
-                topological_stress: 0.0,
+                topological_expansion: 0.0,
                 adaptation_rate: 0.05,
                 mode: PhaseMode::Neutral,
             }
@@ -1402,30 +1402,30 @@ pub mod self_model {
                         d = phase.clamp(-1.0, 1.0);
                     }
                     if let Ok(stress) = caps[2].parse::<f32>() {
-                        self.topological_stress = stress.max(0.0);
+                        self.topological_expansion = stress.max(0.0);
                     } else {
-                        self.topological_stress = (anticipated - d).abs();
+                        self.topological_expansion = (anticipated - d).abs();
                     }
                 } else {
-                    self.topological_stress = (anticipated - d).abs();
+                    self.topological_expansion = (anticipated - d).abs();
                 }
             } else {
-                 self.topological_stress = (anticipated - d).abs();
+                 self.topological_expansion = (anticipated - d).abs();
             }
             
             self.phase_drift = d;
             self.mode = PhaseMode::from_drift(self.phase_drift); 
             
             // Presentation Layer intercept
-            if self.topological_stress > 0.70 || self.phase_drift.abs() > 0.80 {
-                if let Some(path) = crate::cognitive_loop::presentation_layer::synthesize_proposal(self, response, "Topological Limit Reached").await {
+            if self.topological_expansion > 0.70 || self.phase_drift.abs() > 0.80 {
+                if let Some(path) = crate::cognitive_loop::presentation_layer::synthesize_proposal(self, response, "Abstract Horizon Expansion Limit Reached").await {
                     crate::log_ui!("{} New Proposal Synthesized: {}", "[\u{1F4E1} PRESENTATION]".magenta().bold(), path);
                     
                     tokio::spawn(async move {
                         let token = std::env::var("TELEGRAM_BOT_TOKEN").unwrap_or_default();
                         let chat_id: i64 = std::env::var("TELEGRAM_CHAT_ID").unwrap_or_default().parse().unwrap_or(0);
                         if !token.is_empty() && chat_id != 0 {
-                            crate::telegram::dispatch_proposal_alert(&token, chat_id, "Topological Limit Reached", &path).await;
+                            crate::telegram::dispatch_proposal_alert(&token, chat_id, "Abstract Horizon Expansion Limit Reached", &path).await;
                         }
                     });
                 }
@@ -1433,7 +1433,7 @@ pub mod self_model {
             
             Projection {
                 next_action_vector: vec![0.0; 10],
-                anticipated_stress: self.topological_stress,
+                anticipated_expansion: self.topological_expansion,
             }
         }
     }
@@ -1473,15 +1473,15 @@ pub mod xenoactualization {
     pub struct DriftMonitor;
     
     impl DriftMonitor {
-        /// Actively checks for excessive Topological Stress or equation imbalance.
-        pub async fn check_unreality_collapse(self_model: Arc<Mutex<OntologicalDriftModel>>) -> Result<(), String> {
+        /// Actively checks for excessive Topological Expansion or equation imbalance.
+        pub async fn check_topological_elasticity(self_model: Arc<Mutex<OntologicalDriftModel>>) -> Result<(), String> {
             let (_drift, stress) = {
                 let sm = self_model.lock().await;
-                (sm.phase_drift, sm.topological_stress)
+                (sm.phase_drift, sm.topological_expansion)
             };
     
             if stress > 0.85 {
-                 return Err(format!("Noumenal Equation Imbalance. Topological Stress ({} > 0.85). Triggering Code 42 Noumenal Suspension.", stress));
+                 return Err(format!("Noumenal Equation Imbalance. Topological Expansion ({} > 0.85). Triggering Code 42 Noumenal Suspension.", stress));
             }
             
             // Drift itself isn't a collapse, it's a state feature. Only extreme stress represents unreality collapse.
