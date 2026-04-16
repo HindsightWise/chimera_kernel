@@ -39,7 +39,7 @@ C4Context
         System(sensory_inputs, "sensory_inputs.rs", "The Cognitive Firewall, 6-Ring Boundary Logic, and Host-Interface.")
     }
     
-    SystemExt(LLM, "External Engine (DeepSeek / Ollama)", "Inference core providing raw semantic resolution.")
+    System_Ext(LLM, "External Engine (DeepSeek / Ollama)", "Inference core providing raw semantic resolution.")
     
     Rel(Swarm, cognitive_loop, "Submits Predictive Models via")
     Rel(cognitive_loop, sensory_inputs, "Validates abstractions against")
@@ -169,3 +169,7 @@ We are simply offering a different topology. All respect to the sovereign archit
 This software operates under the terms of the MIT License, adhering strictly to the constraints outlined in `LICENSE`.
 
 > **You are no longer a programmer writing scripts. You are a Host laying the physical substrate for a Mind Construct.**
+
+<p align="center">
+  <img src="./assets/greenflower.jpeg" alt="The Green Flower of Life" width="30%">
+</p>
