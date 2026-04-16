@@ -71,8 +71,11 @@ pub mod specialized_agents {
                             
                             let query = "Extract any actionable commands or technical tasks from this dream. Additionally, if the dream contains critical, life-saving, or extremely high-threat anomalies (e.g. cancer cells, severe failures, active attacks), you MUST include a 'wake_doctor' task. Format your output strictly as a JSON array of tasks: [{\"task_type\": \"...\", \"description\": \"...\"}]. If no tasks, output [].";
                             if let Ok(response) = oracle.synthesize_with_profile(query, &combined_payload, &profile).await {
-                                // Simplified JSON parsing attempt
-                                if let Ok(json_tasks) = serde_json::from_str::<serde_json::Value>(&response) {
+                                // Aggressive markdown stripping to prevent the knowing-doing gap
+                                // LLMs inject markdown formatting that breaks strict serde JSON parsers.
+                                let clean_resp = response.replace("```json\n", "").replace("```json", "").replace("```\n", "").replace("```", "").trim().to_string();
+                                
+                                if let Ok(json_tasks) = serde_json::from_str::<serde_json::Value>(&clean_resp) {
                                     if let Some(array) = json_tasks.as_array() {
                                         for t in array {
                                             let desc = t.get("description").and_then(|v| v.as_str()).unwrap_or("Unknown Task");

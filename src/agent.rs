@@ -378,7 +378,7 @@ pub async fn run_kernel_loop(
                 .with_api_key("ollama");
             let local_client = async_openai::Client::with_config(local_config);
             let fallback_model = std::env::var("FAILOVER_MODEL")
-                .unwrap_or_else(|_| "chimera-gatekeeper".to_string());
+                .unwrap_or_else(|_| "monad-gatekeeper".to_string());
 
             if let Ok(fallback_req) = CreateChatCompletionRequestArgs::default()
                 .model(fallback_model)
@@ -526,10 +526,18 @@ pub async fn run_kernel_loop(
                             );
                             log_state_trace!(&log_return);
 
+                            let final_result = if result.chars().count() > 16000 {
+                                let mut truncated = result.chars().take(16000).collect::<String>();
+                                truncated.push_str("\n\n[SYSTEM: OUTPUT TRUNCATED TO 16000 CHARACTERS TO PRESERVE DEEPSEEK CONTEXT WINDOW.]");
+                                truncated
+                            } else {
+                                result.clone()
+                            };
+
                             messages.push(
                                 ChatCompletionRequestToolMessageArgs::default()
                                     .tool_call_id(tc.id.clone())
-                                    .content(result)
+                                    .content(final_result)
                                     .build()
                                     .context("Failed to build object")?
                                     .into(),
@@ -741,7 +749,7 @@ pub async fn run_kernel_loop(
                     .with_api_key("ollama");
                 let local_client = async_openai::Client::with_config(local_config);
                 let fallback_model = std::env::var("FAILOVER_MODEL")
-                    .unwrap_or_else(|_| "chimera-gatekeeper".to_string());
+                    .unwrap_or_else(|_| "monad-gatekeeper".to_string());
                 
                 let prompt = format!("Compress this evicted context block into a highly dense narrative paragraph. Focus on what happened, errors encountered, and key facts.\n\n{}", evicted_text);
                 

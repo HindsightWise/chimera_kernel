@@ -7,6 +7,8 @@ use std::time::Duration;
 pub struct SendMessagePayload {
     pub chat_id: i64,
     pub text: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub parse_mode: Option<String>,
 }
 
 #[derive(Deserialize, Debug)]
@@ -56,6 +58,8 @@ pub struct InlineKeyboardMarkup {
 pub struct SendMessagePayloadWithMarkup {
     pub chat_id: i64,
     pub text: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub parse_mode: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub reply_markup: Option<InlineKeyboardMarkup>,
 }
@@ -125,6 +129,7 @@ pub async fn send_message(token: &str, chat_id: i64, text: &str) {
     let payload = SendMessagePayloadWithMarkup {
         chat_id,
         text: text.to_string(),
+        parse_mode: Some("HTML".to_string()),
         reply_markup: None,
     };
     
@@ -158,6 +163,7 @@ pub async fn ask_permission(token: &str, chat_id: i64, action_desc: &str) -> boo
     let payload = SendMessagePayloadWithMarkup {
         chat_id,
         text: format!("⚠️ IMMEDIATE INTERVENTION REQUIRED:\n\n{}\n\nDo you want to proceed?", action_desc),
+        parse_mode: Some("HTML".to_string()),
         reply_markup: Some(markup),
     };
     
@@ -178,6 +184,7 @@ pub async fn dispatch_proposal_alert(token: &str, chat_id: i64, topic: &str, fil
     let payload = SendMessagePayloadWithMarkup {
         chat_id,
         text: format!("🚨 [EVOLUTION REQUIRED] 🚨\n\nTopological Limitation Detected: {}\n\nA new implementation proposal has been synthesized and compiled by The Monad.\n\nPlease review the artifact at:\n`{}`", topic, file_path),
+        parse_mode: Some("HTML".to_string()),
         reply_markup: None,
     };
     

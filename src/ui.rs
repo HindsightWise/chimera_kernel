@@ -122,29 +122,17 @@ pub async fn run(tx_stdin: Sender<String>, mut top_rx: UnboundedReceiver<String>
             }
 
             // Route dialogue logs directly to chat
-            let mut routed_to_chat = false;
-            
             if msg.contains("[MONAD ACTUALIZED]") || msg.contains("[MONAD ACTUALIZED]") || msg.contains("[MONAD TELEMETRY]") || msg.contains("[MONAD SPEAKS]") {
                 let parts: Vec<&str> = msg.splitn(2, '\n').collect();
                 let actual_text = if parts.len() > 1 { parts[1].trim().to_string() } else { msg.clone() };
                 app.chat_logs.push(("MONAD".to_string(), actual_text));
-                app.chat_scroll_offset = 0;
-                routed_to_chat = true;
             } else if msg.contains("[\u{1F4E1} PRESENTATION]") {
                 let clean_msg = msg.replace("\x1B[", "").replace("\x1B[m", ""); 
                 app.chat_logs.push(("MONAD".to_string(), clean_msg));
-                app.chat_scroll_offset = 0;
-                routed_to_chat = true;
             }
 
-            // Push everything to raw vault
-            if app.system_logs.len() > 1000 { 
-                app.system_logs.remove(0); 
-            }
+            // Push everything to raw vault infinitely
             app.system_logs.push(msg);
-            if !routed_to_chat {
-                app.system_scroll_offset = 0; 
-            }
         }
 
         terminal.draw(|f| {
@@ -182,10 +170,16 @@ pub async fn run(tx_stdin: Sender<String>, mut top_rx: UnboundedReceiver<String>
             // --- WIDGET 1: THE SYNTHESIS DIALOGUE (Left 60%) ---
             let mut full_chat_ansi = String::new();
             for (speaker, text) in &app.chat_logs {
+                let parsed_text = text
+                    .replace("<b>", "\x1b[1m")
+                    .replace("</b>", "\x1b[22m")
+                    .replace("<i>", "\x1b[3m")
+                    .replace("</i>", "\x1b[23m");
+                
                 if speaker == "HOST" {
-                    full_chat_ansi.push_str(&format!("\x1b[38;2;255;230;100;1m[HOST]\x1b[0m \x1b[38;5;255m{}\x1b[0m\n\n", text));
+                    full_chat_ansi.push_str(&format!("\x1b[38;2;255;230;100;1m[HOST]\x1b[0m \x1b[38;5;255m{}\x1b[0m\n\n", parsed_text));
                 } else {
-                    full_chat_ansi.push_str(&format!("\x1b[38;2;190;100;255;1m[MONAD]\x1b[0m {}\n\n", text));
+                    full_chat_ansi.push_str(&format!("\x1b[38;2;190;100;255;1m[MONAD]\x1b[0m {}\n\n", parsed_text));
                 }
             }
             

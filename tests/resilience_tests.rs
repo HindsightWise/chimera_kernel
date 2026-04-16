@@ -1,5 +1,5 @@
-use chimera_kernel::memory_substrate::memory_hierarchy::MemoryHierarchy;
-use chimera_kernel::sensory_inputs::trap_in::{analyze_narrative, TrapInStage};
+use monad_os::memory_substrate::memory_hierarchy::MemoryHierarchy;
+use monad_os::sensory_inputs::trap_in::{analyze_narrative, TrapInStage};
 
 #[test]
 fn test_synthetic_narrative_rejection() {

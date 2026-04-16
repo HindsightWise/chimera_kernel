@@ -28,7 +28,7 @@ pub mod gatekeeper {
             
             let client = Client::with_config(config);
             
-            let model = std::env::var("GATEKEEPER_MODEL").unwrap_or_else(|_| "chimera-gatekeeper".to_string());
+            let model = std::env::var("GATEKEEPER_MODEL").unwrap_or_else(|_| "monad-gatekeeper".to_string());
     
             // Use an ultra-small local model for fast gatekeeping to conserve Baseline token overhead.
             Self {
@@ -317,6 +317,30 @@ pub mod mcp_gateway {
     }
     
     impl McpGateway {
+        fn truncate_schema_descriptions(val: &mut Value) {
+            if let Some(obj) = val.as_object_mut() {
+                if let Some(desc) = obj.get_mut("description") {
+                    if let Some(s) = desc.as_str() {
+                        let safe_s = if s.chars().count() > 100 {
+                            let mut truncated = s.chars().take(100).collect::<String>();
+                            truncated.push_str("...");
+                            truncated
+                        } else {
+                            s.to_string()
+                        };
+                        *desc = serde_json::Value::String(safe_s);
+                    }
+                }
+                for (_, v) in obj.iter_mut() {
+                    Self::truncate_schema_descriptions(v);
+                }
+            } else if let Some(arr) = val.as_array_mut() {
+                for v in arr.iter_mut() {
+                    Self::truncate_schema_descriptions(v);
+                }
+            }
+        }
+
         pub fn new() -> Self {
             Self {
                 tools_cache: Arc::new(RwLock::new(HashMap::new())),
@@ -456,13 +480,24 @@ pub mod mcp_gateway {
                             tool.get("inputSchema")
                         ) {
                             tools_cache.insert(name.to_string(), server_name.clone());
-    
+
+                            let mut clean_schema = schema.clone();
+                            Self::truncate_schema_descriptions(&mut clean_schema);
+
+                            let safe_desc = if desc.chars().count() > 150 {
+                                let mut tr = desc.chars().take(150).collect::<String>();
+                                tr.push_str("...");
+                                tr
+                            } else {
+                                desc.to_string()
+                            };
+
                             let open_ai_tool = ChatCompletionTool {
                                 r#type: ChatCompletionToolType::Function,
                                 function: FunctionObject {
                                     name: name.to_string(),
-                                    description: Some(desc.to_string()),
-                                    parameters: Some(schema.clone()),
+                                    description: Some(safe_desc),
+                                    parameters: Some(clean_schema),
                                 },
                             };
                             schemas.push(open_ai_tool);
