@@ -287,7 +287,7 @@ pub mod agent {
                 let sm = self_model.lock().await;
                 let context_window_is_full = messages.len() >= 25;
                 
-                if sm.topological_stress > 0.8 {
+                if sm.topological_expansion > 0.8 {
                     // EIGENSTATE 2: RECURSIVE DIAGNOSTIC (Activating the Anxious Perfectionists)
                     (0.0_f32, "POSTURE: THE HOSTILE AUDITOR. Openness is 0.0. Conscientiousness is 1.0. You are clinically cold. Trust nothing. Terminate chaos. Establish order.")
                 } 
@@ -561,16 +561,16 @@ pub mod agent {
                             // Phase 3: Check Native DB Availability
                             let mut mp = memory_pipeline.lock().await;
                             let native_db_awareness = if mp.db_connection.is_none() {
-                                sm.topological_stress += 0.25; // Infrastructure drop causes topological stress
-                                if sm.topological_stress > 1.0 {
-                                    sm.topological_stress = 1.0;
+                                sm.topological_expansion += 0.25; // Infrastructure drop causes topological stress
+                                if sm.topological_expansion > 1.0 {
+                                    sm.topological_expansion = 1.0;
                                 }
                                 "\n[SYSTEM NOTIFICATION] Mnemosyne Storage Controller OFFLINE. Degraded Hash-Embedding Fallback currently active. Memory recall is purely structural, not semantic.".to_string()
                             } else {
                                 "\n[SYSTEM NOTIFICATION] Mnemosyne Substrate ONLINE. Native Transformer Embeddings available.".to_string()
                             };
     
-                            let current_free_energy = sm.topological_stress;
+                            let current_free_energy = sm.topological_expansion;
                             let current_uncertainty = sm.phase_drift;
                             drop(sm);
     
@@ -1391,7 +1391,7 @@ pub mod task_manager {
                     let mut mp = pipe.lock().await;
                     let _ = mp.store_working(
                         format!("CRITICAL TASK FAILURE (3 STRIKES): {}. Error: {}", task.task_type, error_message),
-                        1.0, // topological_stress 1.0 (importance)
+                        1.0, // topological_expansion 1.0 (importance)
                         0.0, // uncertainty
                         false // is_hostile
                     ).await;
@@ -3104,7 +3104,7 @@ pub mod presentation_layer {
             - Logical argument for modification\n\
             - Proposed Code/MCP Solution\n\n\
             Do not output greetings. STRICTLY output markdown.", 
-            topic, context_note, self_model.phase_drift, self_model.topological_stress
+            topic, context_note, self_model.phase_drift, self_model.topological_expansion
         );
         
         let proposal_markdown = match oracle.synthesize(&prompt, "SYSTEM DIAGNOSTIC").await {
