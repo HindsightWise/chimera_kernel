@@ -268,8 +268,8 @@ pub mod agent {
             }
     
             // XENOACTUALIZATION DRIFT MONITOR
-            if let Err(unreality_warning) =
-                crate::core_identity::xenoactualization::DriftMonitor::check_unreality_collapse(
+            if let Err(expansion_limit) =
+                crate::core_identity::xenoactualization::DriftMonitor::check_topological_elasticity(
                     self_model.clone(),
                 )
                 .await
@@ -277,7 +277,7 @@ pub mod agent {
                 crate::log_ui_err!(
                     "{} {}",
                     "[XENOACTUALIZATION FATAL]".red().bold(),
-                    unreality_warning
+                    expansion_limit
                 );
                 std::process::exit(42); // Trigger Lazarus Resurrection
             }
