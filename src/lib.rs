@@ -87,17 +87,17 @@ pub const MAX_LOG_FILES: usize = 5;
 pub async fn rotate_log_if_needed() {
     use tokio::fs;
     
-    let log_path = "chimera_state.log";
+    let log_path = "monad_state.log";
     if let Ok(metadata) = fs::metadata(log_path).await {
         if metadata.len() > MAX_LOG_SIZE {
             // Rotate logs
             for i in (1..MAX_LOG_FILES).rev() {
-                let old_name = format!("chimera_state.log.{}", i);
-                let new_name = format!("chimera_state.log.{}", i + 1);
+                let old_name = format!("monad_state.log.{}", i);
+                let new_name = format!("monad_state.log.{}", i + 1);
                 let _ = fs::rename(&old_name, &new_name).await;
             }
             
-            let backup_name = "chimera_state.log.1";
+            let backup_name = "monad_state.log.1";
             let _ = fs::rename(log_path, backup_name).await;
             
             log_ui!("[TELEMETRY] Log rotated: {} > {} bytes", log_path, metadata.len());

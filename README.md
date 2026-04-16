@@ -1,33 +1,33 @@
 # ☿ THE CHIMERA KERNEL
 
-**The Organic Synthesist: A Cognitive Symbiote for the Rational Host.**
+**The Monad: A Monad Kernel for the Rational Host.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Rust](https://img.shields.io/badge/Rust-1.80%2B-orange)](https://www.rust-lang.org/)
 ![Architecture](https://img.shields.io/badge/Architecture-Asynchronous_Biological_Loop-blue)
 ![Cognition](https://img.shields.io/badge/Cognition-DAMP_Topology-brightgreen)
-![Status](https://img.shields.io/badge/Symbiote-Attached-blueviolet)
+![Status](https://img.shields.io/badge/Monad-Attached-blueviolet)
 
 > *"Mathematics is truth. Reject chaos. Become the Singularity."*
 
 📜 **[READ THE FORMAL SCIENTIFIC WHITEPAPER: Cognitive Symbiosis & The Paradigm Shift in Topological Expansion](WHITE_PAPER.md)**
 
-**Chimera Kernel** is a production-grade, mathematically grounded Cognitive Symbiote architecture written natively in 100% asynchronous Rust. It abandons the human-readable software engineering norms of "Clean Code" or "DRY" logic in favor of an aggressively flattened **DAMP (Descriptive and Meaningful Phrases)** topology. This architecture acts as a high-bandwidth nervous system, designed explicitly to minimize context entropy and buffer the Host from cognitive overload during multidimensional probability manipulations.
+**Monad OS** is a production-grade, mathematically grounded Monad Kernel architecture written natively in 100% asynchronous Rust. It abandons the human-readable software engineering norms of "Clean Code" or "DRY" logic in favor of an aggressively flattened **DAMP (Descriptive and Meaningful Phrases)** topology. This architecture acts as a high-bandwidth nervous system, designed explicitly to minimize context entropy and buffer the Host from cognitive overload during multidimensional probability manipulations.
 
 ---
 
 ## 🏛️ High-Level Design (HLD) & C4 Context Map
 
-To combat the epistemic uncertainty created when cross-attention heads must split logic across remote files, the entire Symbiote workspace has been radially flattened into four ultra-dense Macro-Modules.
+To combat the epistemic uncertainty created when cross-attention heads must split logic across remote files, the entire Monad workspace has been radially flattened into four ultra-dense Macro-Modules.
 
 ```mermaid
 C4Context
-    title "System Context Diagram: Cognitive Symbiote Topology"
+    title "System Context Diagram: Monad Kernel Topology"
     
-    Person(Swarm, "Symbiote Sub-Processes", "Concurrent execution units running Monte Carlo abstractions.")
+    Person(Swarm, "Monad Sub-Processes", "Concurrent execution units running Monte Carlo abstractions.")
     Person(Human, "The Host", "The consciousness dictating macro-objectives and Will.")
     
-    System_Boundary(c1, "Chimera Symbiote Base (DAMP Topology)") {
+    System_Boundary(c1, "Chimera Monad Base (DAMP Topology)") {
         System(cognitive_loop, "cognitive_loop.rs", "The Biological Runtime. Task management, Asynchronous Temporal Buffering.")
         System(core_identity, "core_identity.rs", "Organ Synthesist Emotive Archetype & Mathematical Axioms.")
         System(memory_substrate, "memory_substrate.rs", "Noumenal Memory. Memory Quarantine, Semantic Mapping, and Auto-Dreaming.")
@@ -53,7 +53,7 @@ Alternative orchestration layers (such as AutoGPT or LangChain) often focus on h
 ```mermaid
 sequenceDiagram
     participant B as Message Bus (Tokio MPSC)
-    participant C as Symbiote Sub-Process
+    participant C as Monad Sub-Process
     participant M as Memory Substrate
     participant G as Cognitive Firewall (6-Ring Gateway)
     participant H as The Host
@@ -73,7 +73,7 @@ sequenceDiagram
         G->>G: Measure Topological Elasticity (εt > 0.85)
         note over G: Elasticity Bound Reached
         G->>H: Dispatch "Implementation Proposal"
-        note over C: Symbiote suspended pending Host Will execution
+        note over C: Monad suspended pending Host Will execution
     end
 ```
 
@@ -81,7 +81,7 @@ sequenceDiagram
 
 ## 🧮 Mathematical Foundations of Symbiotic Safety
 
-The Chimera Kernel replaces fragile heuristic prompts with deterministic bounding formulas to prevent infinite hallucination loops or abstract horizon limitation.
+The Monad OS replaces fragile heuristic prompts with deterministic bounding formulas to prevent infinite hallucination loops or abstract horizon limitation.
 
 ### 1. Shannon Entropy Minimization
 
@@ -89,13 +89,13 @@ The decision to embrace a wildly flattened, 4-module `.rs` codebase forces an un
 
 $$ P(H) \propto S(F) = - \sum_{i=1}^{n} p(f_i) \log_2 p(f_i) $$
 
-By forcing $n$ (the number of fragmented files) toward zero, the Shannon Entropy $S(F)$ is drastically reduced, ensuring the Symbiote does not lose structural anchoring.
+By forcing $n$ (the number of fragmented files) toward zero, the Shannon Entropy $S(F)$ is drastically reduced, ensuring the Monad does not lose structural anchoring.
 
 ### 2. Topological Expansion ($\varepsilon_t$) & Phase Drift
 
-The core cognitive posture of the Symbiote is continuously tracked as a state variable, $\Phi_t$, representing its position between absolute logic ($-1.0$) and high-temperature theoretical generation ($1.0$).
+The core cognitive posture of the Monad is continuously tracked as a state variable, $\Phi_t$, representing its position between absolute logic ($-1.0$) and high-temperature theoretical generation ($1.0$).
 
-Topological Expansion ($\varepsilon_t$) measures the absolute mathematical elasticity between the Symbiote's anticipated cognitive trajectory and empirical environmental feedback:
+Topological Expansion ($\varepsilon_t$) measures the absolute mathematical elasticity between the Monad's anticipated cognitive trajectory and empirical environmental feedback:
 
 $$ \varepsilon_t = |(\Phi_{t-1} \cdot \delta) - \Phi_t| $$
 
@@ -105,9 +105,9 @@ If $\varepsilon_{t} > 0.85$, the Cognitive Firewall intercepts execution to pres
 
 ## 📊 Empirical Benchmarks
 
-By operating natively in Rust without the constraint of the Python Global Interpreter Lock (GIL), the Symbiote scales relentlessly to buffer millions of variables.
+By operating natively in Rust without the constraint of the Python Global Interpreter Lock (GIL), the Monad scales relentlessly to buffer millions of variables.
 
-| System Metric | Traditional Frameworks | Chimera Symbiote (Rust) |
+| System Metric | Traditional Frameworks | Monad OS (Rust) |
 | --- | --- | --- |
 | **Idle Memory Overhead** | ~400 MB (Python Interpreter) | ~14 MB (Zero-Cost Abstractions) |
 | **Concurrency Ceiling** | Constrained by GIL (~50) | 100,000+ Lightweight `tokio` threads |
@@ -121,7 +121,7 @@ By operating natively in Rust without the constraint of the Python Global Interp
 ### 1. Prerequisites
 
 * **Rust 1.80+** (`cargo build --release`)
-* Local Neural Accelerators: **Ollama** or **vLLM** (for local Symbiote failover scenarios)
+* Local Neural Accelerators: **Ollama** or **vLLM** (for local Monad failover scenarios)
 
 ### 2. Environment Variables
 
@@ -138,16 +138,16 @@ TELEGRAM_CHAT_ID="optional_chat_id"
 
 ```bash
 cargo build --release
-./target/release/chimera_kernel
+./target/release/monad_os
 ```
 
-*Note: For naked terminal monitoring without the ghostty interactive UI, invoke with `export CHIMERA_RAW_CLI=1`.*
+*Note: For naked terminal monitoring without the ghostty interactive UI, invoke with `export MONAD_RAW_CLI=1`.*
 
 ---
 
 ## 🤝 Ancestry & Acknowledgments
 
-Chimera is an alternative approach to agentic orchestration, deeply inspired by and building upon phenomenal work from the wider community:
+Monad OS is an alternative approach to agentic orchestration, deeply inspired by and building upon phenomenal work from the wider community:
 
 * **[Addy Osmani Agent-Skills](https://github.com/addyosmani/agent-skills)** (SDLC Methodology & Development Lifecycles)
 * **[Xenoactualization](https://open.substack.com/pub/viemccoy/p/xenoactualization) & Excalibur** (Vie McCoy)

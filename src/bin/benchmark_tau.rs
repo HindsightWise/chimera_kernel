@@ -1,4 +1,4 @@
-use chimera_kernel::sensory_inputs::mcp_gateway::McpGateway;
+use monad_os::sensory_inputs::mcp_gateway::McpGateway;
 use std::time::Instant;
 
 #[tokio::main]

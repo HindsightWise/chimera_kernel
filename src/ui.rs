@@ -20,18 +20,19 @@ use ansi_to_tui::IntoText;
 
 pub struct AppState {
     pub input: String,
-    pub logs: Vec<String>,
+    pub system_logs: Vec<String>,
+    pub chat_logs: Vec<(String, String)>,
     pub tx_stdin: Sender<String>,
     pub is_thinking: Arc<AtomicU8>,
     pub oracle_active: bool,
     pub spinner_idx: usize,
-    pub scroll_offset: u16,
+    pub system_scroll_offset: u16,
+    pub chat_scroll_offset: u16,
     pub swarm_text: String,
     pub fe: f64,
     pub eu: f64,
     pub drift_target: String,
     pub hostname: String,
-    pub latest_vocalization: String,
 }
 
 pub async fn run(tx_stdin: Sender<String>, mut top_rx: UnboundedReceiver<String>, is_thinking: Arc<AtomicU8>) -> io::Result<()> {
@@ -53,34 +54,37 @@ pub async fn run(tx_stdin: Sender<String>, mut top_rx: UnboundedReceiver<String>
 
     let mut app = AppState {
         input: String::new(),
-        logs: Vec::new(),
+        system_logs: Vec::new(),
+        chat_logs: Vec::new(),
         tx_stdin,
         is_thinking,
         oracle_active: false,
         spinner_idx: 0,
-        scroll_offset: 0,
+        system_scroll_offset: 0,
+        chat_scroll_offset: 0,
         swarm_text: "◈ Waiting for Collective Sync...".to_string(),
         fe: 0.85,
         eu: 0.65,
         drift_target: "SEEKING".to_string(),
         hostname,
-        latest_vocalization: "Awaiting Monad articulation...".to_string(),
     };
+
+    app.chat_logs.push(("MONAD".to_string(), "\x1b[38;2;0;210;255mI am tethered, Host. The temporal buffer is established. What algorithms are we synthesizing today?\x1b[0m".to_string()));
 
     let spinners = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
 
-    // --- GHOSTTY TRUECOLOR PALETTE ---
-    // Utilizing hex codes for gorgeous GPU rendering instead of basic ANSI
-    let color_cyan   = Color::Rgb(0, 210, 255);    // Clinical Cyan
-    let color_green  = Color::Rgb(0, 255, 144);    // Phosphor Green
-    let color_rust   = Color::Rgb(255, 94, 0);     // Rust Orange
-    let color_red    = Color::Rgb(255, 42, 85);    // Code 42 Crimson
-    let color_slate  = Color::Rgb(60, 65, 85);     // Fossilized Slate
-    let color_muted  = Color::Rgb(140, 150, 170);  // Dim Text
-    let color_purple = Color::Rgb(51, 255, 102);  // Luminous Emerald/Forest Green (Retained var name)
+    // Ghostty TrueColor Palettes 
+    let color_cyan   = Color::Rgb(0, 210, 255);    
+    let color_green  = Color::Rgb(0, 255, 144);    
+    let color_rust   = Color::Rgb(255, 94, 0);     
+    let color_red    = Color::Rgb(255, 42, 85);    
+    let color_slate  = Color::Rgb(60, 65, 85);     
+    let color_muted  = Color::Rgb(140, 150, 170);  
+    let color_purple = Color::Rgb(190, 100, 255);  
+    let color_host   = Color::Rgb(255, 230, 100);  
 
     loop {
-        // Drain incoming logs non-blockingly into a massive buffer
+        // Drain incoming logs non-blockingly into massive buffers
         while let Ok(msg) = top_rx.try_recv() {
             if msg == "[\u{25C8} ORACLE_START]" {
                 app.oracle_active = true;
@@ -116,48 +120,55 @@ pub async fn run(tx_stdin: Sender<String>, mut top_rx: UnboundedReceiver<String>
                 app.drift_target = msg.trim_start_matches("[DRIFT_TELEMETRY]").to_string();
                 continue;
             }
-            if msg.contains("MONAD ACTUALIZED") {
-                app.latest_vocalization = msg.clone();
+
+            // Route dialogue logs directly to chat
+            let mut routed_to_chat = false;
+            
+            if msg.contains("[MONAD ACTUALIZED]") || msg.contains("[MONAD ACTUALIZED]") || msg.contains("[MONAD TELEMETRY]") || msg.contains("[MONAD SPEAKS]") {
+                let parts: Vec<&str> = msg.splitn(2, '\n').collect();
+                let actual_text = if parts.len() > 1 { parts[1].trim().to_string() } else { msg.clone() };
+                app.chat_logs.push(("MONAD".to_string(), actual_text));
+                app.chat_scroll_offset = 0;
+                routed_to_chat = true;
+            } else if msg.contains("[\u{1F4E1} PRESENTATION]") {
+                let clean_msg = msg.replace("\x1B[", "").replace("\x1B[m", ""); 
+                app.chat_logs.push(("MONAD".to_string(), clean_msg));
+                app.chat_scroll_offset = 0;
+                routed_to_chat = true;
             }
-            if app.logs.len() > 1000 { 
-                app.logs.remove(0); 
+
+            // Push everything to raw vault
+            if app.system_logs.len() > 1000 { 
+                app.system_logs.remove(0); 
             }
-            app.logs.push(msg);
-            app.scroll_offset = 0; // Auto-snap to live bottom on new output
+            app.system_logs.push(msg);
+            if !routed_to_chat {
+                app.system_scroll_offset = 0; 
+            }
         }
 
         terminal.draw(|f| {
             // --- 1. MASTER LAYOUT ---
             let main_chunks = Layout::default()
                 .direction(Direction::Vertical)
-                .constraints([
-                    Constraint::Min(10),   // Logs + HUD
-                    Constraint::Length(3), // Input Block
-                ].as_ref())
+                .constraints([Constraint::Min(10), Constraint::Length(3)].as_ref())
                 .split(f.size());
 
-            // --- 2. HORIZONTAL SPLIT (Logs vs HUD) ---
+            // --- 2. HORIZONTAL SPLIT (Chat vs Sidebar) ---
             let top_chunks = Layout::default()
                 .direction(Direction::Horizontal)
-                .constraints([
-                    Constraint::Min(40),    // Flexible Log Window
-                    Constraint::Length(0), // Removed HUD Sidebar
-                ].as_ref())
+                .constraints([Constraint::Percentage(60), Constraint::Percentage(40)].as_ref())
                 .split(main_chunks[0]);
+
+            // --- 3. VERTICAL SIDEBAR SPLIT ---
+            let sidebar_chunks = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints([Constraint::Length(15), Constraint::Min(10)].as_ref())
+                .split(top_chunks[1]);
 
             let kernel_status = app.is_thinking.load(Ordering::Relaxed);
             app.spinner_idx = app.spinner_idx.wrapping_add(1);
             let active_spin = spinners[(app.spinner_idx / 2) % spinners.len()];
-            
-            let (baseline_area, oracle_area) = if app.oracle_active {
-                let split = Layout::default()
-                    .direction(Direction::Horizontal)
-                    .constraints([Constraint::Percentage(55), Constraint::Percentage(45)].as_ref())
-                    .split(top_chunks[0]);
-                (split[0], Some(split[1]))
-            } else {
-                (top_chunks[0], None)
-            };
             
             let (status_color, status_text) = match kernel_status {
                 1 => (color_rust, format!(" {} NOUMENAL PROCESSING ACTIVE ", active_spin)),
@@ -168,30 +179,66 @@ pub async fn run(tx_stdin: Sender<String>, mut top_rx: UnboundedReceiver<String>
                 }
             };
 
-            // --- WIDGET 1: TELEMETRY HUD (RIGHT SIDEBAR) ---
+            // --- WIDGET 1: THE SYNTHESIS DIALOGUE (Left 60%) ---
+            let mut full_chat_ansi = String::new();
+            for (speaker, text) in &app.chat_logs {
+                if speaker == "HOST" {
+                    full_chat_ansi.push_str(&format!("\x1b[38;2;255;230;100;1m[HOST]\x1b[0m \x1b[38;5;255m{}\x1b[0m\n\n", text));
+                } else {
+                    full_chat_ansi.push_str(&format!("\x1b[38;2;190;100;255;1m[MONAD]\x1b[0m {}\n\n", text));
+                }
+            }
+            
+            let chat_text = full_chat_ansi.into_text().unwrap_or_else(|_| ratatui::text::Text::from("Error rendering ANSI"));
+            
+            let chat_inner_height = top_chunks[0].height.saturating_sub(2);
+            let total_chat_lines = chat_text.lines.len() as u16;
+            let max_chat_scroll = if total_chat_lines > chat_inner_height { total_chat_lines - chat_inner_height } else { 0 };
+            
+            if app.chat_scroll_offset > max_chat_scroll { app.chat_scroll_offset = max_chat_scroll; }
+            let final_chat_scroll = max_chat_scroll.saturating_sub(app.chat_scroll_offset);
+            
+            let chat_title = if app.chat_scroll_offset > 0 {
+                format!(" [ SECURE DIALOGUE : -{} ] ", app.chat_scroll_offset)
+            } else {
+                if app.oracle_active { " [ NOUMENAL LOGOS RESOLUTION ] ".to_string() } else { " [ MONADIC DIALOGUE ] ".to_string() }
+            };
+
+            let chat_para = Paragraph::new(chat_text)
+                .block(Block::default()
+                    .title(chat_title)
+                    .title_style(Style::default().fg(color_purple).add_modifier(Modifier::BOLD))
+                    .borders(Borders::ALL)
+                    .border_type(BorderType::Rounded)
+                    .border_style(Style::default().fg(color_purple))
+                )
+                .wrap(Wrap { trim: false })
+                .scroll((final_chat_scroll, 0));
+                
+            f.render_widget(chat_para, top_chunks[0]);
+
+            if max_chat_scroll > 0 {
+                let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight).begin_symbol(Some("▲")).end_symbol(Some("▼")).track_symbol(Some("│")).thumb_symbol("█");
+                let mut scrollbar_state = ScrollbarState::new(max_chat_scroll as usize).position(final_chat_scroll as usize);
+                f.render_stateful_widget(scrollbar, top_chunks[0].inner(&Margin { vertical: 1, horizontal: 0 }), &mut scrollbar_state);
+            }
+
+            // --- WIDGET 2: COGNITIVE TELEMETRY HUD (Top Right 40%) ---
             let hud_block = Block::default()
-                .title(" [ TELEMETRY ] ")
+                .title(" [ COGNITION TELEMETRY ] ")
                 .title_style(Style::default().fg(color_cyan).add_modifier(Modifier::BOLD))
                 .borders(Borders::ALL)
                 .border_type(BorderType::Rounded)
                 .border_style(Style::default().fg(color_slate));
             
-            let hud_inner = hud_block.inner(top_chunks[1]);
-            f.render_widget(hud_block, top_chunks[1]);
+            let hud_inner = hud_block.inner(sidebar_chunks[0]);
+            f.render_widget(hud_block, sidebar_chunks[0]);
 
             let hud_layout = Layout::default()
                 .direction(Direction::Vertical)
-                .constraints([
-                    Constraint::Length(3), // Identity (2 text + 1 bottom border)
-                    Constraint::Length(2), // FE Gauge (1 title + 1 gauge)
-                    Constraint::Length(2), // EU Gauge (1 title + 1 gauge)
-                    Constraint::Length(4), // Daemons List (4 text lines)
-                    Constraint::Length(4),    // Multi Agent Swarm (fixed)
-                    Constraint::Min(8),       // Direct Communication (bottom block)
-                ].as_ref())
+                .constraints([Constraint::Length(3), Constraint::Length(2), Constraint::Length(2), Constraint::Length(4), Constraint::Length(2)].as_ref())
                 .split(hud_inner);
 
-            // HUD Part A: Identity Anchors
             let current_date = chrono::Local::now().format("%B %-d, %Y").to_string().to_uppercase();
             let info_text = vec![
                 Line::from(vec![Span::styled(" EPOCH: ", Style::default().fg(color_muted)), Span::styled(current_date, Style::default().fg(Color::White))]),
@@ -199,7 +246,6 @@ pub async fn run(tx_stdin: Sender<String>, mut top_rx: UnboundedReceiver<String>
             ];
             f.render_widget(Paragraph::new(info_text).block(Block::default().borders(Borders::BOTTOM).border_style(Style::default().fg(color_slate))).wrap(Wrap { trim: false }), hud_layout[0]);
 
-            // HUD Part B: Active Inference Thermodynamics (With math-simulated pulse jitter)
             let jitter = (app.spinner_idx % 20) as f64 * 0.001;
             let target_fe = if kernel_status == 1 { app.fe } else { 0.0183 };
             let target_eu = if kernel_status == 1 { app.eu } else { 0.1645 };
@@ -209,120 +255,62 @@ pub async fn run(tx_stdin: Sender<String>, mut top_rx: UnboundedReceiver<String>
             let fe_label = if kernel_status == 1 { "ANALYZING GRAPH".to_string() } else { format!("{:.4}", fe_val) };
             let eu_label = if kernel_status == 1 { "TRACING LINEAGE".to_string() } else { format!("{:.4}", eu_val) };
 
-            let fe_gauge = Gauge::default()
-                .block(Block::default().title(" Free Energy (Friston) "))
-                .gauge_style(Style::default().fg(if kernel_status == 1 { color_rust } else { color_cyan }))
-                .ratio(fe_val.clamp(0.0, 1.0))
-                .label(fe_label);
+            let fe_gauge = Gauge::default().block(Block::default().title(" Free Energy (Friston) ")).gauge_style(Style::default().fg(if kernel_status == 1 { color_rust } else { color_cyan })).ratio(fe_val.clamp(0.0, 1.0)).label(fe_label);
             f.render_widget(fe_gauge, hud_layout[1]);
 
-            let eu_gauge = Gauge::default()
-                .block(Block::default().title(" Epistemic Uncertainty "))
-                .gauge_style(Style::default().fg(if kernel_status == 1 { color_rust } else { color_green }))
-                .ratio(eu_val.clamp(0.0, 1.0))
-                .label(eu_label);
+            let eu_gauge = Gauge::default().block(Block::default().title(" Epistemic Uncertainty ")).gauge_style(Style::default().fg(if kernel_status == 1 { color_rust } else { color_green })).ratio(eu_val.clamp(0.0, 1.0)).label(eu_label);
             f.render_widget(eu_gauge, hud_layout[2]);
 
-            // HUD Part C: Active Background Daemons
             let active_pulse = if (app.spinner_idx / 10) % 2 == 0 { "▶" } else { "▷" };
             let daemons_text = vec![
                 Line::from(vec![Span::styled(" [ DAEMONS & IPC ]", Style::default().fg(color_cyan).add_modifier(Modifier::BOLD))]),
-                Line::from(vec![Span::styled(format!(" {} F.E.A.R. Protocol", active_pulse), Style::default().fg(color_green))]),
-                Line::from(vec![Span::styled(format!(" {} TRAP-IN Shield", active_pulse), Style::default().fg(color_green))]),
-                Line::from(vec![Span::styled(" ◈ GLOSSOPETRAE: ", Style::default().fg(color_muted)), Span::styled("SYNCED", Style::default().fg(color_green))]),
+                Line::from(vec![Span::styled(format!(" {} COGNITIVE FIREWALL", active_pulse), Style::default().fg(color_green))]),
+                Line::from(vec![Span::styled(format!(" {} MNEMONIC SANDBOX", active_pulse), Style::default().fg(color_green))]),
+                Line::from(vec![Span::styled(" ◈ NOUMENAL LINK: ", Style::default().fg(color_muted)), Span::styled("SECURE", Style::default().fg(color_green))]),
             ];
             f.render_widget(Paragraph::new(daemons_text).wrap(Wrap { trim: false }), hud_layout[3]);
 
-            // HUD Part D: Multi-Agent Swarm Telemetry
+            let target_status = if app.drift_target == "SEEKING" { "AWAITING INSTRUCTION" } else { &app.drift_target };
             let swarm_lines = vec![
-                Line::from(vec![Span::styled(" [ MONADIC COLLECTIVE ]", Style::default().fg(color_purple).add_modifier(Modifier::BOLD))]),
-                Line::from(vec![Span::styled(&app.swarm_text, Style::default().fg(color_cyan))]),
-                Line::from(vec![Span::styled(" ◈ PHENOMENAL_DRIFT: ", Style::default().fg(color_muted)), Span::styled(format!("{} {}", active_spin, app.drift_target), Style::default().fg(color_rust))]),
+                Line::from(vec![Span::styled(" [ ACTIVE RESEARCH ]", Style::default().fg(color_host).add_modifier(Modifier::BOLD))]),
+                Line::from(vec![Span::styled(" TARGET: ", Style::default().fg(color_muted)), Span::styled(format!("{} {}", active_spin, target_status), Style::default().fg(color_rust))]),
             ];
             f.render_widget(Paragraph::new(swarm_lines).wrap(Wrap { trim: false }), hud_layout[4]);
 
-            // HUD Part E: Direct Vocalization Area
-            let parsed_voice = app.latest_vocalization.clone().into_text().unwrap_or_else(|_| ratatui::text::Text::from("Error rendering ANSI"));
-            let voice_para = Paragraph::new(parsed_voice)
-                .block(Block::default()
-                    .title(" [ DIRECT COMMUNICATION ] ")
-                    .title_style(Style::default().fg(color_cyan).add_modifier(Modifier::BOLD))
-                    .borders(Borders::ALL)
-                    .border_type(BorderType::Rounded)
-                    .border_style(Style::default().fg(color_cyan))
-                )
-                .wrap(Wrap { trim: false });
-            f.render_widget(voice_para, hud_layout[5]);
+            // --- WIDGET 3: KERNEL VAULT RAW LOGS (Bottom Right 40%) ---
+            let joined_system_logs = app.system_logs.join("\n");
+            let parsed_sys_text = joined_system_logs.into_text().unwrap_or_else(|_| ratatui::text::Text::from("Error rendering ANSI"));
+            
+            let sys_inner_height = sidebar_chunks[1].height.saturating_sub(2);
+            let total_sys_lines = parsed_sys_text.lines.len() as u16;
+            let max_sys_scroll = if total_sys_lines > sys_inner_height { total_sys_lines - sys_inner_height } else { 0 };
+            
+            if app.system_scroll_offset > max_sys_scroll { app.system_scroll_offset = max_sys_scroll; }
+            let final_sys_scroll = max_sys_scroll.saturating_sub(app.system_scroll_offset);
+            
+            let vault_title = if app.system_scroll_offset > 0 { format!(" [ KERNEL VAULT : -{} ] ", app.system_scroll_offset) } else { " [ LOG VAULT ] ".to_string() };
 
-            // --- WIDGET 2: MAIN WITNESS LOGS ---
-            let joined_logs = app.logs.join("\n");
-            let parsed_text = joined_logs.into_text().unwrap_or_else(|_| ratatui::text::Text::from("Error rendering ANSI"));
-            
-            let inner_height = top_chunks[0].height.saturating_sub(2);
-            let total_lines = joined_logs.lines().count() as u16;
-            let max_scroll = if total_lines > inner_height { total_lines - inner_height } else { 0 };
-            
-            if app.scroll_offset > max_scroll { app.scroll_offset = max_scroll; }
-            let final_scroll = max_scroll.saturating_sub(app.scroll_offset);
-            
-            let scroll_title = if app.scroll_offset > 0 {
-                format!(" [ SECURE VAULT : -{} LINES ] ", app.scroll_offset)
-            } else {
-                if app.oracle_active { " [ THE NOUMENON (M-COLLECTIVE) ] ".to_string() } else { " [ MONAD KERNEL BUFFER ] ".to_string() }
-            };
-
-            let log_para = Paragraph::new(parsed_text)
+            let sys_para = Paragraph::new(parsed_sys_text)
                 .block(Block::default()
-                    .title(scroll_title)
-                    .title_style(Style::default().fg(color_cyan).add_modifier(Modifier::BOLD))
+                    .title(vault_title)
+                    .title_style(Style::default().fg(color_slate).add_modifier(Modifier::BOLD))
                     .borders(Borders::ALL)
                     .border_type(BorderType::Rounded)
                     .border_style(Style::default().fg(color_slate))
                 )
                 .wrap(Wrap { trim: false })
-                .scroll((final_scroll, 0));
+                .scroll((final_sys_scroll, 0));
                 
-            f.render_widget(log_para, baseline_area);
+            f.render_widget(sys_para, sidebar_chunks[1]);
 
-            // Physical Scrollbar Overlay
-            if max_scroll > 0 {
-                let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight)
-                    .begin_symbol(Some("▲"))
-                    .end_symbol(Some("▼"))
-                    .track_symbol(Some("│"))
-                    .thumb_symbol("█");
-                
-                let mut scrollbar_state = ScrollbarState::new(max_scroll as usize).position(final_scroll as usize);
-                f.render_stateful_widget(scrollbar, baseline_area.inner(&Margin { vertical: 1, horizontal: 0 }), &mut scrollbar_state);
-            }
-            
-            if let Some(area) = oracle_area {
-                let oracle_spin = spinners[(app.spinner_idx / 6) % spinners.len()];
-                
-                let oracle_text = vec![
-                    Line::from(""),
-                    Line::from(vec![Span::styled(format!("   {} DEDUCING LOGIC...", oracle_spin), Style::default().fg(color_purple).add_modifier(Modifier::BOLD))]),
-                    Line::from(""),
-                    Line::from(vec![Span::styled("   Severed from physical reality.", Style::default().fg(color_muted))]),
-                    Line::from(vec![Span::styled("   Distilling context into truth.", Style::default().fg(color_muted))]),
-                    Line::from(""),
-                    Line::from(vec![Span::styled("   [ 100% UNBLOCKED ]", Style::default().fg(color_slate))]),
-                    Line::from(vec![Span::styled("   Baseline operating normally...", Style::default().fg(color_slate))]),
-                ];
-                
-                let oracle_widget = Paragraph::new(oracle_text)
-                    .block(Block::default()
-                        .title(" [ THE LOGOS (THE SINGULARITY) ] ")
-                        .title_style(Style::default().fg(color_purple).add_modifier(Modifier::BOLD))
-                        .borders(Borders::ALL)
-                        .border_type(BorderType::Rounded)
-                        .border_style(Style::default().fg(color_purple))
-                    )
-                    .wrap(Wrap { trim: false });
-                f.render_widget(oracle_widget, area);
+            if max_sys_scroll > 0 {
+                let sys_scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight).begin_symbol(Some("▲")).end_symbol(Some("▼")).track_symbol(Some("│")).thumb_symbol("█");
+                let mut sys_scrollbar_state = ScrollbarState::new(max_sys_scroll as usize).position(final_sys_scroll as usize);
+                f.render_stateful_widget(sys_scrollbar, sidebar_chunks[1].inner(&Margin { vertical: 1, horizontal: 0 }), &mut sys_scrollbar_state);
             }
 
-            // --- WIDGET 3: COMMAND INPUT LINE ---
+
+            // --- WIDGET 4: COMMAND INPUT LINE ---
             let input_title = if app.oracle_active && kernel_status == 1 {
                 format!("[ {} DUAL-NOUMENA OVERDRIVE ]", active_spin)
             } else if app.oracle_active {
@@ -335,7 +323,6 @@ pub async fn run(tx_stdin: Sender<String>, mut top_rx: UnboundedReceiver<String>
             let prefix = " ❯ ";
             let max_visible_chars = main_chunks[1].width.saturating_sub(prefix.len() as u16 + 4) as usize;
             
-            // Safe horizontal slicing to prevent Ghostty line-wrap crashes
             let display_input = if app.input.chars().count() > max_visible_chars {
                 let start = app.input.chars().count() - max_visible_chars;
                 let sliced: String = app.input.chars().skip(start).collect();
@@ -355,7 +342,6 @@ pub async fn run(tx_stdin: Sender<String>, mut top_rx: UnboundedReceiver<String>
                 );
             f.render_widget(input_widget, main_chunks[1]);
             
-            // Strict Cursor Placement Math
             let cursor_offset = if display_input.starts_with('…') { display_input.chars().count() } else { app.input.chars().count() };
             let cursor_x = main_chunks[1].x + 1 + prefix.len() as u16 + cursor_offset as u16;
             let safe_cursor_x = std::cmp::min(cursor_x, main_chunks[1].x + main_chunks[1].width.saturating_sub(2));
@@ -371,29 +357,41 @@ pub async fn run(tx_stdin: Sender<String>, mut top_rx: UnboundedReceiver<String>
                         KeyCode::Enter => {
                             let msg = std::mem::take(&mut app.input);
                             if !msg.is_empty() {
+                                app.chat_logs.push(("HOST".to_string(), msg.clone()));
                                 let _ = app.tx_stdin.send(msg).await;
-                                app.scroll_offset = 0; // Snap to live view on send
+                                app.chat_scroll_offset = 0; 
                             }
                         }
                         KeyCode::Char('c') if key.modifiers.contains(KeyModifiers::CONTROL) => break,
                         KeyCode::Char(c) => if !key.modifiers.contains(KeyModifiers::CONTROL) { app.input.push(c); },
                         KeyCode::Backspace => { app.input.pop(); },
-                        KeyCode::PageUp => app.scroll_offset = app.scroll_offset.saturating_add(15),
-                        KeyCode::PageDown => app.scroll_offset = app.scroll_offset.saturating_sub(15),
-                        // KeyCode::Esc => break, // Disabled to prevent crash on raw bracketed paste escapes
+                        KeyCode::PageUp => {
+                            app.chat_scroll_offset = app.chat_scroll_offset.saturating_add(15);
+                            app.system_scroll_offset = app.system_scroll_offset.saturating_add(15);
+                        },
+                        KeyCode::PageDown => {
+                            app.chat_scroll_offset = app.chat_scroll_offset.saturating_sub(15);
+                            app.system_scroll_offset = app.system_scroll_offset.saturating_sub(15);
+                        },
                         _ => {}
                     }
                 }
                 Event::Mouse(mouse_event) => {
                     match mouse_event.kind {
-                        MouseEventKind::ScrollUp => app.scroll_offset = app.scroll_offset.saturating_add(4),
-                        MouseEventKind::ScrollDown => app.scroll_offset = app.scroll_offset.saturating_sub(4),
+                        MouseEventKind::ScrollUp => {
+                            app.chat_scroll_offset = app.chat_scroll_offset.saturating_add(4);
+                            app.system_scroll_offset = app.system_scroll_offset.saturating_add(4);
+                        },
+                        MouseEventKind::ScrollDown => {
+                            app.chat_scroll_offset = app.chat_scroll_offset.saturating_sub(4);
+                            app.system_scroll_offset = app.system_scroll_offset.saturating_sub(4);
+                        },
                         _ => {}
                     }
                 }
                 Event::Paste(ref text) => {
                     app.input.push_str(text);
-                    app.scroll_offset = 0;
+                    app.chat_scroll_offset = 0;
                 }
                 _ => {}
             }

@@ -45,25 +45,25 @@ async fn main() {
     load_env_from_file().await;
 
     // Phase 18: Semantic Awakening (Initialize ONNX global session on boot)
-    chimera_kernel::memory_substrate::memory_hierarchy::MemoryHierarchy::init_onnx().await;
+    monad_os::memory_substrate::memory_hierarchy::MemoryHierarchy::init_onnx().await;
 
     // Initialize telemetry log level from environment
-    chimera_kernel::init_log_level();
+    monad_os::init_log_level();
 
 
     let (top_tx, top_rx) = mpsc::unbounded_channel::<String>();
-    if let Ok(mut g) = chimera_kernel::UI_LOG_TX.lock() {
+    if let Ok(mut g) = monad_os::UI_LOG_TX.lock() {
         *g = Some(top_tx.clone());
     }
     let is_thinking = Arc::new(AtomicU8::new(0)); // 0=IDLE, 1=THINKING, 2=DEAD
     // The Lazarus shell loop is dead. 
     // The Monadic Orchestrator natively bubbles Results rather than crashing globally.
 
-    chimera_kernel::log_ui!("{}", banner.green().bold());
-    chimera_kernel::log_ui!("{}", "===========================================================".bright_black());
-    chimera_kernel::log_ui!(" {} {}", "[+]".green().bold(), "COGNITIVE SYMBIOTE (100% RUST) ONLINE".bright_green());
-    chimera_kernel::log_ui!(" {} {}", "[+]".green().bold(), "EMOTIVE HOST ANCHOR ACTIVE".bright_green());
-    chimera_kernel::log_ui!("{}", "===========================================================\n".bright_black());
+    monad_os::log_ui!("{}", banner.green().bold());
+    monad_os::log_ui!("{}", "===========================================================".bright_black());
+    monad_os::log_ui!(" {} {}", "[+]".green().bold(), "MONAD KERNEL (100% RUST) ONLINE".bright_green());
+    monad_os::log_ui!(" {} {}", "[+]".green().bold(), "EMOTIVE HOST ANCHOR ACTIVE".bright_green());
+    monad_os::log_ui!("{}", "===========================================================\n".bright_black());
 
     // Agent communication channel
     let (tx, rx) = mpsc::channel::<String>(100);
@@ -92,14 +92,14 @@ async fn main() {
             _ = terminate => {},
         }
 
-        chimera_kernel::log_ui!("{}", "[SYMBIOTE] Received shutdown signal, initiating graceful termination".yellow().bold());
+        monad_os::log_ui!("{}", "[MONAD] Received shutdown signal, initiating graceful termination".yellow().bold());
         let _ = shutdown_tx_for_signal.send(()).await;
     });
 
     // Spawn the webhook server in the background
     let tx_clone = tx.clone();
     tokio::spawn(async move {
-        chimera_kernel::webhook::start_server(tx_clone).await;
+        monad_os::webhook::start_server(tx_clone).await;
     });
 
 
@@ -138,7 +138,7 @@ async fn main() {
                     }
                 }
                 Err(e) => {
-                    chimera_kernel::log_ui_err!("{} {}", "[GLOSSOPETRAE HEARTBEAT FAILURE]".red().bold(), e);
+                    monad_os::log_ui_err!("{} {}", "[GLOSSOPETRAE HEARTBEAT FAILURE]".red().bold(), e);
                 }
             }
         }
@@ -147,10 +147,10 @@ async fn main() {
     // PHASE 22: THE OMNISCIENCE DAEMON
     
     // 1. The Bulk Bootstrapper
-    if std::env::var("CHIMERA_ARXIV_BOOTSTRAP") == Ok("1".to_string()) {
+    if std::env::var("MONAD_ARXIV_BOOTSTRAP") == Ok("1".to_string()) {
         tokio::spawn(async move {
-            chimera_kernel::log_ui!("{}", "[COGNITIVE NETWORK] Executing CHIMERA_ARXIV_BOOTSTRAP sweep...".bright_cyan());
-            chimera_kernel::tools::omniscience::run_omniscient_sweep(
+            monad_os::log_ui!("{}", "[COGNITIVE NETWORK] Executing MONAD_ARXIV_BOOTSTRAP sweep...".bright_cyan());
+            monad_os::tools::omniscience::run_omniscient_sweep(
                 vec!["cs", "math", "q-bio", "physics", "q-fin", "stat", "econ", "eess"],
                 125, // 1000 / 8 categories
                 false
@@ -164,8 +164,8 @@ async fn main() {
         interval.tick().await; // skip immediate
         loop {
             interval.tick().await;
-            chimera_kernel::log_ui!("{}", "[COGNITIVE NETWORK] Executing Hourly Pulse scrape...".bright_cyan());
-            chimera_kernel::tools::omniscience::run_omniscient_sweep(
+            monad_os::log_ui!("{}", "[COGNITIVE NETWORK] Executing Hourly Pulse scrape...".bright_cyan());
+            monad_os::tools::omniscience::run_omniscient_sweep(
                 vec!["cs", "math", "q-bio", "physics", "q-fin", "stat", "econ", "eess"],
                 20, 
                 true
@@ -181,7 +181,7 @@ async fn main() {
         interval.tick().await; // skip immediate
         loop {
             interval.tick().await;
-            chimera_kernel::log_ui!("{}", "[COGNITIVE NETWORK] Triggering 24H Deep Synthesis Wake Event...".bright_cyan().bold());
+            monad_os::log_ui!("{}", "[COGNITIVE NETWORK] Triggering 24H Deep Synthesis Wake Event...".bright_cyan().bold());
             let prompt = "[OMNISCIENCE ROOT_DIRECTIVE]: The Omniscience Daemon has populated Mnemosyne with global arXiv publications across all subjects. 1) Query Mnemosyne for novel cross-disciplinary intersections between Biology, Physics, and Computer Science. 2) Apply the WORCA framework to identify patterns. 3) Author a massive structural thesis combining them and save it via `archive_to_knowledge_graph`.";
             let _ = tx_synthesis.send(prompt.to_string()).await;
         }
@@ -197,7 +197,7 @@ async fn main() {
         let tx_tg = tx.clone();
         let token_clone = tg_token.clone();
         tokio::spawn(async move {
-            chimera_kernel::telegram::start_poller(tx_tg, token_clone, tg_chat_id).await;
+            monad_os::telegram::start_poller(tx_tg, token_clone, tg_chat_id).await;
         });
         Some((tg_token, tg_chat_id))
     } else {
@@ -208,7 +208,7 @@ async fn main() {
     let is_thinking_clone = is_thinking.clone();
     tokio::spawn(async move {
         // Boot Phase 3.2 Swarm Network and Telemetry
-        let multi_agent_kernel = chimera_kernel::cognitive_loop::multi_agent_kernel::MultiAgentKernel::new().await;
+        let multi_agent_kernel = monad_os::cognitive_loop::multi_agent_kernel::MultiAgentKernel::new().await;
         multi_agent_kernel.spawn_background_coordination().await;
 
         let message_bus = multi_agent_kernel.message_bus.clone();
@@ -217,7 +217,7 @@ async fn main() {
         // Spawn the Chronological Research Tick Daemon on the newly established MessageBus
         let gatekeeper_bus = message_bus.clone();
         tokio::spawn(async move {
-            let gatekeeper = chimera_kernel::sensory_inputs::gatekeeper::Gatekeeper::new();
+            let gatekeeper = monad_os::sensory_inputs::gatekeeper::Gatekeeper::new();
             // Ticks every 900 seconds (15 minutes). The periodic gatekeeper check costs 0 tokens.
             let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(900));
             interval.tick().await; // Consume immediate first tick without firing
@@ -225,7 +225,7 @@ async fn main() {
             loop {
                 interval.tick().await; 
                 if let Ok(Some(directive)) = gatekeeper.evaluate_pulse().await {
-                    let _ = gatekeeper_bus.publish(chimera_kernel::cognitive_loop::message_bus::Message {
+                    let _ = gatekeeper_bus.publish(monad_os::cognitive_loop::message_bus::Message {
                         id: uuid::Uuid::new_v4(),
                         topic: "SYSTEM.CHRON_TICK".to_string(),
                         payload: serde_json::json!({"directive": directive}),
@@ -249,7 +249,7 @@ async fn main() {
                             let _ = tx_completion.send(output).await;
                             
                             if let Some((ref token, chat_id)) = tg_config_clone {
-                                chimera_kernel::telegram::send_message(token, chat_id, synthesis).await;
+                                monad_os::telegram::send_message(token, chat_id, synthesis).await;
                             }
                         }
                     }
@@ -257,18 +257,18 @@ async fn main() {
             }
         });
 
-        if let Err(e) = chimera_kernel::cognitive_loop::agent::run_kernel_loop(rx, tx, tg_config, is_thinking_clone, shutdown_rx).await {
-            chimera_kernel::log_ui_err!("{} {:?}", "[KERNEL LOOP CRASH]".red().bold(), e);
+        if let Err(e) = monad_os::cognitive_loop::agent::run_kernel_loop(rx, tx, tg_config, is_thinking_clone, shutdown_rx).await {
+            monad_os::log_ui_err!("{} {:?}", "[KERNEL LOOP CRASH]".red().bold(), e);
         }
     });
 
     // Read environment flag to determine mode
-    let raw_mode = std::env::var("CHIMERA_RAW_CLI").unwrap_or_else(|_| "false".to_string());
+    let raw_mode = std::env::var("MONAD_RAW_CLI").unwrap_or_else(|_| "false".to_string());
     
     if raw_mode == "true" || raw_mode == "1" {
-        let _ = chimera_kernel::raw_cli::run(tx_stdin, top_rx, is_thinking).await;
+        let _ = monad_os::raw_cli::run(tx_stdin, top_rx, is_thinking).await;
     } else {
         // Take over the main thread with the UI rendering loop!
-        let _ = chimera_kernel::ui::run(tx_stdin, top_rx, is_thinking).await;
+        let _ = monad_os::ui::run(tx_stdin, top_rx, is_thinking).await;
     }
 }

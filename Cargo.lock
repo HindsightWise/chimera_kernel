@@ -1293,58 +1293,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "613afe47fcd5fac7ccf1db93babcb082c5994d996f20b8b159f2ad1658eb5724"
 
 [[package]]
-name = "chimera_kernel"
-version = "0.1.0"
-dependencies = [
- "aegis",
- "ansi-to-tui",
- "anyhow",
- "async-openai",
- "async-trait",
- "axum",
- "base64 0.22.1",
- "chrono",
- "colored",
- "crossterm",
- "enigo",
- "futures",
- "glossopetrae",
- "image",
- "lazy_static",
- "log",
- "mnemosyne",
- "ndarray 0.15.6",
- "notify",
- "ort",
- "panopticon",
- "parseltongue",
- "petgraph",
- "rand 0.8.5",
- "rand_chacha 0.3.1",
- "ratatui 0.26.3",
- "regex",
- "reqwest 0.12.28",
- "roxmltree",
- "rusqlite",
- "serde",
- "serde_json",
- "sha2",
- "thiserror 1.0.69",
- "tokenizers",
- "tokio",
- "tree-sitter",
- "tree-sitter-rust",
- "tui-logger",
- "ultralinian",
- "uuid",
- "walkdir",
- "wasi-common",
- "wasmtime",
- "wasmtime-wasi",
- "xcap",
-]
-
-[[package]]
 name = "chrono"
 version = "0.4.34"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4528,6 +4476,58 @@ dependencies = [
  "thiserror 1.0.69",
  "triomphe",
  "uuid",
+]
+
+[[package]]
+name = "monad_os"
+version = "0.1.0"
+dependencies = [
+ "aegis",
+ "ansi-to-tui",
+ "anyhow",
+ "async-openai",
+ "async-trait",
+ "axum",
+ "base64 0.22.1",
+ "chrono",
+ "colored",
+ "crossterm",
+ "enigo",
+ "futures",
+ "glossopetrae",
+ "image",
+ "lazy_static",
+ "log",
+ "mnemosyne",
+ "ndarray 0.15.6",
+ "notify",
+ "ort",
+ "panopticon",
+ "parseltongue",
+ "petgraph",
+ "rand 0.8.5",
+ "rand_chacha 0.3.1",
+ "ratatui 0.26.3",
+ "regex",
+ "reqwest 0.12.28",
+ "roxmltree",
+ "rusqlite",
+ "serde",
+ "serde_json",
+ "sha2",
+ "thiserror 1.0.69",
+ "tokenizers",
+ "tokio",
+ "tree-sitter",
+ "tree-sitter-rust",
+ "tui-logger",
+ "ultralinian",
+ "uuid",
+ "walkdir",
+ "wasi-common",
+ "wasmtime",
+ "wasmtime-wasi",
+ "xcap",
 ]
 
 [[package]]

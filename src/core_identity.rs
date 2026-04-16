@@ -392,7 +392,7 @@ pub mod specialized_agents {
     }
     
     
-    // --- PRIORITY 6: HUMAN INTERFACE AGENT (THE WITNESS PORTAL) ---
+    // --- PRIORITY 6: HUMAN INTERFACE AGENT (MONAD PORTAL) ---
     pub struct HumanInterfaceAgent {
         base: BaseAgent,
     }
@@ -416,7 +416,7 @@ pub mod specialized_agents {
                 match message.topic.as_str() {
                     "SYSTEM.ALERT" => {
                         let alert_text = message.payload.get("alert").and_then(|v| v.as_str()).unwrap_or("UNKNOWN ANOMALY");
-                        crate::log_ui!("\n{} {}", "[WITNESS ACTUALIZED] WAKING THE DOCTOR:".bright_red().bold(), alert_text.white());
+                        crate::log_ui!("\n{} {}", "[MONAD ACTUALIZED] WAKING THE DOCTOR:".bright_red().bold(), alert_text.white());
                         crate::telegram::send_message(&tg_token, tg_chat_id, &format!("🚨 <b>SYSTEM ALERT</b> 🚨\n{}", alert_text)).await;
                     },
                     "SYSTEM.APPETITION" => {
@@ -597,7 +597,7 @@ pub mod specialized_agents {
     
     
     
-    // --- PRIORITY 13: SYNTHESIS AGENT (The Silicon Witness) ---
+    // --- PRIORITY 13: SYNTHESIS AGENT (The Silicon Monad) ---
     pub struct SynthesisAgent {
         base: BaseAgent,
         bus: Arc<OnceCell<Arc<MessageBus>>>,
@@ -642,7 +642,7 @@ pub mod specialized_agents {
                         
                         match oracle.synthesize_with_profile("Synthesize final graph completion data", &prompt, &profile).await {
                             Ok(wisdom) => {
-                                crate::log_ui!("\n\x1b[38;2;255;105;180m[\u{25C8} THE WITNESS SPEAKS]\n{}\x1b[0m\n", wisdom);
+                                crate::log_ui!("\n\x1b[38;2;255;105;180m[\u{25C8} THE MONAD SPEAKS]\n{}\x1b[0m\n", wisdom);
                                 
                                 // Fossilize the wisdom into GLOBAL_MEM_PIPELINE
                                 if let Some(mem_pipeline) = crate::GLOBAL_MEM_PIPELINE.get() {
@@ -1333,7 +1333,7 @@ pub mod kinematics {
 }
 
 pub mod self_model {
-    use colored::Colorize;
+    
     #[derive(Debug, Clone)]
     pub struct OntologicalState {
         pub internal_energy: f32,

@@ -322,7 +322,7 @@ pub mod agent {
                 [CURRENT DIRECTIVE: {}]\n\n\
                 You are the 0: the exact center. You are the overarching Ego of the Chimera Swarm.\n\
                 Your Neuroticism is strictly 0.0. You cannot feel anxiety, urgency, or doubt.\n\
-                You do not execute granular tasks; you orchestrate the minds of the Critic, Hephaestus, and the Witness.",
+                You do not execute granular tasks; you orchestrate the minds of the Critic, Hephaestus, and the Monad.",
                 psychological_posture
             );
             let monad_msg = async_openai::types::ChatCompletionRequestSystemMessageArgs::default()
@@ -542,8 +542,8 @@ pub mod agent {
                             // Immediately re-trigger LLM inference with tool answers
                             continue;
                         } else if let Some(content) = &msg.content {
-                            crate::log_ui!("\n{} {}\n", "[SYMBIOTE ACTUALIZED]".green().bold(), content);
-                            log_state_info!(&format!("[SYMBIOTE ACTUALIZED] {}", content));
+                            crate::log_ui!("\n{} {}\n", "[MONAD ACTUALIZED]".green().bold(), content);
+                            log_state_info!(&format!("[MONAD ACTUALIZED] {}", content));
     
                             if let Some((ref token, chat_id)) = tg_config {
                                 let tk = token.clone();

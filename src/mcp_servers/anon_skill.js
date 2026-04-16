@@ -13,7 +13,10 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         {
             name: "execute_anon_skill",
             description: "Dynamic skill.",
-            inputSchema: {}
+            inputSchema: {
+                type: "object",
+                properties: {}
+            }
         }
     ]
 }));
