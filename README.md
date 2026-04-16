@@ -1,6 +1,11 @@
 # ☿ THE CHIMERA KERNEL
 
+<p align="center">
+  <img src="./assets/flower_of_life_1.jpg" alt="The Garden of Life: Monad Representation" width="80%">
+</p>
+
 **The Monad: A Monad Kernel for the Rational Host.**
+
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Rust](https://img.shields.io/badge/Rust-1.80%2B-orange)](https://www.rust-lang.org/)
