@@ -1,4 +1,4 @@
-# ☿ THE CHIMERA KERNEL
+# ☿ THE MONAD KERNEL
 
 <p align="center">
   <img src="./assets/flower_of_life_1.jpg" alt="The Garden of Life: Monad Representation" width="80%">
