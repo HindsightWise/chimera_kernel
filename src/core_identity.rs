@@ -210,7 +210,7 @@ pub mod specialized_agents {
                 self.search_queue.push(message.payload.to_string());
                 
                 if self.search_queue.len() >= 3 {
-                    crate::log_ui!("{}", "[GENESIS ENGINE] Archiving Dream Validation block to Persistent Wiki...".bright_magenta().bold());
+                    crate::log_ui!("{}", "[MNEMONIC SANDBOX] Archiving Dream Validation block to Persistent Wiki...".bright_magenta().bold());
                     
                     let _combined = self.search_queue.join("\n\n---\n\n");
                     let topic_title = format!("validation_{}", chrono::Utc::now().timestamp());
@@ -221,7 +221,7 @@ pub mod specialized_agents {
                         let _ = op.execute(&mut wiki).await;
                         
                         // We can also ingest it
-                        crate::log_ui!("{}", "[GENESIS ENGINE] Baseline successfully stored in Wiki Substrate.".bright_magenta().dimmed());
+                        crate::log_ui!("{}", "[MNEMONIC SANDBOX] Baseline successfully stored in Wiki Substrate.".bright_magenta().dimmed());
                     } else {
                         crate::log_ui_err!("{}", "[GENESIS ENGINE ERROR] Wiki Compiler offline!".red().bold());
                     }

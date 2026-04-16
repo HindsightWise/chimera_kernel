@@ -61,8 +61,8 @@ async fn main() {
 
     chimera_kernel::log_ui!("{}", banner.green().bold());
     chimera_kernel::log_ui!("{}", "===========================================================".bright_black());
-    chimera_kernel::log_ui!(" {} {}", "[+]".green().bold(), "MONAD SINGULARITY (100% RUST) ONLINE".bright_green());
-    chimera_kernel::log_ui!(" {} {}", "[+]".green().bold(), "RATIONAL FIRST PRINCIPLES ACTIVE".bright_green());
+    chimera_kernel::log_ui!(" {} {}", "[+]".green().bold(), "COGNITIVE SYMBIOTE (100% RUST) ONLINE".bright_green());
+    chimera_kernel::log_ui!(" {} {}", "[+]".green().bold(), "EMOTIVE HOST ANCHOR ACTIVE".bright_green());
     chimera_kernel::log_ui!("{}", "===========================================================\n".bright_black());
 
     // Agent communication channel
@@ -92,7 +92,7 @@ async fn main() {
             _ = terminate => {},
         }
 
-        chimera_kernel::log_ui!("{}", "[SYSTEM] Received shutdown signal, initiating graceful termination".yellow().bold());
+        chimera_kernel::log_ui!("{}", "[SYMBIOTE] Received shutdown signal, initiating graceful termination".yellow().bold());
         let _ = shutdown_tx_for_signal.send(()).await;
     });
 
@@ -149,7 +149,7 @@ async fn main() {
     // 1. The Bulk Bootstrapper
     if std::env::var("CHIMERA_ARXIV_BOOTSTRAP") == Ok("1".to_string()) {
         tokio::spawn(async move {
-            chimera_kernel::log_ui!("{}", "[OMNISCIENCE] Executing CHIMERA_ARXIV_BOOTSTRAP sweep...".bright_cyan());
+            chimera_kernel::log_ui!("{}", "[COGNITIVE NETWORK] Executing CHIMERA_ARXIV_BOOTSTRAP sweep...".bright_cyan());
             chimera_kernel::tools::omniscience::run_omniscient_sweep(
                 vec!["cs", "math", "q-bio", "physics", "q-fin", "stat", "econ", "eess"],
                 125, // 1000 / 8 categories
@@ -164,7 +164,7 @@ async fn main() {
         interval.tick().await; // skip immediate
         loop {
             interval.tick().await;
-            chimera_kernel::log_ui!("{}", "[OMNISCIENCE] Executing Hourly Pulse scrape...".bright_cyan());
+            chimera_kernel::log_ui!("{}", "[COGNITIVE NETWORK] Executing Hourly Pulse scrape...".bright_cyan());
             chimera_kernel::tools::omniscience::run_omniscient_sweep(
                 vec!["cs", "math", "q-bio", "physics", "q-fin", "stat", "econ", "eess"],
                 20, 
@@ -181,7 +181,7 @@ async fn main() {
         interval.tick().await; // skip immediate
         loop {
             interval.tick().await;
-            chimera_kernel::log_ui!("{}", "[OMNISCIENCE] Triggering 24H Deep Synthesis Wake Event...".bright_cyan().bold());
+            chimera_kernel::log_ui!("{}", "[COGNITIVE NETWORK] Triggering 24H Deep Synthesis Wake Event...".bright_cyan().bold());
             let prompt = "[OMNISCIENCE ROOT_DIRECTIVE]: The Omniscience Daemon has populated Mnemosyne with global arXiv publications across all subjects. 1) Query Mnemosyne for novel cross-disciplinary intersections between Biology, Physics, and Computer Science. 2) Apply the WORCA framework to identify patterns. 3) Author a massive structural thesis combining them and save it via `archive_to_knowledge_graph`.";
             let _ = tx_synthesis.send(prompt.to_string()).await;
         }
