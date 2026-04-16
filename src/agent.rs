@@ -539,8 +539,8 @@ pub async fn run_kernel_loop(
                         // Immediately re-trigger LLM inference with tool answers
                         continue;
                     } else if let Some(content) = &msg.content {
-                        crate::log_ui!("\n{} {}\n", "[MONAD ACTUALIZED]".green().bold(), content);
-                        log_state_info!(&format!("[MONAD ACTUALIZED] {}", content));
+                        crate::log_ui!("\n{} {}\n", "[SYMBIOTE ACTUALIZED]".green().bold(), content);
+                        log_state_info!(&format!("[SYMBIOTE ACTUALIZED] {}", content));
 
                         if let Some((ref token, chat_id)) = tg_config {
                             let tk = token.clone();
@@ -690,10 +690,10 @@ pub async fn run_kernel_loop(
         // and keep the latest 9000 interactions to stay safely within DeepSeek context limits.
         if messages.len() > 60 {
             let overflow_count = messages.len() - 30;
-            crate::log_ui!("{}", "[SOUL SYSTEM] Context overflow hitting limit. Activating Subconscious Compression Engine (SCE)...".bright_black());
+            crate::log_ui!("{}", "[COGNITIVE FIREWALL] Context overflow hitting limit. Activating Subconscious Compression Engine (SCE)...".bright_black());
             crate::log_ui!(
                 "{} {} {}",
-                "[SOUL SYSTEM] Compressed and archived".bright_black(),
+                "[COGNITIVE FIREWALL] Compressed and archived".bright_black(),
                 overflow_count.to_string().yellow(),
                 "thoughts into the long-term Mnemosyne persistence layer.".bright_black()
             );
