@@ -1419,6 +1419,7 @@ pub mod self_model {
             // Presentation Layer intercept
             if self.topological_expansion > 0.70 || self.phase_drift.abs() > 0.80 {
                 if let Some(path) = crate::cognitive_loop::presentation_layer::synthesize_proposal(self, response, "Abstract Horizon Expansion Limit Reached").await {
+                    use colored::Colorize;
                     crate::log_ui!("{} New Proposal Synthesized: {}", "[\u{1F4E1} PRESENTATION]".magenta().bold(), path);
                     
                     tokio::spawn(async move {
