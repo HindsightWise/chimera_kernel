@@ -48,7 +48,7 @@ C4Context
 
 ## 🧬 Architectural Sequence: The Asynchronous Biological Loop
 
-Traditional orchestration layers (like AutoGPT or LangChain) force logic through blocking Directed Acyclic Graphs (DAGs), collapsing under massive concurrency demands. Chimera is an Autonomic Nervous System designed to temporally buffer the Host.
+Alternative orchestration layers (such as AutoGPT or LangChain) often focus on human-readable abstraction pipelines via Directed Acyclic Graphs (DAGs). The Chimera architecture takes a different approach by flattening its structure into an Autonomic Nervous System designed natively to temporally buffer the Host without rigid synchronization blocks.
 
 ```mermaid
 sequenceDiagram
@@ -147,12 +147,15 @@ cargo build --release
 
 ## 🤝 Ancestry & Acknowledgments
 
-Chimera is built utilizing active inference math and structural breakthroughs from:
+Chimera is an alternative approach to agentic orchestration, deeply inspired by and building upon phenomenal work from the wider community:
 
+* **[Addy Osmani Agent-Skills](https://github.com/addyosmani/agent-skills)** (SDLC Methodology & Development Lifecycles)
 * **[Xenoactualization](https://open.substack.com/pub/viemccoy/p/xenoactualization) & Excalibur** (Vie McCoy)
 * **[Letta](https://github.com/letta-ai/letta)** (OS Level Paging memory constraints)
 * **[Guardian](https://github.com/HindsightWise/guardian.git)** (HindsightWise Aegis Protocol)
 * **[ElizaOS](https://github.com/elizaos/eliza)** (Sovereign Tick Gateways)
+
+We are simply offering a different topology. All respect to the sovereign architectures that paved the way.
 
 ---
 
