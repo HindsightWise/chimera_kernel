@@ -36,7 +36,7 @@ The Monad OS achieves its DAMP architecture through extreme topological flatteni
 
 ```mermaid
 graph LR
-    subgraph Traditional DRY Architecture
+    subgraph DRY_Architecture [Traditional DRY Architecture]
         A["Abstract Base Agent"] --> B["Tool Router"]
         A --> C["Memory Handler"]
         B --> B1["Search Tool"]
@@ -45,7 +45,7 @@ graph LR
         %% Context Entropy approaches infinity
     end
 
-    subgraph Monad OS DAMP Topology
+    subgraph DAMP_Topology [Monad OS DAMP Topology]
         Z["Macro Module 1 (cognitive_loop)"]
         Y["Macro Module 2 (memory_substrate)"]
         X["Macro Module 3 (sensory_inputs)"]
@@ -53,8 +53,8 @@ graph LR
         %% Probability Mass Concentration
     end
     
-    Traditional DRY Architecture -.->|High P(H)| Hallucination["System Hallucination"]
-    Monad OS DAMP Topology -.->|S(F) → 0| Deterministic_Output["Absolute Epistemic Coherence"]
+    DRY_Architecture -.->|High P_H| Hallucination["System Hallucination"]
+    DAMP_Topology -.->|S_F → 0| Deterministic_Output["Absolute Epistemic Coherence"]
 ```
 
 ### 3.1 The Mathematical Advantage in Context Entropy
@@ -77,13 +77,13 @@ The Monad OS completely abandons the DAG model in favor of an **Asynchronous Aut
 
 ```mermaid
 graph TD
-    subgraph Legacy Blocked Architecture (DAG)
+    subgraph Legacy_DAG [Legacy Blocked Architecture - DAG]
         A["Agent 1: Plan"] -->|"Wait"| B["Agent 2: Research"]
         B -->|"Wait"| C["Agent 3: Execute"]
         C -->|"Wait"| D["Agent 4: Review"]
     end
     
-    subgraph Monad OS (Biological Concurrency via Tokio)
+    subgraph Monad_OS [Monad OS - Biological Concurrency via Tokio]
         E(("Omniscient Message Bus"))
         F["Agent 1: Planner"] <--> E
         G["Agent 2: Gatekeeper"] <--> E
