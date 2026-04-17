@@ -29,6 +29,11 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
                         type: "boolean",
                         description: "Whether to run in headless mode",
                         default: true
+                    },
+                    customScripts: {
+                        type: "array",
+                        items: { type: "string" },
+                        description: "Raw JS payload strings to logically inject into the execution scope via evaluateOnNewDocument before navigation occurs."
                     }
                 },
                 required: ["url"]
@@ -49,7 +54,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             // Use stealth plugin
             puppeteer.use(StealthPlugin.default());
             
-            const { url, testMode = false, headless = true } = args;
+            const { url, testMode = false, headless = true, customScripts = [] } = args;
             
             let browser;
             try {
@@ -72,6 +77,55 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
                 const page = await browser.newPage();
                 
+                // Add this AFTER creating the page, BEFORE any navigation
+                await page.evaluateOnNewDocument(() => {
+                    // Remove WebDriver property
+                    Object.defineProperty(navigator, 'webdriver', {
+                        get: () => undefined
+                    });
+                    
+                    // Spoof Chrome runtime
+                    window.chrome = {
+                        runtime: {},
+                        loadTimes: () => {},
+                        csi: () => {},
+                        app: {
+                            isInstalled: false,
+                            InstallState: {
+                                DISABLED: 'disabled',
+                                INSTALLED: 'installed',
+                                NOT_INSTALLED: 'not_installed'
+                            },
+                            RunningState: {
+                                CANNOT_RUN: 'cannot_run',
+                                READY_TO_RUN: 'ready_to_run',
+                                RUNNING: 'running'
+                            }
+                        }
+                    };
+                    
+                    // Overwrite the `plugins` property to mimic human browser
+                    Object.defineProperty(navigator, 'plugins', {
+                        get: () => [1, 2, 3, 4, 5].map(() => ({
+                            name: 'Chrome PDF Plugin',
+                            filename: 'internal-pdf-viewer',
+                            description: 'Portable Document Format'
+                        }))
+                    });
+                    
+                    // Overwrite the `languages` property
+                    Object.defineProperty(navigator, 'languages', {
+                        get: () => ['en-US', 'en']
+                    });
+                });
+                
+                // Dynamically hot-load custom payload scripts from Monad MCP pipeline
+                if (customScripts && customScripts.length > 0) {
+                    for (const payloadScriptChunk of customScripts) {
+                        await page.evaluateOnNewDocument(payloadScriptChunk);
+                    }
+                }
+                
                 // Set viewport
                 await page.setViewport({ width: 1366, height: 768 });
                 
@@ -81,8 +135,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                     timeout: 30000
                 });
 
-                // Wait a bit for page to fully load
-                await page.waitForTimeout(2000);
+                // Use promise-based delay instead of detectable timeout
+                await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 1000));
 
                 if (testMode) {
                     // For bot.sannysoft.com testing

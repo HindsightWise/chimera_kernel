@@ -89,7 +89,11 @@ pub async fn start_poller(tx: Sender<String>, token: String, allowed_chat_id: i6
                                 if msg.chat.id == allowed_chat_id {
                                     if let Some(text) = msg.text {
                                         crate::log_ui!("\n{} {}", "[TELEGRAM INGRESS]".bright_blue().bold(), text.white());
-                                        let _ = tx.send(text).await;
+                                        let _ = tx.send(text.clone()).await;
+                                        if let Some(mem_pipeline) = crate::GLOBAL_MEM_PIPELINE.get() {
+                                            let mut mp = mem_pipeline.lock().await;
+                                            mp.store_working(format!("[TELEGRAM INBOUND] User replied directly:\n{}", text), 1.0, 0.0, false).await;
+                                        }
                                     }
                                 } else {
                                     crate::log_ui!("{} Access denied for chat_id: {}", "[TELEGRAM WALL]".yellow().bold(), msg.chat.id);
@@ -141,6 +145,11 @@ pub async fn send_message(token: &str, chat_id: i64, text: &str) {
         
     if let Err(e) = res {
         crate::log_ui_err!("{} Failed to send to telegram: {}", "[TELEGRAM ERROR]".red().bold(), e);
+    } else {
+        if let Some(mem_pipeline) = crate::GLOBAL_MEM_PIPELINE.get() {
+            let mut mp = mem_pipeline.lock().await;
+            mp.store_working(format!("[TELEGRAM OUTBOUND] AI dispatched message to user:\n{}", text), 1.0, 0.0, false).await;
+        }
     }
 }
 

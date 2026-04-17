@@ -28,8 +28,6 @@ use {crate::memory_substrate::memory_hierarchy::MemoryHierarchy, crate::core_ide
 pub async fn get_tools(mcp_gateway: Arc<crate::sensory_inputs::mcp_gateway::McpGateway>) -> Vec<ChatCompletionTool> {
     let mut native_tools = vec![
         terminal::definition(),
-        venom::polyglot_definition(),
-        venom::scanner_definition(),
         cyborg::definition(),
         memory::definition(),
         axiom::execute_trade_definition(),
@@ -49,13 +47,13 @@ pub async fn get_tools(mcp_gateway: Arc<crate::sensory_inputs::mcp_gateway::McpG
         gitnexus::definition(),
         duality::definition(),
         duality::json_definition(),
+        duality::kinematic_recon_definition(),
         wiki::definition(),
         forge::definition(),
         genesis::definition(),
         sandbox::definition(),
         chronos::definition(),
         patcher::definition(),
-        reversing::definition(),
     ];
     let schemas = mcp_gateway.schemas.read().await;
     native_tools.extend(schemas.clone());
@@ -79,8 +77,6 @@ pub async fn execute_tool(
             let intel_lock = code_intel.lock().await;
             terminal::execute(args, &intel_lock).await
         },
-        "generate_polyglot" => venom::execute_polyglot(args, tx.clone()).await,
-        "stealth_scan" => venom::execute_scan(args, tx.clone()).await,
         "emulate_human" => cyborg::execute(args).await,
         "mnemosyne_subconscious_recall" => memory::execute(args, mem_pipeline).await,
         "axiom_clepsydra_extract" => axiom::execute(args).await,
@@ -104,13 +100,15 @@ pub async fn execute_tool(
         "delegate_to_oracle_reasoner" | "delegate_to_local_gemma_json" => {
             duality::execute(args, tx.clone(), mem_pipeline.clone()).await
         },
+        "delegate_kinematic_recon" => {
+            duality::execute_kinematic(args, tx.clone(), mem_pipeline.clone()).await
+        },
         "compile_wiki" => wiki::execute(args, wiki_manager.clone()).await,
         "forge_mcp_server" => forge::execute(args, mcp_gateway.clone()).await,
         "genesis_compile_rust" => genesis::execute(args).await,
         "ephemeral_docker_sandbox" => sandbox::execute(args).await,
         "schedule_temporal_anchor" => chronos::execute(args).await,
         "mutate_source_code" => patcher::execute(args).await,
-        "binary_introspection" => reversing::execute(args).await,
         _ => {
             // Unrecognized native tool, attempting route through MCP Gateway
             let result = mcp_gateway.call_tool(name, args).await;

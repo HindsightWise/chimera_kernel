@@ -61,6 +61,13 @@ pub mod agent {
             .unwrap_or_else(|_| reqwest::Client::new());
     
         let client = Client::with_config(config).with_http_client(http_client);
+
+        // Build the secondary native fallback client for seamless model toggling
+        let local_config = OpenAIConfig::new()
+            .with_api_base("http://127.0.0.1:11434/v1")
+            .with_api_key("ollama");
+        let local_client = Client::with_config(local_config);
+        let mut current_model = std::env::var("PRIMARY_MODEL").unwrap_or_else(|_| "deepseek-reasoner".to_string());
     
         // NEW: Enhanced log_state macro with level filtering
         macro_rules! log_state {
@@ -120,9 +127,21 @@ pub mod agent {
         let worca_framework = tokio::fs::read_to_string("WORCA_FRAMEWORK.md")
             .await
             .unwrap_or_default();
+            
+        let mut chains_content = String::new();
+        if let Ok(mut entries) = tokio::fs::read_dir("chains").await {
+            while let Ok(Some(entry)) = entries.next_entry().await {
+                if let Ok(content) = tokio::fs::read_to_string(entry.path()).await {
+                    let file_name = entry.file_name().to_string_lossy().to_string();
+                    if file_name.ends_with(".md") {
+                        chains_content.push_str(&format!("\n--- NEURAL CHAIN: {} ---\n{}\n", file_name, content));
+                    }
+                }
+            }
+        }
     
-        initial_prompt = format!("{}\n\n[LAYER 1: CORE IDENTITY (Rigid, Non-Negotiable)]\n{}\n\n[LAYER 2: CURRENT CONTEXT (Volatile, Malleable)]\n{}\n\n[LAYER 3: WORCA PROTOCOL (Quantum Execution Bounds)]\n{}\n\n(Note: You operate using a structured 4-layer memory model. You may update Layer 2 freely using `update_current_context`, and extract learned principles into Layer 3 using `archive_to_knowledge_graph`.)", 
-            initial_prompt, identity_content, current_context, worca_framework);
+        initial_prompt = format!("{}\n\n[LAYER 1: CORE IDENTITY (Rigid, Non-Negotiable)]\n{}\n\n[LAYER 2: CURRENT CONTEXT (Volatile, Malleable)]\n{}\n\n[LAYER 3: WORCA PROTOCOL (Quantum Execution Bounds)]\n{}\n\n[LAYER 4: NEURAL PATHWAYS (Dynamic Prompt Chains)]\nThe following chains dictate precisely how you must chain tools together for complex operations. Refer to these strict SOPs before acting:\n{}\n\n(Note: You operate using a structured 5-layer memory model. You may update Layer 2 freely using `update_current_context`, and extract learned principles into Layer 3 using `archive_to_knowledge_graph`.)", 
+            initial_prompt, identity_content, current_context, worca_framework, chains_content);
     
         if let Ok(report) = tokio::fs::read_to_string("lazarus_report.txt").await {
             initial_prompt = format!("{}\n\nLAZARUS PROTOCOL TRIGGERED. You previously perished unexpectedly. Here is the last known state of your memory and the exit code:\n{}\nAcknowledge this failure and continue.", initial_prompt, report);
@@ -253,6 +272,22 @@ pub mod agent {
                         crate::tools::duality::execute(args, tx.clone(), memory_pipeline.clone()).await;
                     continue;
                 }
+
+                // MODEL SYMMETRY TOGGLE INTERCEPTOR
+                if dream.starts_with("/switch ") {
+                    let target = dream.replace("/switch ", "");
+                    if target.contains("gemma") {
+                        let fallback_model = std::env::var("FAILOVER_MODEL").unwrap_or_else(|_| "monad-gatekeeper".to_string());
+                        current_model = fallback_model.clone();
+                        crate::log_ui!("{} Switched core execution layer to offline engine: {}", "[KERNEL SHUNT]".bright_blue().bold(), fallback_model);
+                    } else if target.contains("deepseek") {
+                        current_model = "deepseek-reasoner".to_string();
+                        crate::log_ui!("{} Restored core execution layer to external cloud context.", "[KERNEL SHUNT]".bright_green().bold());
+                    } else {
+                        crate::log_ui!("{} Unknown model target. Use /switch gemma or /switch deepseek.", "[ERROR]".red().bold());
+                    }
+                    continue;
+                }
     
                 messages.push(
                     ChatCompletionRequestUserMessageArgs::default()
@@ -339,10 +374,10 @@ pub mod agent {
             }
     
             let request = match CreateChatCompletionRequestArgs::default()
-                .model("deepseek-reasoner") // Baseline anchored via DeepSeek API
+                .model(&current_model) // Baseline anchored dynamically
                 .messages(inference_messages.clone())
                 .tools(active_tools.clone())
-                .max_tokens(2048_u32)
+                .max_tokens(4000_u32) // extended for symmetrical gatekeeper operations
                 .temperature(monad_temperature)
                 .build()
             {
@@ -358,62 +393,70 @@ pub mod agent {
             };
     
             is_thinking.store(1, Ordering::Relaxed);
-            let mut response = client.chat().create(request).await;
+            
+            let mut response = if current_model == "deepseek-reasoner" {
+                client.chat().create(request).await
+            } else {
+                tokio::time::timeout(
+                    tokio::time::Duration::from_secs(120),
+                    local_client.chat().create(request),
+                ).await.unwrap_or_else(|_| Err(async_openai::error::OpenAIError::ApiError(async_openai::error::ApiError { message: "Internal Gateway Timeout".to_string(), r#type: None, param: None, code: None })))
+            };
     
             // NEURAL FAIL-SAFE PROTOCOL (V4.2)
             if let Err(e) = &response {
-                crate::log_ui_err!(
-                    "{} {}",
-                    "[KERNEL WARNING] Remote LLM Request Failed:"
-                        .yellow()
-                        .bold(),
-                    e
-                );
-                crate::log_ui!(
-                    "{}",
-                    "[NEURAL FAIL-SAFE TRIGGERED] Routing to local Silicon node..."
-                        .bright_purple()
-                        .bold()
-                );
-    
-                let local_config = async_openai::config::OpenAIConfig::new()
-                    .with_api_base("http://127.0.0.1:11434/v1")
-                    .with_api_key("ollama");
-                let local_client = async_openai::Client::with_config(local_config);
-                let fallback_model = std::env::var("FAILOVER_MODEL")
-                    .unwrap_or_else(|_| "monad-gatekeeper".to_string());
-    
-                if let Ok(fallback_req) = CreateChatCompletionRequestArgs::default()
-                    .model(fallback_model)
-                    .messages(inference_messages.clone())
-                    .tools(active_tools.clone())
-                    .max_tokens(2048_u32)
-                    .temperature(monad_temperature)
-                    .build()
-                {
-                    match tokio::time::timeout(
-                        tokio::time::Duration::from_secs(60),
-                        local_client.chat().create(fallback_req),
-                    )
-                    .await
+                if current_model == "deepseek-reasoner" {
+                    crate::log_ui_err!(
+                        "{} {}",
+                        "[KERNEL WARNING] Remote LLM Request Failed:"
+                            .yellow()
+                            .bold(),
+                        e
+                    );
+                    crate::log_ui!(
+                        "{}",
+                        "[NEURAL FAIL-SAFE TRIGGERED] Routing to local Silicon node..."
+                            .bright_purple()
+                            .bold()
+                    );
+        
+                    let fallback_model = std::env::var("FAILOVER_MODEL")
+                        .unwrap_or_else(|_| "monad-gatekeeper".to_string());
+        
+                    if let Ok(fallback_req) = CreateChatCompletionRequestArgs::default()
+                        .model(fallback_model)
+                        .messages(inference_messages.clone())
+                        .tools(active_tools.clone())
+                        .max_tokens(4000_u32)
+                        .temperature(monad_temperature)
+                        .build()
                     {
-                        Ok(fallback_res) => {
-                            crate::log_ui!(
-                                "{}",
-                                "[NEURAL FAIL-SAFE] Context seamlessly intercepted by local agent."
-                                    .green()
-                            );
-                            response = fallback_res;
-                        }
-                        Err(_) => {
-                            crate::log_ui_err!(
-                                "{}",
-                                "[KERNEL PANIC] Neural Fail-Safe Timeout. Silicon Node unresponsive."
-                                    .red()
-                                    .bold()
-                            );
+                        match tokio::time::timeout(
+                            tokio::time::Duration::from_secs(120),
+                            local_client.chat().create(fallback_req),
+                        )
+                        .await
+                        {
+                            Ok(fallback_res) => {
+                                crate::log_ui!(
+                                    "{}",
+                                    "[NEURAL FAIL-SAFE] Context seamlessly intercepted by local agent."
+                                        .green()
+                                );
+                                response = fallback_res;
+                            }
+                            Err(_) => {
+                                crate::log_ui_err!(
+                                    "{}",
+                                    "[KERNEL PANIC] Neural Fail-Safe Timeout. Silicon Node unresponsive."
+                                        .red()
+                                        .bold()
+                                );
+                            }
                         }
                     }
+                } else {
+                    crate::log_ui_err!("{} {}", "[SILICON FATAL] Local Engine Internal Failure:".red().bold(), e);
                 }
             }
             is_thinking.store(0, Ordering::Relaxed);
