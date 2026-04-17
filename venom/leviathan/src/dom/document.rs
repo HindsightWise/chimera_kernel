@@ -40,6 +40,11 @@ impl LeviathanDocument {
 
         Ok(results)
     }
+
+    /// Extracts raw JS string blocks from all <script> tags for consumption by the JS evaluator
+    pub fn extract_scripts_raw(&self) -> Result<Vec<String>, LeviathanError> {
+        self.css_select("script")
+    }
 }
 
 #[cfg(test)]
