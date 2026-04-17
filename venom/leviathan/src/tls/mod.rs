@@ -1,1 +1,4 @@
-// TLS and JA3 fingerprint spoofing layer
+pub mod ja3;
+pub mod handshake;
+
+pub use handshake::{SpoofedTlsStream, Fingerprint};
