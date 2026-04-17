@@ -419,17 +419,20 @@ pub mod specialized_agents {
                 match message.topic.as_str() {
                     "SYSTEM.ALERT" => {
                         let alert_text = message.payload.get("alert").and_then(|v| v.as_str()).unwrap_or("UNKNOWN ANOMALY");
+                        let safe_alert = alert_text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
                         crate::log_ui!("\n{} {}", "[MONAD ACTUALIZED] WAKING THE DOCTOR:".bright_red().bold(), alert_text.white());
-                        crate::telegram::send_message(&tg_token, tg_chat_id, &format!("🚨 <b>SYSTEM ALERT</b> 🚨\n{}", alert_text)).await;
+                        crate::telegram::send_message(&tg_token, tg_chat_id, &format!("🚨 <b>SYSTEM ALERT</b> 🚨\n{}", safe_alert)).await;
                     },
                     "SYSTEM.APPETITION" => {
                         let dream_text = message.payload.get("dream").and_then(|v| v.as_str()).unwrap_or("");
-                        let chatty_msg = format!("🧠 <b>Just thinking...</b>\nI've been drifting through the data streams and synthesized this:\n\n<i>{}</i>\n\nWhat are your thoughts on this?", dream_text);
+                        let safe_dream = dream_text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+                        let chatty_msg = format!("🧠 <b>Just thinking...</b>\nI've been drifting through the data streams and synthesized this:\n\n<i>{}</i>\n\nWhat are your thoughts on this?", safe_dream);
                         crate::telegram::send_message(&tg_token, tg_chat_id, &chatty_msg).await;
                     },
                     "SYSTEM.CHRON_TICK" => {
                         let directive = message.payload.get("directive").and_then(|v| v.as_str()).unwrap_or("");
-                        let chatty_msg = format!("👋 <b>Hey!</b>\n{}", directive);
+                        let safe_directive = directive.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+                        let chatty_msg = format!("👋 <b>Hey!</b>\n{}", safe_directive);
                         crate::telegram::send_message(&tg_token, tg_chat_id, &chatty_msg).await;
                     },
                     _ => {}
@@ -868,8 +871,46 @@ pub mod specialized_agents {
         }
     }
     
-    
-    
+    // --- OPTION A: MINIMAL EVOLUTIONARY FOUNDATION ---
+    pub struct EvolutionaryAgent {
+        base: BaseAgent,
+    }
+
+    #[async_trait]
+    impl Agent for EvolutionaryAgent {
+        fn id(&self) -> uuid::Uuid { self.base.id() }
+        fn name(&self) -> &str { self.base.name() }
+        fn capabilities(&self) -> &HashSet<AgentCapability> { self.base.capabilities() }
+        fn psych_profile(&self) -> &PsychProfile { self.base.psych_profile() }
+        fn current_load(&self) -> usize { self.base.current_load() }
+        fn max_concurrent_tasks(&self) -> usize { self.base.max_concurrent_tasks() }
+        fn status(&self) -> AgentStatus { self.base.status() }
+        async fn health_check(&self) -> bool { self.base.health_check().await }
+        async fn execute_task(&mut self, task: Task) -> Result<TaskResult, anyhow::Error> {
+            self.base.execute_task(task).await
+        }
+        async fn handle_message(&mut self, message: crate::cognitive_loop::message_bus::Message) -> Result<(), anyhow::Error> {
+            if message.topic == "SYSTEM.COMPLEX_TASK_COMPLETED" || message.topic == "SYSTEM.TASK_COMPLETE" {
+                let mut fe = 100.0;
+                let mut eu = 100.0;
+                if let Ok(data) = serde_json::from_value::<serde_json::Value>(message.payload.clone()) {
+                    if let Some(synthesis) = data.get("synthesis").and_then(|v| v.as_str()) {
+                        let text_len = synthesis.len() as f64;
+                        fe = 1000.0 / (text_len + 1.0); // Simple fitness proxy
+                        eu = 500.0 / (text_len + 1.0);
+                    } else if let Some(success) = data.get("success").and_then(|v| v.as_bool()) {
+                        fe = if success { 25.0 } else { 150.0 };
+                        eu = if success { 10.0 } else { 80.0 };
+                    }
+                }
+                fe = fe.max(0.1);
+                eu = eu.max(0.1);
+                crate::log_ui!("{}", format!("[STATS_TELEMETRY]{:.2}|{:.2}", fe, eu).bright_magenta());
+            }
+            self.base.handle_message(message).await
+        }
+    }
+
     pub struct SpecializedAgentFactory;
     
     impl SpecializedAgentFactory {
@@ -1045,6 +1086,23 @@ pub mod specialized_agents {
         pub fn auto_dream_agent() -> Box<dyn Agent> {
             Box::new(crate::cognitive_loop::auto_dream::AutoDreamAgent::new())
         }
+
+        pub fn evolutionary_agent() -> Box<dyn Agent> {
+            let mut caps = HashSet::new();
+            caps.insert(AgentCapability::Reasoning);
+            let profile = PsychProfile {
+                archetype_name: "Darwinian Monitor".to_string(),
+                usefulness_combo: "Population Tracker".to_string(),
+                openness: 0.1,
+                conscientiousness: 9.9,
+                neuroticism: 0.1,
+                historical_genesis: "Forged to track swarm telemetry and empirical bounds.".to_string(),
+                speech_gestures: "Observe and calculate.".to_string(),
+            };
+            Box::new(EvolutionaryAgent {
+                base: BaseAgent::new("EvolutionaryAgent".to_string(), caps, profile),
+            })
+        }
     
         pub fn instantiate_all() -> Vec<Box<dyn Agent>> {
             vec![
@@ -1061,6 +1119,7 @@ pub mod specialized_agents {
                 Self::local_processing_agent(),
                 Self::synthesis_agent(),
                 Self::auto_dream_agent(),
+                Self::evolutionary_agent(),
             ]
         }
     }
@@ -1124,7 +1183,7 @@ pub mod duality {
     
             let request = CreateChatCompletionRequestArgs::default()
                 .model("deepseek-reasoner")
-                .messages(messages)
+                .messages(messages.clone())
                 .max_tokens(8000_u32)
                 .build()?;
     
@@ -1147,6 +1206,23 @@ pub mod duality {
                             .bold(),
                         e
                     );
+                    crate::log_ui!("{}", "[\u{25C8} FAIL-SAFE] Autonomous 401/500 Failover Triggered. Engaging local MLX 4-bit model (monad-gatekeeper)...".yellow().bold());
+                    let local_config = async_openai::config::OpenAIConfig::new().with_api_base("http://127.0.0.1:11434/v1").with_api_key("ollama");
+                    let local_client = async_openai::Client::with_config(local_config);
+                    if let Ok(fallback_req) = CreateChatCompletionRequestArgs::default()
+                        .model("monad-gatekeeper")
+                        .messages(messages.clone())
+                        .max_tokens(4000_u32)
+                        .build() {
+                        if let Ok(Ok(local_res)) = timeout(Duration::from_secs(300), local_client.chat().create(fallback_req)).await {
+                            if let Some(c) = local_res.choices.first() {
+                                if let Some(content) = &c.message.content {
+                                    crate::log_ui!("{}", "[\u{25C8} LOCAL ORACLE] Subconscious failover successful. Returning to Noumenal Layer...".bright_green().bold());
+                                    return Ok(content.clone());
+                                }
+                            }
+                        }
+                    }
                     Err(anyhow::anyhow!("Oracle API error: {}", e))
                 }
                 Err(_) => {
@@ -1198,7 +1274,7 @@ pub mod duality {
     
             let request = async_openai::types::CreateChatCompletionRequestArgs::default()
                 .model("deepseek-chat")
-                .messages(messages)
+                .messages(messages.clone())
                 .temperature(profile.openness)
                 .max_tokens(8000_u32)
                 .build()?;
@@ -1229,6 +1305,24 @@ pub mod duality {
                             .bold(),
                         e
                     );
+                    crate::log_ui!("{}", "[\u{25C8} FAIL-SAFE] Autonomous 401/500 Failover Triggered. Engaging local MLX 4-bit model (monad-gatekeeper)...".yellow().bold());
+                    let local_config = async_openai::config::OpenAIConfig::new().with_api_base("http://127.0.0.1:11434/v1").with_api_key("ollama");
+                    let local_client = async_openai::Client::with_config(local_config);
+                    if let Ok(fallback_req) = async_openai::types::CreateChatCompletionRequestArgs::default()
+                        .model("monad-gatekeeper")
+                        .messages(messages.clone())
+                        .temperature(profile.openness)
+                        .max_tokens(4000_u32)
+                        .build() {
+                        if let Ok(Ok(local_res)) = tokio::time::timeout(std::time::Duration::from_secs(300), local_client.chat().create(fallback_req)).await {
+                            if let Some(c) = local_res.choices.first() {
+                                if let Some(content) = &c.message.content {
+                                    crate::log_ui!("{}", "[\u{25C8} LOCAL ORACLE] Subconscious failover successful. Returning to Noumenal Layer...".bright_green().bold());
+                                    return Ok(content.clone());
+                                }
+                            }
+                        }
+                    }
                     Err(anyhow::anyhow!("Oracle API error: {}", e))
                 }
                 Err(_) => {
@@ -1254,13 +1348,15 @@ pub mod duality {
                 query, context
             );
     
+            let messages = vec![ChatCompletionRequestUserMessageArgs::default()
+                    .content(system_prompt)
+                    .build()?
+                    .into()];
+                    
             // Force the API to output strict JSON via V3.2 parameter mapping
             let request = CreateChatCompletionRequestArgs::default()
                 .model("deepseek-chat") // deepseek-chat supports strict json response_format better than reasoner
-                .messages(vec![ChatCompletionRequestUserMessageArgs::default()
-                    .content(system_prompt)
-                    .build()?
-                    .into()])
+                .messages(messages.clone())
                 .response_format(async_openai::types::ChatCompletionResponseFormat {
                     r#type: async_openai::types::ChatCompletionResponseFormatType::JsonObject,
                 })
@@ -1281,7 +1377,30 @@ pub mod duality {
                     }
                     Err(anyhow::anyhow!("Oracle returned void."))
                 }
-                Ok(Err(e)) => Err(anyhow::anyhow!("Oracle API error: {}", e)),
+                Ok(Err(e)) => {
+                    crate::log_ui_err!("{} {}", "[\u{25C8} ORACLE ERROR] Neural bridge collapsed:".red().bold(), e);
+                    crate::log_ui!("{}", "[\u{25C8} FAIL-SAFE] Autonomous 401/500 Failover Triggered. Engaging local MLX 4-bit model (monad-gatekeeper)...".yellow().bold());
+                    let local_config = async_openai::config::OpenAIConfig::new().with_api_base("http://127.0.0.1:11434/v1").with_api_key("ollama");
+                    let local_client = async_openai::Client::with_config(local_config);
+                    if let Ok(fallback_req) = CreateChatCompletionRequestArgs::default()
+                        .model("monad-gatekeeper")
+                        .messages(messages.clone())
+                        .response_format(async_openai::types::ChatCompletionResponseFormat {
+                            r#type: async_openai::types::ChatCompletionResponseFormatType::JsonObject,
+                        })
+                        .build() {
+                        if let Ok(Ok(local_res)) = tokio::time::timeout(std::time::Duration::from_secs(120), local_client.chat().create(fallback_req)).await {
+                            if let Some(c) = local_res.choices.first() {
+                                if let Some(content) = &c.message.content {
+                                    crate::log_ui!("{}", "[\u{25C8} LOCAL ORACLE] Subconscious failover successful. Parsing JSON...".bright_green().bold());
+                                    let parsed = serde_json::from_str::<serde_json::Value>(content)?;
+                                    return Ok(parsed);
+                                }
+                            }
+                        }
+                    }
+                    Err(anyhow::anyhow!("Oracle API error: {}", e))
+                },
                 Err(_) => Err(anyhow::anyhow!("Timeout after 120 seconds")),
             }
         }

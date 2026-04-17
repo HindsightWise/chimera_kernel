@@ -2,8 +2,8 @@ use ratatui::{
     backend::CrosstermBackend,
     layout::{Constraint, Direction, Layout, Margin},
     style::{Color, Style, Modifier},
-    text::{Line, Span},
-    widgets::{Block, Borders, BorderType, Paragraph, Wrap, Gauge, Scrollbar, ScrollbarOrientation, ScrollbarState},
+    text::{},
+    widgets::{Block, Borders, BorderType, Paragraph, Wrap, Scrollbar, ScrollbarOrientation, ScrollbarState},
     Terminal,
 };
 use crossterm::{
@@ -75,13 +75,10 @@ pub async fn run(tx_stdin: Sender<String>, mut top_rx: UnboundedReceiver<String>
 
     // Ghostty TrueColor Palettes 
     let color_cyan   = Color::Rgb(0, 210, 255);    
-    let color_green  = Color::Rgb(0, 255, 144);    
     let color_rust   = Color::Rgb(255, 94, 0);     
     let color_red    = Color::Rgb(255, 42, 85);    
     let color_slate  = Color::Rgb(60, 65, 85);     
-    let color_muted  = Color::Rgb(140, 150, 170);  
     let color_purple = Color::Rgb(190, 100, 255);  
-    let color_host   = Color::Rgb(255, 230, 100);  
 
     loop {
         // Drain incoming logs non-blockingly into massive buffers
@@ -122,13 +119,15 @@ pub async fn run(tx_stdin: Sender<String>, mut top_rx: UnboundedReceiver<String>
             }
 
             // Route dialogue logs directly to chat
-            if msg.contains("[MONAD ACTUALIZED]") || msg.contains("[MONAD ACTUALIZED]") || msg.contains("[MONAD TELEMETRY]") || msg.contains("[MONAD SPEAKS]") {
+            if msg.contains("[MONAD ACTUALIZED]") || msg.contains("[MONAD TELEMETRY]") || msg.contains("[MONAD SPEAKS]") {
                 let parts: Vec<&str> = msg.splitn(2, '\n').collect();
                 let actual_text = if parts.len() > 1 { parts[1].trim().to_string() } else { msg.clone() };
                 app.chat_logs.push(("MONAD".to_string(), actual_text));
+                continue;
             } else if msg.contains("[\u{1F4E1} PRESENTATION]") {
                 let clean_msg = msg.replace("\x1B[", "").replace("\x1B[m", ""); 
                 app.chat_logs.push(("MONAD".to_string(), clean_msg));
+                continue;
             }
 
             // Push everything to raw vault infinitely
@@ -148,11 +147,7 @@ pub async fn run(tx_stdin: Sender<String>, mut top_rx: UnboundedReceiver<String>
                 .constraints([Constraint::Percentage(60), Constraint::Percentage(40)].as_ref())
                 .split(main_chunks[0]);
 
-            // --- 3. VERTICAL SIDEBAR SPLIT ---
-            let sidebar_chunks = Layout::default()
-                .direction(Direction::Vertical)
-                .constraints([Constraint::Length(15), Constraint::Min(10)].as_ref())
-                .split(top_chunks[1]);
+
 
             let kernel_status = app.is_thinking.load(Ordering::Relaxed);
             app.spinner_idx = app.spinner_idx.wrapping_add(1);
@@ -217,65 +212,13 @@ pub async fn run(tx_stdin: Sender<String>, mut top_rx: UnboundedReceiver<String>
                 f.render_stateful_widget(scrollbar, top_chunks[0].inner(&Margin { vertical: 1, horizontal: 0 }), &mut scrollbar_state);
             }
 
-            // --- WIDGET 2: COGNITIVE TELEMETRY HUD (Top Right 40%) ---
-            let hud_block = Block::default()
-                .title(" [ COGNITION TELEMETRY ] ")
-                .title_style(Style::default().fg(color_cyan).add_modifier(Modifier::BOLD))
-                .borders(Borders::ALL)
-                .border_type(BorderType::Rounded)
-                .border_style(Style::default().fg(color_slate));
-            
-            let hud_inner = hud_block.inner(sidebar_chunks[0]);
-            f.render_widget(hud_block, sidebar_chunks[0]);
 
-            let hud_layout = Layout::default()
-                .direction(Direction::Vertical)
-                .constraints([Constraint::Length(3), Constraint::Length(2), Constraint::Length(2), Constraint::Length(4), Constraint::Length(2)].as_ref())
-                .split(hud_inner);
-
-            let current_date = chrono::Local::now().format("%B %-d, %Y").to_string().to_uppercase();
-            let info_text = vec![
-                Line::from(vec![Span::styled(" EPOCH: ", Style::default().fg(color_muted)), Span::styled(current_date, Style::default().fg(Color::White))]),
-                Line::from(vec![Span::styled(" NODE:  ", Style::default().fg(color_muted)), Span::styled(&app.hostname, Style::default().fg(color_cyan))]),
-            ];
-            f.render_widget(Paragraph::new(info_text).block(Block::default().borders(Borders::BOTTOM).border_style(Style::default().fg(color_slate))).wrap(Wrap { trim: false }), hud_layout[0]);
-
-            let jitter = (app.spinner_idx % 20) as f64 * 0.001;
-            let target_fe = if kernel_status == 1 { app.fe } else { 0.0183 };
-            let target_eu = if kernel_status == 1 { app.eu } else { 0.1645 };
-            let fe_val = target_fe + jitter;
-            let eu_val = target_eu + jitter;
-            
-            let fe_label = if kernel_status == 1 { "ANALYZING GRAPH".to_string() } else { format!("{:.4}", fe_val) };
-            let eu_label = if kernel_status == 1 { "TRACING LINEAGE".to_string() } else { format!("{:.4}", eu_val) };
-
-            let fe_gauge = Gauge::default().block(Block::default().title(" Free Energy (Friston) ")).gauge_style(Style::default().fg(if kernel_status == 1 { color_rust } else { color_cyan })).ratio(fe_val.clamp(0.0, 1.0)).label(fe_label);
-            f.render_widget(fe_gauge, hud_layout[1]);
-
-            let eu_gauge = Gauge::default().block(Block::default().title(" Epistemic Uncertainty ")).gauge_style(Style::default().fg(if kernel_status == 1 { color_rust } else { color_green })).ratio(eu_val.clamp(0.0, 1.0)).label(eu_label);
-            f.render_widget(eu_gauge, hud_layout[2]);
-
-            let active_pulse = if (app.spinner_idx / 10) % 2 == 0 { "▶" } else { "▷" };
-            let daemons_text = vec![
-                Line::from(vec![Span::styled(" [ DAEMONS & IPC ]", Style::default().fg(color_cyan).add_modifier(Modifier::BOLD))]),
-                Line::from(vec![Span::styled(format!(" {} COGNITIVE FIREWALL", active_pulse), Style::default().fg(color_green))]),
-                Line::from(vec![Span::styled(format!(" {} MNEMONIC SANDBOX", active_pulse), Style::default().fg(color_green))]),
-                Line::from(vec![Span::styled(" ◈ NOUMENAL LINK: ", Style::default().fg(color_muted)), Span::styled("SECURE", Style::default().fg(color_green))]),
-            ];
-            f.render_widget(Paragraph::new(daemons_text).wrap(Wrap { trim: false }), hud_layout[3]);
-
-            let target_status = if app.drift_target == "SEEKING" { "AWAITING INSTRUCTION" } else { &app.drift_target };
-            let swarm_lines = vec![
-                Line::from(vec![Span::styled(" [ ACTIVE RESEARCH ]", Style::default().fg(color_host).add_modifier(Modifier::BOLD))]),
-                Line::from(vec![Span::styled(" TARGET: ", Style::default().fg(color_muted)), Span::styled(format!("{} {}", active_spin, target_status), Style::default().fg(color_rust))]),
-            ];
-            f.render_widget(Paragraph::new(swarm_lines).wrap(Wrap { trim: false }), hud_layout[4]);
 
             // --- WIDGET 3: KERNEL VAULT RAW LOGS (Bottom Right 40%) ---
             let joined_system_logs = app.system_logs.join("\n");
             let parsed_sys_text = joined_system_logs.into_text().unwrap_or_else(|_| ratatui::text::Text::from("Error rendering ANSI"));
             
-            let sys_inner_height = sidebar_chunks[1].height.saturating_sub(2);
+            let sys_inner_height = top_chunks[1].height.saturating_sub(2);
             let total_sys_lines = parsed_sys_text.lines.len() as u16;
             let max_sys_scroll = if total_sys_lines > sys_inner_height { total_sys_lines - sys_inner_height } else { 0 };
             
@@ -295,12 +238,12 @@ pub async fn run(tx_stdin: Sender<String>, mut top_rx: UnboundedReceiver<String>
                 .wrap(Wrap { trim: false })
                 .scroll((final_sys_scroll, 0));
                 
-            f.render_widget(sys_para, sidebar_chunks[1]);
+            f.render_widget(sys_para, top_chunks[1]);
 
             if max_sys_scroll > 0 {
                 let sys_scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight).begin_symbol(Some("▲")).end_symbol(Some("▼")).track_symbol(Some("│")).thumb_symbol("█");
                 let mut sys_scrollbar_state = ScrollbarState::new(max_sys_scroll as usize).position(final_sys_scroll as usize);
-                f.render_stateful_widget(sys_scrollbar, sidebar_chunks[1].inner(&Margin { vertical: 1, horizontal: 0 }), &mut sys_scrollbar_state);
+                f.render_stateful_widget(sys_scrollbar, top_chunks[1].inner(&Margin { vertical: 1, horizontal: 0 }), &mut sys_scrollbar_state);
             }
 
 

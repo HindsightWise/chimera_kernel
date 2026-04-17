@@ -271,4 +271,5 @@ async fn main() {
         // Take over the main thread with the UI rendering loop!
         let _ = monad_os::ui::run(tx_stdin, top_rx, is_thinking).await;
     }
+    std::process::exit(0);
 }
