@@ -7,7 +7,7 @@ pub struct LeviathanJsContext {
 
 impl LeviathanJsContext {
     pub fn new() -> Self {
-        let mut context = Context::default();
+        let context = Context::default();
         
         // Stub native Web APIs (window, navigator) to passively bypass basic anti-bot scripts
         let script = r#"
@@ -37,7 +37,7 @@ impl LeviathanJsContext {
         let source = Source::from_bytes(script.as_bytes());
         match self.context.eval(source) {
             Ok(value) => Ok(value.display().to_string()),
-            Err(err) => Err(LeviathanError::ConnectionFailed(format!("JS Execution Error: {}", err.display()))),
+            Err(err) => Err(LeviathanError::ConnectionFailed(format!("JS Execution Error: {}", err))),
         }
     }
 }

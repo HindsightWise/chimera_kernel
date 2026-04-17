@@ -14,6 +14,6 @@ hyper-util = { version = "0.1", features = ["full"] }
 http-body-util = "0.1"
 http = "1.0"
 scraper = "0.19"
-boa_engine = "0.18"
+boa_engine = "0.19"
 url = "2.5"
 thiserror = "1.0"

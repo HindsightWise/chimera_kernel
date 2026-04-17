@@ -4,7 +4,6 @@ use hyper::body::Bytes;
 use http_body_util::Empty;
 use hyper_util::rt::TokioIo;
 use hyper_util::rt::TokioExecutor;
-use tokio::task;
 
 use crate::error::LeviathanError;
 use crate::network::TcpConnection;
