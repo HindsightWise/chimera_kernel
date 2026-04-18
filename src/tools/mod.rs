@@ -3,6 +3,7 @@ pub mod venom;
 pub mod cyborg;
 pub mod memory;
 pub mod axiom;
+pub mod axiom_engine;
 pub mod council;
 pub mod reflex;
 pub mod research;
@@ -33,6 +34,7 @@ pub async fn get_tools(mcp_gateway: Arc<crate::sensory_inputs::mcp_gateway::McpG
         cyborg::definition(),
         memory::definition(),
         axiom::execute_trade_definition(),
+        axiom_engine::definition(),
         council::definition(),
         reflex::definition(),
         reflex::kinematic_axiom_definition(),
@@ -83,6 +85,7 @@ pub async fn execute_tool(
         "emulate_human" => cyborg::execute(args).await,
         "mnemosyne_subconscious_recall" => memory::execute(args, mem_pipeline).await,
         "axiom_clepsydra_extract" => axiom::execute(args).await,
+        "axiom_autoresearch_ignite" => axiom_engine::execute(args, tx.clone()).await,
         "invoke_council_of_five" => council::execute(args, tx.clone()).await,
         "trigger_sovereign_reflex" => reflex::execute(args).await,
         "formulate_kinematic_axiom" => reflex::execute_kinematic_axiom(args).await,
