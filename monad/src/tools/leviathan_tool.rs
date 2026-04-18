@@ -31,11 +31,12 @@ pub async fn execute(args: Value, tx: Sender<String>) -> String {
 
     let task_id = uuid::Uuid::new_v4().to_string();
     let task_id_clone = task_id.clone();
+    let target_clone = target.clone();
     
     // Decouple network thread to avoid blocking OS
     tokio::spawn(async move {
         let engine = LeviathanEngine::new();
-        match engine.stealth_get(&target).await {
+        match engine.stealth_get(&target_clone).await {
             Ok(response) => {
                 let extracted = response.document.css_select_text(&filter);
                 let mut data = extracted.unwrap_or_else(|_| vec!["[Parse Error]".to_string()]).join("\n");
@@ -47,6 +48,10 @@ pub async fn execute(args: Value, tx: Sender<String>) -> String {
                 }
                 
                 let msg = format!("[LEVIATHAN RESULT: {}] Scraped payload (HTTP {}):\n{}", task_id_clone, response.status, data);
+                
+                // Explictly drop the !Send response types before crossing the .await boundary
+                drop(response);
+                
                 let _ = tx.send(msg).await;
             },
             Err(e) => {
