@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="assets/flower_of_life_1.jpg" alt="Flower of Life: The Symmetrical Framework" width="100%">
+  <img src="./assets/flower_of_life_1.jpg" alt="Flower of Life: The Symmetrical Framework" width="100%">
   
 # ◈ MONAD OS ◈
 
