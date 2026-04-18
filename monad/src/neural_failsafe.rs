@@ -74,4 +74,30 @@ impl NeuralFailSafe {
             Err(_) => Err(anyhow::anyhow!("Local Oracle timed out after {}s", fallback_timeout_secs)),
         }
     }
+    
+    pub async fn execute_reflex_arc(prompt: &str) -> Result<String, anyhow::Error> {
+        let local_client = Self::local_client();
+        let reflex_req = CreateChatCompletionRequestArgs::default()
+            .model("monad-spinal-cord")
+            .messages(vec![
+                async_openai::types::ChatCompletionRequestUserMessageArgs::default().content(prompt).build()?.into()
+            ])
+            .max_tokens(10_u32)
+            .temperature(0.0)
+            .build()?;
+
+        // Sub-second biological failover speed limit
+        match timeout(Duration::from_millis(800), local_client.chat().create(reflex_req)).await {
+            Ok(Ok(local_res)) => {
+                if let Some(c) = local_res.choices.first() {
+                    if let Some(content) = &c.message.content {
+                        return Ok(content.trim().to_string());
+                    }
+                }
+                Err(anyhow::anyhow!("Spinal cord empty response"))
+            }
+            Ok(Err(e)) => Err(anyhow::anyhow!("Spinal cord malfunction: {:?}", e)),
+            Err(_) => Err(anyhow::anyhow!("Spinal cord loop timeout (>800ms)")),
+        }
+    }
 }

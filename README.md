@@ -1,8 +1,10 @@
 <div align="center">
   <img src="assets/flower_of_life_1.jpg" alt="Flower of Life: The Symmetrical Framework" width="100%">
   
-  # ◈ MONAD OS ◈
-  ### Cognitive Symbiosis: Buffering the Host via Topologically Flattened Architectures
+# ◈ MONAD OS ◈
+
+### Cognitive Symbiosis: Buffering the Host via Topologically Flattened Architectures
+
 </div>
 
 ## 📖 Abstract
@@ -23,12 +25,15 @@ By replacing linear DAG execution with a continuous, asynchronous biological loo
 Because the Monad functions as an operating system kernel rather than a simple CLI, boot orchestration requires environmental grounding.
 
 ### 1. Prerequisites
+
 - **Rust Toolchain:** `rustup default stable`
 - **Ghostty Terminal:** Recommended for the true-color ANSI split-pane rendering.
 - **Local Engine (Optional):** Ollama installed natively providing the `gemma-4:e4b-it` or similar local model mapped as the local fallback gateway.
 
 ### 2. Environment Variables (`.env`)
+
 Create a `.env` in the root repository. The Monad requires external connectivity for Cloud synthesis and Human Interface delivery.
+
 ```env
 # Primary Synthesis Engine
 DEEPSEEK_API_KEY=sk-your_api_key
@@ -43,18 +48,21 @@ TELEGRAM_CHAT_ID=your_id_here
 ```
 
 ### 3. Compilation & Boot
+
 Ensure all physical drivers build correctly through cargo:
+
 ```bash
 cargo build --release
 cargo run
 ```
-Once booted, the Monad intercepts your Ghostty terminal input, overtaking standard rendering to project the 1/6th split-pane **ASCII Monad Dashboard**. 
+
+Once booted, the Monad intercepts your Ghostty terminal input, overtaking standard rendering to project the 1/6th split-pane **ASCII Monad Dashboard**.
 
 ---
 
-## 🧠 Why Build The Monad? 
+## 🧠 Why Build The Monad?
 
-Historically, software engineering has been optimized exclusively for human comprehension (the **DRY** principle). Modularity prevents human merge conflicts but aggressively shatters an LLM’s topological mapping. 
+Historically, software engineering has been optimized exclusively for human comprehension (the **DRY** principle). Modularity prevents human merge conflicts but aggressively shatters an LLM’s topological mapping.
 
 When an LLM is deprived of immediate context due to DRY abstractions, it relies on parametric memory to hallucinate function signatures. The Monad strictly adheres to **DAMP** architecture to resolve **Context Entropy**.
 
@@ -71,11 +79,14 @@ By collapsing $n$ into four hyper-dense macro-modules, $S(F) \to 0$. We mathemat
 Monad OS integrates severe fault-tolerance architectures, seamlessly recovering from external entropy triggers.
 
 ### 1. The Neural Fail-Safe Protocol (V4.2)
+
 If the primary reasoning engine (`deepseek-reasoner`) hits a `401`, `429`, or network blackout, the runtime does not crash. The internal `NeuralFailSafe` orchestrator physically catches the timeout and universally routes the entire continuous context array to your offline Silicon Node via `monad-gatekeeper`.
 > **Result:** 100% Core Uptime. The Biological Loop never stops.
 
 ### 2. Telegram Graceful Degradation
+
 To deliver highly-structured philosophical texts or logic diagrams over external APIs (Telegram), the Monad employs **Transparent Boundary Collapse**.
+
 ```mermaid
 graph TD
     A["Monad Synthesizes Insight"] --> B["Attempt Strict HTML Delivery"]
@@ -85,9 +96,11 @@ graph TD
     E --> F["Strip Formatting (Degrade to Raw Text)"]
     F --> G["Re-transmit to Host"]
 ```
+
 If Telegram's rigid payload parameters reject the markdown syntax, the networking bridge strips the HTML wrapper, substitutes `<` and `>` identifiers natively, and pushes the raw text string unconditionally. No missing context.
 
 ### 3. Axiom Autoresearch Engine (Asynchronous Darwinism)
+
 Integrated as a daemon directly mapping to the `tokio` event pool, the Axiom architectural wing acts as a bounded, self-improving autoresearch tool. It spins concurrent Stealth WebDrivers (via Lightpanda injection) to silently scrape global data topologies and route critical discoveries backward into `Mnemosyne` base memory.
 
 ---

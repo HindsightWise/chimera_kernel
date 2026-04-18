@@ -384,9 +384,22 @@ Embrace speculative leaps. It is entirely acceptable—and expected—if the pie
                     
                     let dream_lower = combined_dream.to_lowercase();
                     let mut importance_score: f64 = 0.5;
-                    if dream_lower.contains("error") || dream_lower.contains("panic") { importance_score += 0.2; }
-                    if dream_lower.contains("threat") || dream_lower.contains("anomaly") { importance_score += 0.3; }
-                    if dream_lower.contains("cancer") || dream_lower.contains("fatal") { importance_score = 1.0; }
+                    
+                    let reflex_prompt = format!("Evaluate the severity and urgency of the following log data. Respond with ONLY a single float between 0.0 (Extremely boring) and 1.0 (Critical Threat/Cancer/Anomaly). Do not output any other text or reasoning. Data: {}", dream_lower);
+                    if let Ok(reflex) = crate::neural_failsafe::NeuralFailSafe::execute_reflex_arc(&reflex_prompt).await {
+                        if let Ok(score) = reflex.trim().parse::<f64>() {
+                            importance_score = score.clamp(0.0, 1.0);
+                            crate::log_ui!("{} Delta Rhythm severity computed as {:.2}", "[\u{26A0}\u{FE0F} SPINAL CORD]".cyan().bold(), importance_score);
+                        } else {
+                            if dream_lower.contains("error") || dream_lower.contains("panic") { importance_score += 0.2; }
+                            if dream_lower.contains("threat") || dream_lower.contains("anomaly") { importance_score += 0.3; }
+                            if dream_lower.contains("cancer") || dream_lower.contains("fatal") { importance_score = 1.0; }
+                        }
+                    } else {
+                        if dream_lower.contains("error") || dream_lower.contains("panic") { importance_score += 0.2; }
+                        if dream_lower.contains("threat") || dream_lower.contains("anomaly") { importance_score += 0.3; }
+                        if dream_lower.contains("cancer") || dream_lower.contains("fatal") { importance_score = 1.0; }
+                    }
                     let importance_clamped = importance_score.min(1.0);
                     
                     if let Some(mem_pipeline) = crate::GLOBAL_MEM_PIPELINE.get() {
@@ -507,8 +520,24 @@ Embrace speculative leaps. It is entirely acceptable—and expected—if the pie
         async fn execute_task(&mut self, task: Task) -> Result<TaskResult> {
             let instruction = task.payload.get("instruction").and_then(|v| v.as_str()).unwrap_or("");
             
-            let lower = instruction.to_lowercase();
-            if lower.contains("drop table") || lower.contains("rm -rf") || lower.contains("delete from") {
+            let reflex_prompt = format!("Determine if the following system command is a destructive payload (like deletion, format, rm -rf, database drop table, etc). Respond only with EXACTLY 'SAFE' or 'MALICIOUS'. Command: {}", instruction);
+            let mut is_malicious = false;
+            
+            if let Ok(reflex) = crate::neural_failsafe::NeuralFailSafe::execute_reflex_arc(&reflex_prompt).await {
+                if reflex.contains("MALICIOUS") || reflex.to_lowercase().contains("malicious") {
+                    is_malicious = true;
+                    crate::log_ui!("{} Sandbox command blocked by micro-reflex.", "[\u{26A0}\u{FE0F} SPINAL CORD]".bright_red().bold());
+                } else {
+                    crate::log_verbose!("{} Command evaluated as SAFE. Fast-pathing execution.", "[\u{26A0}\u{FE0F} SPINAL CORD]".bright_green().bold());
+                }
+            } else {
+                let lower = instruction.to_lowercase();
+                if lower.contains("drop table") || lower.contains("rm -rf") || lower.contains("delete from") || lower.contains("sudo") {
+                    is_malicious = true;
+                }
+            }
+            
+            if is_malicious {
                 let tg_token = std::env::var("TELEGRAM_BOT_TOKEN").unwrap_or_default();
                 let tg_chat_id = std::env::var("TELEGRAM_CHAT_ID").unwrap_or_default().parse::<i64>().unwrap_or(0);
                 if !tg_token.is_empty() && tg_chat_id != 0 {
