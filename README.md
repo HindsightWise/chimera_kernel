@@ -90,17 +90,20 @@ graph TD
 ```
 
 ### 1. The Neocortex: Sovereign Intelligence (DeepSeek)
+
 Operating via the cloud API, the primary reasoning engine (`deepseek-reasoner`) handles all complex logic. It drives Dream Synthesis, executes Lateral Reach abstractions, and orchestrates final Graph conclusions. It is the philosophical and architectural core of the Monad.
 
 ### 2. The Autonomic Nervous System: Neural Fail-Safe (Gemma 4)
+
 Triggered via the localized `monad-gatekeeper` alias, this offline system regulates the Monad's raw survival without burning external API tokens:
-* **Failover Uptime:** If the Neocortex hits a `401`, `429`, or network blackout, the runtime physically catches the timeout and routes the entire continuous context array to Gemma. **Result:** 100% Core Uptime.
-* **Amnesia Patching:** When conversation limits are mathematically breached, the subsystem actively compresses old state memory into highly dense narrative blocks (`CURRENT_CONTEXT.md`), avoiding catastrophic context collapse.
+- **Failover Uptime:** If the Neocortex hits a `401`, `429`, or network blackout, the runtime physically catches the timeout and routes the entire continuous context array to Gemma. **Result:** 100% Core Uptime.
+- **Amnesia Patching:** When conversation limits are mathematically breached, the subsystem actively compresses old state memory into highly dense narrative blocks (`CURRENT_CONTEXT.md`), avoiding catastrophic context collapse.
 
 ### 3. The Spinal Cord: Zero-Trust Intercepts (Qwen 0.8B)
+
 Wired natively into the kernel's most critical event loops, this microscopic model alias (`monad-spinal-cord`) executes logic in under `800ms` with a strict `max_tokens: 10` boundary and an absolute `0.0` temperature constraint.
-* **Terminal Sandbox Gating:** All bash executions are routed through the Spinal Cord before running. It calculates threat probability and acts as an unyielding Zero-Trust sentinel.
-* **Delta Rhythm Scoring:** Continuous background events and dreams are mathematically scored (`0.0` to `1.0`). If a threat is recognized, it is immediately fossilized into deep memory without needing to consult the upper Neocortex.
+- **Terminal Sandbox Gating:** All bash executions are routed through the Spinal Cord before running. It calculates threat probability and acts as an unyielding Zero-Trust sentinel.
+- **Delta Rhythm Scoring:** Continuous background events and dreams are mathematically scored (`0.0` to `1.0`). If a threat is recognized, it is immediately fossilized into deep memory without needing to consult the upper Neocortex.
 
 ### 2. Telegram Graceful Degradation
 
