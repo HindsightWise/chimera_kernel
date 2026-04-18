@@ -130,46 +130,66 @@ pub async fn start_poller(tx: Sender<String>, token: String, allowed_chat_id: i6
 
 pub async fn send_message(token: &str, chat_id: i64, text: &str) {
     let url = format!("https://api.telegram.org/bot{}/sendMessage", token);
-    let payload = SendMessagePayloadWithMarkup {
-        chat_id,
-        text: text.to_string(),
-        parse_mode: Some("HTML".to_string()),
-        reply_markup: None,
-    };
-    
     let client = reqwest::Client::new();
     
-    match client.post(&url).json(&payload).send().await {
-        Ok(res) => {
-            if res.status().is_client_error() || res.status().is_server_error() {
-                crate::log_ui_err!("{} HTML Parse Collision Detected (Status: {}). Activating Raw Text Failover...", "[TELEGRAM ERROR]".red().bold(), res.status());
-                
-                let safe_text = text.replace("<", "[").replace(">", "]");
-                
-                let fallback_payload = SendMessagePayloadWithMarkup {
-                    chat_id,
-                    text: safe_text.clone(),
-                    parse_mode: None,
-                    reply_markup: None,
-                };
-                
-                if let Err(fallback_err) = client.post(&url).json(&fallback_payload).send().await {
-                    crate::log_ui_err!("{} Terminal failure on fallback dispatch: {}", "[TELEGRAM FATAL]".red().bold(), fallback_err);
+    let chars: Vec<char> = text.chars().collect();
+    let chunk_size = 3800; // Leave room for Telegram constraints and our headers
+    let chunks: Vec<String> = chars.chunks(chunk_size).map(|c| c.iter().collect()).collect();
+
+    for (i, chunk) in chunks.iter().enumerate() {
+        if i > 0 {
+            tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+        }
+        
+        let chunk_display = if chunks.len() > 1 {
+            format!("(Part {}/{})\n{}", i + 1, chunks.len(), chunk)
+        } else {
+            chunk.clone()
+        };
+
+        let payload = SendMessagePayloadWithMarkup {
+            chat_id,
+            text: chunk_display.clone(),
+            parse_mode: Some("HTML".to_string()),
+            reply_markup: None,
+        };
+        
+        match client.post(&url).json(&payload).send().await {
+            Ok(res) => {
+                if res.status().is_client_error() || res.status().is_server_error() {
+                    crate::log_ui_err!("{} HTML Parse Collision Detected (Status: {}) on chunk {}/{}. Activating Raw Text Failover...", "[TELEGRAM ERROR]".red().bold(), res.status(), i + 1, chunks.len());
+                    
+                    let safe_text = chunk_display.replace("<", "[").replace(">", "]");
+                    
+                    let fallback_payload = SendMessagePayloadWithMarkup {
+                        chat_id,
+                        text: safe_text.clone(),
+                        parse_mode: None,
+                        reply_markup: None,
+                    };
+                    
+                    if let Err(fallback_err) = client.post(&url).json(&fallback_payload).send().await {
+                        crate::log_ui_err!("{} Terminal failure on fallback dispatch: {}", "[TELEGRAM FATAL]".red().bold(), fallback_err);
+                    } else {
+                        if chunks.len() == 1 {
+                            if let Some(mem_pipeline) = crate::GLOBAL_MEM_PIPELINE.get() {
+                                let mut mp = mem_pipeline.lock().await;
+                                mp.store_working(format!("[TELEGRAM OUTBOUND] AI dispatched FALLBACK message to user:\n{}", safe_text), 1.0, 0.0, false).await;
+                            }
+                        }
+                    }
                 } else {
-                    if let Some(mem_pipeline) = crate::GLOBAL_MEM_PIPELINE.get() {
-                        let mut mp = mem_pipeline.lock().await;
-                        mp.store_working(format!("[TELEGRAM OUTBOUND] AI dispatched FALLBACK message to user:\n{}", safe_text), 1.0, 0.0, false).await;
+                    if chunks.len() == 1 {
+                        if let Some(mem_pipeline) = crate::GLOBAL_MEM_PIPELINE.get() {
+                            let mut mp = mem_pipeline.lock().await;
+                            mp.store_working(format!("[TELEGRAM OUTBOUND] AI dispatched message to user:\n{}", chunk_display), 1.0, 0.0, false).await;
+                        }
                     }
                 }
-            } else {
-                if let Some(mem_pipeline) = crate::GLOBAL_MEM_PIPELINE.get() {
-                    let mut mp = mem_pipeline.lock().await;
-                    mp.store_working(format!("[TELEGRAM OUTBOUND] AI dispatched message to user:\n{}", text), 1.0, 0.0, false).await;
-                }
             }
-        }
-        Err(e) => {
-            crate::log_ui_err!("{} Failed to route to telegram network: {}", "[TELEGRAM ERROR]".red().bold(), e);
+            Err(e) => {
+                crate::log_ui_err!("{} Failed to route to telegram network: {}", "[TELEGRAM ERROR]".red().bold(), e);
+            }
         }
     }
 }
