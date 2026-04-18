@@ -36,7 +36,7 @@ pub async fn execute(args: Value, tx: Sender<String>) -> String {
     // Decouple network thread to avoid blocking OS
     tokio::spawn(async move {
         let engine = LeviathanEngine::new();
-        match engine.stealth_get(&target_clone).await {
+        let result_msg = match engine.stealth_get(&target_clone).await {
             Ok(response) => {
                 let extracted = response.document.css_select_text(&filter);
                 let mut data = extracted.unwrap_or_else(|_| vec!["[Parse Error]".to_string()]).join("\n");
@@ -47,17 +47,16 @@ pub async fn execute(args: Value, tx: Sender<String>) -> String {
                     data.push_str("\n...[TRUNCATED TO PREVENT OS KERNEL OOM]");
                 }
                 
-                let msg = format!("[LEVIATHAN RESULT: {}] Scraped payload (HTTP {}):\n{}", task_id_clone, response.status, data);
-                
-                // Explictly drop the !Send response types before crossing the .await boundary
-                drop(response);
-                
-                let _ = tx.send(msg).await;
+                format!("[LEVIATHAN RESULT: {}] Scraped payload (HTTP {}):\n{}", task_id_clone, response.status, data)
             },
             Err(e) => {
-                let _ = tx.send(format!("[LEVIATHAN RESULT: {}] Fatal Network Error: {:?}", task_id_clone, e)).await;
+                format!("[LEVIATHAN RESULT: {}] Fatal Network Error: {:?}", task_id_clone, e)
             }
-        }
+        };
+
+        // All !Send variables from `stealth_get` are fully dropped by the end of the `match` block.
+        // It is now perfectly safe to await crossing the thread boundary natively.
+        let _ = tx.send(result_msg).await;
     });
 
     format!("[TASK ACCEPTED] Leviathan stealth pipeline initialized for {}. Background task: {}", target, task_id)
