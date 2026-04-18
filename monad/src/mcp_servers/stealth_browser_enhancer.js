@@ -23,7 +23,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const args = request.params.arguments;
         
         async function runLogic(args) {
-            async function runLogic(args) {
   const { action, config } = args;
   
   if (action === 'generate_fingerprint') {
