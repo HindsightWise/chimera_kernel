@@ -1,0 +1,964 @@
+CMAKE_TOOLCHAIN_FILE_aarch64-apple-darwin = None
+CMAKE_TOOLCHAIN_FILE_aarch64_apple_darwin = None
+HOST_CMAKE_TOOLCHAIN_FILE = None
+CMAKE_TOOLCHAIN_FILE = None
+CMAKE_GENERATOR_aarch64-apple-darwin = None
+CMAKE_GENERATOR_aarch64_apple_darwin = None
+HOST_CMAKE_GENERATOR = None
+CMAKE_GENERATOR = None
+CMAKE_PREFIX_PATH_aarch64-apple-darwin = None
+CMAKE_PREFIX_PATH_aarch64_apple_darwin = None
+HOST_CMAKE_PREFIX_PATH = None
+CMAKE_PREFIX_PATH = None
+CMAKE_aarch64-apple-darwin = None
+CMAKE_aarch64_apple_darwin = None
+HOST_CMAKE = None
+CMAKE = None
+-- The CXX compiler identification is AppleClang 21.0.0.21000099
+-- The C compiler identification is AppleClang 21.0.0.21000099
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: /usr/bin/cc - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD
+-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success
+-- Found Threads: TRUE
+-- 64-bit architecture detected
+-- Configuring done (2.1s)
+-- Generating done (0.9s)
+-- Build files have been written to: /Users/zerbytheboss/MEMCORE/memcore/target/release/build/kuzu-d6af96dfc1893ba3/out/build
+[  0%] Building CXX object third_party/miniparquet/CMakeFiles/miniparquet.dir/src/parquet/parquet_constants.cpp.o
+[  0%] Building C object third_party/serd/CMakeFiles/serd.dir/src/base64.c.o
+[  0%] Building CXX object third_party/miniz/CMakeFiles/miniz.dir/miniz.cpp.o
+[  1%] Building CXX object third_party/fastpfor/CMakeFiles/fastpfor.dir/fastpfor/bitpacking.cpp.o
+[  1%] Building CXX object third_party/re2/CMakeFiles/re2.dir/bitstate.cpp.o
+[  1%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/ANTLRErrorListener.cpp.o
+[  2%] Building CXX object third_party/zstd/CMakeFiles/zstd.dir/common/entropy_common.cpp.o
+[  2%] Building CXX object third_party/utf8proc/CMakeFiles/utf8proc.dir/utf8proc.cpp.o
+[  2%] Building C object third_party/serd/CMakeFiles/serd.dir/src/byte_source.c.o
+[  2%] Building CXX object third_party/zstd/CMakeFiles/zstd.dir/common/error_private.cpp.o
+[  2%] Building C object third_party/serd/CMakeFiles/serd.dir/src/env.c.o
+[  2%] Building CXX object third_party/zstd/CMakeFiles/zstd.dir/common/fse_decompress.cpp.o
+[  2%] Building C object third_party/serd/CMakeFiles/serd.dir/src/n3.c.o
+[  2%] Building CXX object third_party/zstd/CMakeFiles/zstd.dir/common/xxhash.cpp.o
+[  2%] Building CXX object third_party/zstd/CMakeFiles/zstd.dir/common/zstd_common.cpp.o
+[  2%] Building CXX object third_party/zstd/CMakeFiles/zstd.dir/compress/fse_compress.cpp.o
+[  2%] Building CXX object third_party/zstd/CMakeFiles/zstd.dir/compress/hist.cpp.o
+[  3%] Building CXX object third_party/zstd/CMakeFiles/zstd.dir/compress/huf_compress.cpp.o
+[  3%] Building CXX object third_party/utf8proc/CMakeFiles/utf8proc.dir/utf8proc_wrapper.cpp.o
+[  3%] Building CXX object third_party/zstd/CMakeFiles/zstd.dir/compress/zstd_compress.cpp.o
+[  3%] Building C object third_party/serd/CMakeFiles/serd.dir/src/node.c.o
+[  3%] Building C object third_party/serd/CMakeFiles/serd.dir/src/reader.c.o
+[  3%] Building CXX object third_party/re2/CMakeFiles/re2.dir/compile.cpp.o
+[  4%] Building C object third_party/serd/CMakeFiles/serd.dir/src/string.c.o
+[  4%] Building CXX object third_party/miniparquet/CMakeFiles/miniparquet.dir/src/parquet/parquet_types.cpp.o
+[  4%] Building C object third_party/serd/CMakeFiles/serd.dir/src/system.c.o
+[  4%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/ANTLRErrorStrategy.cpp.o
+[  4%] Building C object third_party/serd/CMakeFiles/serd.dir/src/uri.c.o
+[  4%] Building C object third_party/serd/CMakeFiles/serd.dir/src/writer.c.o
+[  4%] Linking CXX static library libutf8proc.a
+[  4%] Built target utf8proc
+[  4%] Building CXX object third_party/zstd/CMakeFiles/zstd.dir/compress/zstd_compress_literals.cpp.o
+[  4%] Linking C static library libserd.a
+[  4%] Built target serd
+[  4%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/ANTLRFileStream.cpp.o
+[  4%] Linking CXX static library libminiz.a
+[  4%] Building CXX object third_party/re2/CMakeFiles/re2.dir/dfa.cpp.o
+[  4%] Built target miniz
+[  4%] Building CXX object third_party/zstd/CMakeFiles/zstd.dir/compress/zstd_compress_sequences.cpp.o
+[  4%] Building CXX object third_party/zstd/CMakeFiles/zstd.dir/compress/zstd_compress_superblock.cpp.o
+[  4%] Building CXX object third_party/zstd/CMakeFiles/zstd.dir/compress/zstd_double_fast.cpp.o
+[  4%] Building CXX object third_party/zstd/CMakeFiles/zstd.dir/compress/zstd_fast.cpp.o
+[  4%] Building CXX object third_party/miniparquet/CMakeFiles/miniparquet.dir/src/thrift/protocol/TProtocol.cpp.o
+[  4%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/ANTLRInputStream.cpp.o
+[  4%] Building CXX object third_party/re2/CMakeFiles/re2.dir/filtered_re2.cpp.o
+[  5%] Building CXX object third_party/zstd/CMakeFiles/zstd.dir/compress/zstd_lazy.cpp.o
+[  5%] Building CXX object src/function/aggregate/CMakeFiles/kuzu_function_aggregate.dir/count.cpp.o
+[  5%] Building CXX object third_party/re2/CMakeFiles/re2.dir/mimics_pcre.cpp.o
+[  5%] Building CXX object src/function/arithmetic/CMakeFiles/kuzu_function_arithmetic.dir/multiply.cpp.o
+[  6%] Building CXX object third_party/miniparquet/CMakeFiles/miniparquet.dir/src/thrift/transport/TTransportException.cpp.o
+[  7%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/ActionTransition.cpp.o
+[  7%] Building CXX object third_party/re2/CMakeFiles/re2.dir/nfa.cpp.o
+[  7%] Built target kuzu_function_aggregate
+[  7%] Building CXX object third_party/zstd/CMakeFiles/zstd.dir/compress/zstd_ldm.cpp.o
+[  7%] Building CXX object src/function/cast/CMakeFiles/kuzu_function_cast.dir/cast_rdf_variant.cpp.o
+[  7%] Building CXX object src/function/arithmetic/CMakeFiles/kuzu_function_arithmetic.dir/add.cpp.o
+[  7%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/AmbiguityInfo.cpp.o
+[  7%] Building CXX object third_party/zstd/CMakeFiles/zstd.dir/compress/zstd_opt.cpp.o
+[  7%] Building CXX object third_party/miniparquet/CMakeFiles/miniparquet.dir/src/thrift/transport/TBufferTransports.cpp.o
+[  7%] Building CXX object third_party/re2/CMakeFiles/re2.dir/onepass.cpp.o
+[  7%] Building CXX object src/function/arithmetic/CMakeFiles/kuzu_function_arithmetic.dir/subtract.cpp.o
+[  7%] Building CXX object src/function/cast/CMakeFiles/kuzu_function_cast.dir/cast_fixed_list.cpp.o
+[  7%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/ArrayPredictionContext.cpp.o
+[  7%] Building CXX object third_party/zstd/CMakeFiles/zstd.dir/decompress/huf_decompress.cpp.o
+[  7%] Building CXX object third_party/zstd/CMakeFiles/zstd.dir/decompress/zstd_ddict.cpp.o
+[  7%] Building CXX object src/function/arithmetic/CMakeFiles/kuzu_function_arithmetic.dir/divide.cpp.o
+[  8%] Building CXX object third_party/re2/CMakeFiles/re2.dir/parse.cpp.o
+[  8%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/ATNConfig.cpp.o
+[  8%] Building CXX object third_party/miniparquet/CMakeFiles/miniparquet.dir/src/snappy/snappy.cc.o
+[  9%] Building CXX object src/function/arithmetic/CMakeFiles/kuzu_function_arithmetic.dir/modulo.cpp.o
+[  9%] Building CXX object src/function/table/CMakeFiles/kuzu_table.dir/call_functions.cpp.o
+[  9%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/ATNConfigSet.cpp.o
+[  9%] Building CXX object third_party/re2/CMakeFiles/re2.dir/perl_groups.cpp.o
+[  9%] Building CXX object third_party/re2/CMakeFiles/re2.dir/prefilter.cpp.o
+[  9%] Building CXX object third_party/miniparquet/CMakeFiles/miniparquet.dir/src/snappy/snappy-sinksource.cc.o
+[  9%] Linking CXX static library libminiparquet.a
+[  9%] Building CXX object src/function/arithmetic/CMakeFiles/kuzu_function_arithmetic.dir/negate.cpp.o
+[  9%] Built target miniparquet
+[  9%] Building CXX object src/function/table/CMakeFiles/kuzu_table.dir/scan_functions.cpp.o
+[  9%] Built target kuzu_function_cast
+[  9%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/ATN.cpp.o
+[  9%] Building CXX object src/function/table/call/CMakeFiles/kuzu_table_call.dir/current_setting.cpp.o
+[  9%] Building CXX object src/function/arithmetic/CMakeFiles/kuzu_function_arithmetic.dir/abs.cpp.o
+[  9%] Building CXX object third_party/re2/CMakeFiles/re2.dir/prefilter_tree.cpp.o
+[  9%] Built target kuzu_table
+[  9%] Building CXX object third_party/zstd/CMakeFiles/zstd.dir/decompress/zstd_decompress.cpp.o
+[  9%] Building CXX object src/function/table/call/CMakeFiles/kuzu_table_call.dir/db_version.cpp.o
+[  9%] Building CXX object third_party/zstd/CMakeFiles/zstd.dir/decompress/zstd_decompress_block.cpp.o
+[  9%] Building CXX object third_party/re2/CMakeFiles/re2.dir/prog.cpp.o
+[  9%] Built target kuzu_function_arithmetic
+[  9%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/ATNDeserializationOptions.cpp.o
+[ 10%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/ATNDeserializer.cpp.o
+[ 11%] Linking CXX static library libzstd.a
+[ 11%] Built target zstd
+[ 11%] Building CXX object src/main/CMakeFiles/kuzu_main.dir/client_context.cpp.o
+[ 11%] Building CXX object src/function/table/call/CMakeFiles/kuzu_table_call.dir/show_connection.cpp.o
+[ 11%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/ATNSimulator.cpp.o
+[ 11%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/ATNState.cpp.o
+[ 11%] Building CXX object third_party/re2/CMakeFiles/re2.dir/re2.cpp.o
+[ 12%] Building CXX object src/function/table/call/CMakeFiles/kuzu_table_call.dir/show_tables.cpp.o
+[ 12%] Building CXX object src/main/CMakeFiles/kuzu_main.dir/connection.cpp.o
+[ 12%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/ATNStateType.cpp.o
+[ 12%] Building CXX object third_party/re2/CMakeFiles/re2.dir/regexp.cpp.o
+[ 12%] Building CXX object src/function/table/call/CMakeFiles/kuzu_table_call.dir/storage_info.cpp.o
+[ 13%] Building CXX object src/optimizer/CMakeFiles/kuzu_optimizer.dir/acc_hash_join_optimizer.cpp.o
+[ 14%] Building CXX object src/main/CMakeFiles/kuzu_main.dir/database.cpp.o
+[ 14%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/AtomTransition.cpp.o
+[ 14%] Building CXX object third_party/re2/CMakeFiles/re2.dir/set.cpp.o
+[ 14%] Building CXX object src/parser/CMakeFiles/kuzu_parser.dir/create_macro.cpp.o
+[ 14%] Building CXX object src/optimizer/CMakeFiles/kuzu_optimizer.dir/agg_key_dependency_optimizer.cpp.o
+[ 14%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/ContextSensitivityInfo.cpp.o
+[ 14%] Building CXX object src/parser/CMakeFiles/kuzu_parser.dir/parsed_expression_visitor.cpp.o
+[ 15%] Building CXX object third_party/re2/CMakeFiles/re2.dir/simplify.cpp.o
+[ 15%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/DecisionEventInfo.cpp.o
+[ 15%] Building CXX object src/optimizer/CMakeFiles/kuzu_optimizer.dir/correlated_subquery_unnest_solver.cpp.o
+[ 16%] Building CXX object src/parser/CMakeFiles/kuzu_parser.dir/parser.cpp.o
+[ 16%] Building CXX object src/function/table/call/CMakeFiles/kuzu_table_call.dir/table_info.cpp.o
+[ 16%] Building CXX object third_party/re2/CMakeFiles/re2.dir/stringpiece.cpp.o
+[ 16%] Building CXX object src/optimizer/CMakeFiles/kuzu_optimizer.dir/factorization_rewriter.cpp.o
+[ 17%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/DecisionInfo.cpp.o
+[ 17%] Building CXX object src/parser/antlr_parser/CMakeFiles/kuzu_parser_antlr_parser.dir/kuzu_cypher_parser.cpp.o
+[ 17%] Building CXX object third_party/re2/CMakeFiles/re2.dir/tostring.cpp.o
+[ 17%] Building CXX object src/parser/CMakeFiles/kuzu_parser.dir/parsed_statement_visitor.cpp.o
+[ 17%] Building CXX object third_party/re2/CMakeFiles/re2.dir/unicode_casefold.cpp.o
+[ 17%] Building CXX object third_party/re2/CMakeFiles/re2.dir/unicode_groups.cpp.o
+[ 17%] Building CXX object third_party/re2/CMakeFiles/re2.dir/rune.cpp.o
+[ 17%] Building CXX object third_party/re2/CMakeFiles/re2.dir/strutil.cpp.o
+[ 17%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/DecisionState.cpp.o
+[ 17%] Building CXX object src/parser/CMakeFiles/kuzu_parser.dir/transformer.cpp.o
+[ 18%] Linking CXX static library libre2.a
+[ 18%] Built target re2
+[ 18%] Building CXX object src/optimizer/CMakeFiles/kuzu_optimizer.dir/filter_push_down_optimizer.cpp.o
+[ 18%] Building CXX object src/parser/antlr_parser/CMakeFiles/kuzu_parser_antlr_parser.dir/parser_error_listener.cpp.o
+[ 18%] Building CXX object src/optimizer/CMakeFiles/kuzu_optimizer.dir/logical_operator_collector.cpp.o
+[ 18%] Built target kuzu_table_call
+[ 18%] Building CXX object src/parser/expression/CMakeFiles/kuzu_parser_expression.dir/parsed_case_expression.cpp.o
+[ 18%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/EpsilonTransition.cpp.o
+[ 18%] Building CXX object src/main/CMakeFiles/kuzu_main.dir/plan_printer.cpp.o
+[ 18%] Building CXX object src/parser/expression/CMakeFiles/kuzu_parser_expression.dir/parsed_expression.cpp.o
+[ 18%] Linking CXX static library libfastpfor.a
+[ 18%] Built target fastpfor
+[ 18%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/ErrorInfo.cpp.o
+[ 18%] Building CXX object src/optimizer/CMakeFiles/kuzu_optimizer.dir/logical_operator_visitor.cpp.o
+[ 18%] Building CXX object src/parser/antlr_parser/CMakeFiles/kuzu_parser_antlr_parser.dir/parser_error_strategy.cpp.o
+[ 18%] Building CXX object src/parser/transform/CMakeFiles/kuzu_parser_transform.dir/transform_comment_on.cpp.o
+[ 18%] Built target kuzu_parser
+[ 19%] Building CXX object src/parser/expression/CMakeFiles/kuzu_parser_expression.dir/parsed_function_expression.cpp.o
+[ 19%] Building CXX object src/main/CMakeFiles/kuzu_main.dir/prepared_statement.cpp.o
+[ 20%] Building CXX object src/optimizer/CMakeFiles/kuzu_optimizer.dir/optimizer.cpp.o
+[ 20%] Building CXX object src/parser/expression/CMakeFiles/kuzu_parser_expression.dir/parsed_property_expression.cpp.o
+[ 20%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/LexerAction.cpp.o
+[ 20%] Built target kuzu_parser_antlr_parser
+[ 20%] Building CXX object src/parser/transform/CMakeFiles/kuzu_parser_transform.dir/transform_copy.cpp.o
+[ 20%] Building CXX object src/optimizer/CMakeFiles/kuzu_optimizer.dir/projection_push_down_optimizer.cpp.o
+[ 20%] Building CXX object src/parser/transform/CMakeFiles/kuzu_parser_transform.dir/transform_ddl.cpp.o
+[ 20%] Building CXX object src/parser/expression/CMakeFiles/kuzu_parser_expression.dir/parsed_variable_expression.cpp.o
+[ 20%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/LexerActionExecutor.cpp.o
+[ 20%] Building CXX object src/parser/visitor/CMakeFiles/kuzu_parser_visitor.dir/statement_read_write_analyzer.cpp.o
+[ 20%] Built target kuzu_parser_visitor
+[ 20%] Building CXX object src/optimizer/CMakeFiles/kuzu_optimizer.dir/remove_factorization_rewriter.cpp.o
+[ 20%] Building CXX object src/optimizer/CMakeFiles/kuzu_optimizer.dir/remove_unnecessary_join_optimizer.cpp.o
+[ 20%] Building CXX object src/main/CMakeFiles/kuzu_main.dir/query_result.cpp.o
+[ 20%] Built target kuzu_parser_expression
+[ 20%] Building CXX object src/parser/transform/CMakeFiles/kuzu_parser_transform.dir/transform_expression.cpp.o
+[ 20%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/LexerATNConfig.cpp.o
+[ 20%] Building CXX object src/optimizer/CMakeFiles/kuzu_optimizer.dir/top_k_optimizer.cpp.o
+[ 20%] Building CXX object src/planner/CMakeFiles/kuzu_planner.dir/join_order_enumerator_context.cpp.o
+[ 20%] Building CXX object src/main/CMakeFiles/kuzu_main.dir/query_summary.cpp.o
+[ 21%] Building CXX object src/parser/transform/CMakeFiles/kuzu_parser_transform.dir/transform_graph_pattern.cpp.o
+[ 21%] Building CXX object src/planner/join_order/CMakeFiles/kuzu_planner_join_order.dir/cardinality_estimator.cpp.o
+[ 21%] Building CXX object src/planner/CMakeFiles/kuzu_planner.dir/planner.cpp.o
+[ 21%] Building CXX object src/main/CMakeFiles/kuzu_main.dir/storage_driver.cpp.o
+[ 21%] Built target kuzu_optimizer
+[ 21%] Building CXX object src/planner/operator/CMakeFiles/kuzu_planner_operator.dir/logical_accumulate.cpp.o
+[ 21%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/LexerATNSimulator.cpp.o
+[ 21%] Building CXX object src/parser/transform/CMakeFiles/kuzu_parser_transform.dir/transform_macro.cpp.o
+[ 21%] Building CXX object src/planner/operator/CMakeFiles/kuzu_planner_operator.dir/logical_aggregate.cpp.o
+[ 21%] Building CXX object src/main/CMakeFiles/kuzu_main.dir/version.cpp.o
+[ 22%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/LexerChannelAction.cpp.o
+[ 22%] Building CXX object src/planner/CMakeFiles/kuzu_planner.dir/query_planner.cpp.o
+[ 23%] Building CXX object src/planner/join_order/CMakeFiles/kuzu_planner_join_order.dir/cost_model.cpp.o
+[ 23%] Building CXX object src/planner/operator/CMakeFiles/kuzu_planner_operator.dir/logical_comment_on.cpp.o
+[ 23%] Building CXX object src/parser/transform/CMakeFiles/kuzu_parser_transform.dir/transform_projection.cpp.o
+[ 23%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/LexerCustomAction.cpp.o
+[ 23%] Building CXX object src/main/CMakeFiles/kuzu_main.dir/db_config.cpp.o
+[ 24%] Building CXX object src/planner/CMakeFiles/kuzu_planner.dir/subplans_table.cpp.o
+[ 24%] Building CXX object src/planner/join_order/CMakeFiles/kuzu_planner_join_order.dir/join_order_util.cpp.o
+[ 24%] Building CXX object src/planner/operator/CMakeFiles/kuzu_planner_operator.dir/logical_create_macro.cpp.o
+[ 24%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/LexerIndexedCustomAction.cpp.o
+[ 24%] Building CXX object src/planner/operator/ddl/CMakeFiles/kuzu_planner_ddl.dir/logical_ddl.cpp.o
+[ 24%] Building CXX object src/parser/transform/CMakeFiles/kuzu_parser_transform.dir/transform_query.cpp.o
+[ 24%] Built target kuzu_planner_join_order
+[ 24%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/LexerModeAction.cpp.o
+[ 24%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/LexerMoreAction.cpp.o
+[ 24%] Building CXX object src/planner/operator/CMakeFiles/kuzu_planner_operator.dir/logical_cross_product.cpp.o
+[ 24%] Built target kuzu_main
+[ 24%] Building CXX object src/parser/transform/CMakeFiles/kuzu_parser_transform.dir/transform_reading_clause.cpp.o
+[ 24%] Built target kuzu_planner_ddl
+[ 25%] Building CXX object src/planner/operator/CMakeFiles/kuzu_planner_operator.dir/logical_distinct.cpp.o
+[ 25%] Building CXX object src/planner/operator/extend/CMakeFiles/kuzu_planner_extend.dir/base_logical_extend.cpp.o
+[ 25%] Built target kuzu_planner
+[ 25%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/LexerPopModeAction.cpp.o
+[ 25%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/LexerPushModeAction.cpp.o
+[ 25%] Building CXX object src/planner/operator/CMakeFiles/kuzu_planner_operator.dir/logical_dummy_scan.cpp.o
+[ 25%] Building CXX object src/planner/operator/extend/CMakeFiles/kuzu_planner_extend.dir/logical_extend.cpp.o
+[ 25%] Building CXX object src/planner/operator/extend/CMakeFiles/kuzu_planner_extend.dir/logical_recursive_extend.cpp.o
+[ 25%] Building CXX object src/planner/operator/factorization/CMakeFiles/kuzu_planner_factorization.dir/flatten_resolver.cpp.o
+[ 25%] Building CXX object src/parser/transform/CMakeFiles/kuzu_parser_transform.dir/transform_standalone_call.cpp.o
+[ 25%] Building CXX object src/planner/operator/persistent/CMakeFiles/kuzu_planner_persistent.dir/logical_copy_from.cpp.o
+[ 25%] Building CXX object src/planner/operator/factorization/CMakeFiles/kuzu_planner_factorization.dir/sink_util.cpp.o
+[ 26%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/LexerSkipAction.cpp.o
+[ 26%] Building CXX object src/planner/operator/CMakeFiles/kuzu_planner_operator.dir/logical_explain.cpp.o
+[ 26%] Building CXX object src/planner/operator/scan/CMakeFiles/kuzu_planner_scan.dir/logical_expressions_scan.cpp.o
+[ 26%] Building CXX object src/planner/operator/persistent/CMakeFiles/kuzu_planner_persistent.dir/logical_copy_to.cpp.o
+[ 26%] Built target kuzu_planner_extend
+[ 26%] Building CXX object src/planner/operator/CMakeFiles/kuzu_planner_operator.dir/logical_filter.cpp.o
+[ 26%] Built target kuzu_planner_factorization
+[ 26%] Building CXX object src/parser/transform/CMakeFiles/kuzu_parser_transform.dir/transform_transaction.cpp.o
+[ 26%] Building CXX object src/planner/operator/CMakeFiles/kuzu_planner_operator.dir/logical_flatten.cpp.o
+[ 26%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/LexerTypeAction.cpp.o
+[ 27%] Building CXX object src/parser/transform/CMakeFiles/kuzu_parser_transform.dir/transform_updating_clause.cpp.o
+[ 27%] Building CXX object src/planner/operator/scan/CMakeFiles/kuzu_planner_scan.dir/logical_index_scan.cpp.o
+[ 27%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/LL1Analyzer.cpp.o
+[ 27%] Building CXX object src/planner/plan/CMakeFiles/kuzu_planner_plan_operator.dir/append_accumulate.cpp.o
+[ 27%] Building CXX object src/planner/operator/persistent/CMakeFiles/kuzu_planner_persistent.dir/logical_insert.cpp.o
+[ 27%] Building CXX object src/planner/operator/CMakeFiles/kuzu_planner_operator.dir/logical_hash_join.cpp.o
+[ 27%] Building CXX object src/planner/operator/scan/CMakeFiles/kuzu_planner_scan.dir/logical_scan_file.cpp.o
+[ 27%] Building CXX object src/processor/CMakeFiles/kuzu_processor.dir/processor.cpp.o
+[ 27%] Building CXX object src/planner/plan/CMakeFiles/kuzu_planner_plan_operator.dir/append_aggregate.cpp.o
+[ 27%] Building CXX object src/parser/transform/CMakeFiles/kuzu_parser_transform.dir/transform_extension.cpp.o
+[ 27%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/LookaheadEventInfo.cpp.o
+[ 27%] Building CXX object src/planner/operator/persistent/CMakeFiles/kuzu_planner_persistent.dir/logical_delete.cpp.o
+[ 27%] Building CXX object src/planner/operator/CMakeFiles/kuzu_planner_operator.dir/logical_in_query_call.cpp.o
+[ 27%] Building CXX object src/planner/operator/scan/CMakeFiles/kuzu_planner_scan.dir/logical_scan_internal_id.cpp.o
+[ 27%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/create_factorized_table_scan.cpp.o
+[ 27%] Building CXX object src/processor/CMakeFiles/kuzu_processor.dir/processor_task.cpp.o
+[ 27%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/NotSetTransition.cpp.o
+[ 27%] Building CXX object src/parser/transform/CMakeFiles/kuzu_parser_transform.dir/transform_port_db.cpp.o
+[ 28%] Building CXX object src/planner/operator/persistent/CMakeFiles/kuzu_planner_persistent.dir/logical_merge.cpp.o
+[ 28%] Building CXX object src/planner/plan/CMakeFiles/kuzu_planner_plan_operator.dir/append_insert.cpp.o
+[ 29%] Building CXX object src/planner/operator/scan/CMakeFiles/kuzu_planner_scan.dir/logical_scan_node_property.cpp.o
+[ 29%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/OrderedATNConfigSet.cpp.o
+[ 30%] Building CXX object src/planner/operator/CMakeFiles/kuzu_planner_operator.dir/logical_intersect.cpp.o
+[ 30%] Built target kuzu_processor
+[ 30%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/create_result_collector.cpp.o
+[ 30%] Built target kuzu_parser_transform
+[ 30%] Building CXX object src/planner/plan/CMakeFiles/kuzu_planner_plan_operator.dir/append_cross_product.cpp.o
+[ 30%] Built target kuzu_planner_scan
+[ 30%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/ParseInfo.cpp.o
+[ 30%] Building CXX object src/planner/operator/persistent/CMakeFiles/kuzu_planner_persistent.dir/logical_set.cpp.o
+[ 30%] Building CXX object src/planner/operator/CMakeFiles/kuzu_planner_operator.dir/logical_limit.cpp.o
+[ 30%] Building CXX object src/planner/operator/CMakeFiles/kuzu_planner_operator.dir/logical_operator.cpp.o
+[ 30%] Building CXX object src/processor/operator/CMakeFiles/kuzu_processor_operator.dir/comment_on.cpp.o
+[ 30%] Building CXX object src/planner/operator/persistent/CMakeFiles/kuzu_planner_persistent.dir/logical_export_db.cpp.o
+[ 30%] Building CXX object src/planner/operator/CMakeFiles/kuzu_planner_operator.dir/logical_order_by.cpp.o
+[ 31%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/ParserATNSimulator.cpp.o
+[ 31%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/expression_mapper.cpp.o
+[ 31%] Building CXX object src/planner/operator/CMakeFiles/kuzu_planner_operator.dir/logical_partitioner.cpp.o
+[ 32%] Building CXX object src/planner/plan/CMakeFiles/kuzu_planner_plan_operator.dir/append_delete.cpp.o
+[ 32%] Building CXX object src/processor/operator/aggregate/CMakeFiles/kuzu_processor_operator_aggregate.dir/aggregate_hash_table.cpp.o
+[ 32%] Built target kuzu_planner_persistent
+[ 32%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/PrecedencePredicateTransition.cpp.o
+[ 32%] Building CXX object src/processor/operator/ddl/CMakeFiles/kuzu_processor_operator_ddl.dir/add_node_property.cpp.o
+[ 32%] Building CXX object src/planner/operator/CMakeFiles/kuzu_planner_operator.dir/logical_plan.cpp.o
+[ 32%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/map_acc_hash_join.cpp.o
+[ 33%] Building CXX object src/processor/operator/CMakeFiles/kuzu_processor_operator.dir/cross_product.cpp.o
+[ 34%] Building CXX object src/processor/operator/aggregate/CMakeFiles/kuzu_processor_operator_aggregate.dir/base_aggregate.cpp.o
+[ 34%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/PredicateEvalInfo.cpp.o
+[ 34%] Building CXX object src/planner/operator/CMakeFiles/kuzu_planner_operator.dir/logical_plan_util.cpp.o
+[ 34%] Building CXX object src/planner/plan/CMakeFiles/kuzu_planner_plan_operator.dir/append_distinct.cpp.o
+[ 34%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/PredicateTransition.cpp.o
+[ 34%] Building CXX object src/processor/operator/CMakeFiles/kuzu_processor_operator.dir/empty_result.cpp.o
+[ 34%] Building CXX object src/planner/operator/CMakeFiles/kuzu_planner_operator.dir/logical_projection.cpp.o
+[ 34%] Building CXX object src/processor/operator/aggregate/CMakeFiles/kuzu_processor_operator_aggregate.dir/base_aggregate_scan.cpp.o
+[ 34%] Building CXX object src/processor/operator/ddl/CMakeFiles/kuzu_processor_operator_ddl.dir/add_property.cpp.o
+[ 34%] Building CXX object src/processor/operator/aggregate/CMakeFiles/kuzu_processor_operator_aggregate.dir/hash_aggregate.cpp.o
+[ 34%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/PredictionContextCache.cpp.o
+[ 35%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/map_accumulate.cpp.o
+[ 36%] Building CXX object src/planner/operator/CMakeFiles/kuzu_planner_operator.dir/logical_union.cpp.o
+[ 36%] Building CXX object src/processor/operator/CMakeFiles/kuzu_processor_operator.dir/filter.cpp.o
+[ 36%] Building CXX object src/planner/plan/CMakeFiles/kuzu_planner_plan_operator.dir/append_dummy_scan.cpp.o
+[ 36%] Building CXX object src/processor/operator/hash_join/CMakeFiles/kuzu_processor_operator_hash_join.dir/hash_join_build.cpp.o
+[ 36%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/PredictionContext.cpp.o
+[ 36%] Building CXX object src/planner/operator/CMakeFiles/kuzu_planner_operator.dir/logical_unwind.cpp.o
+[ 36%] Building CXX object src/processor/operator/aggregate/CMakeFiles/kuzu_processor_operator_aggregate.dir/hash_aggregate_scan.cpp.o
+[ 37%] Building CXX object src/processor/operator/ddl/CMakeFiles/kuzu_processor_operator_ddl.dir/add_rel_property.cpp.o
+[ 37%] Building CXX object src/processor/operator/CMakeFiles/kuzu_processor_operator.dir/filtering_operator.cpp.o
+[ 37%] Building CXX object src/planner/operator/CMakeFiles/kuzu_planner_operator.dir/schema.cpp.o
+[ 37%] Building CXX object src/processor/operator/hash_join/CMakeFiles/kuzu_processor_operator_hash_join.dir/hash_join_probe.cpp.o
+[ 37%] Building CXX object src/planner/plan/CMakeFiles/kuzu_planner_plan_operator.dir/append_expressions_scan.cpp.o
+[ 37%] Building CXX object src/processor/operator/CMakeFiles/kuzu_processor_operator.dir/flatten.cpp.o
+[ 37%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/map_aggregate.cpp.o
+[ 37%] Building CXX object src/processor/operator/aggregate/CMakeFiles/kuzu_processor_operator_aggregate.dir/simple_aggregate.cpp.o
+[ 37%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/PredictionContextMergeCache.cpp.o
+[ 37%] Built target kuzu_planner_operator
+[ 37%] Building CXX object src/processor/operator/ddl/CMakeFiles/kuzu_processor_operator_ddl.dir/create_node_table.cpp.o
+[ 37%] Building CXX object src/processor/operator/CMakeFiles/kuzu_processor_operator.dir/index_lookup.cpp.o
+[ 37%] Building CXX object src/processor/operator/hash_join/CMakeFiles/kuzu_processor_operator_hash_join.dir/join_hash_table.cpp.o
+[ 37%] Building CXX object src/planner/plan/CMakeFiles/kuzu_planner_plan_operator.dir/append_extend.cpp.o
+[ 37%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/PredictionMode.cpp.o
+[ 37%] Building CXX object src/processor/operator/aggregate/CMakeFiles/kuzu_processor_operator_aggregate.dir/simple_aggregate_scan.cpp.o
+[ 37%] Building CXX object src/planner/plan/CMakeFiles/kuzu_planner_plan_operator.dir/append_filter.cpp.o
+[ 37%] Built target kuzu_processor_operator_hash_join
+[ 37%] Building CXX object src/processor/operator/ddl/CMakeFiles/kuzu_processor_operator_ddl.dir/create_rdf_graph.cpp.o
+[ 37%] Building CXX object src/processor/operator/CMakeFiles/kuzu_processor_operator.dir/index_scan.cpp.o
+[ 38%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/ProfilingATNSimulator.cpp.o
+[ 38%] Built target kuzu_processor_operator_aggregate
+[ 38%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/map_standalone_call.cpp.o
+[ 38%] Building CXX object src/planner/plan/CMakeFiles/kuzu_planner_plan_operator.dir/append_flatten.cpp.o
+[ 39%] Building CXX object src/processor/operator/CMakeFiles/kuzu_processor_operator.dir/install_extension.cpp.o
+[ 39%] Building CXX object src/processor/operator/intersect/CMakeFiles/kuzu_processor_operator_intersect.dir/intersect.cpp.o
+[ 39%] Building CXX object src/planner/plan/CMakeFiles/kuzu_planner_plan_operator.dir/append_in_query_call.cpp.o
+[ 39%] Building CXX object src/processor/operator/ddl/CMakeFiles/kuzu_processor_operator_ddl.dir/create_rel_table_group.cpp.o
+[ 39%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/RangeTransition.cpp.o
+[ 39%] Building CXX object src/processor/operator/ddl/CMakeFiles/kuzu_processor_operator_ddl.dir/create_rel_table.cpp.o
+[ 40%] Building CXX object src/planner/plan/CMakeFiles/kuzu_planner_plan_operator.dir/append_join.cpp.o
+[ 40%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/RuleTransition.cpp.o
+[ 40%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/map_in_query_call.cpp.o
+[ 40%] Building CXX object src/processor/operator/order_by/CMakeFiles/kuzu_processor_operator_order_by.dir/key_block_merger.cpp.o
+[ 40%] Built target kuzu_processor_operator_intersect
+[ 40%] Building CXX object src/planner/plan/CMakeFiles/kuzu_planner_plan_operator.dir/append_limit.cpp.o
+[ 40%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/SemanticContext.cpp.o
+[ 40%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/map_comment_on.cpp.o
+[ 40%] Building CXX object src/processor/operator/ddl/CMakeFiles/kuzu_processor_operator_ddl.dir/ddl.cpp.o
+[ 41%] Building CXX object src/processor/operator/order_by/CMakeFiles/kuzu_processor_operator_order_by.dir/order_by.cpp.o
+[ 41%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/SetTransition.cpp.o
+[ 41%] Building CXX object src/processor/operator/ddl/CMakeFiles/kuzu_processor_operator_ddl.dir/drop_property.cpp.o
+[ 41%] Building CXX object src/planner/plan/CMakeFiles/kuzu_planner_plan_operator.dir/append_multiplicity_reducer.cpp.o
+[ 41%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/SingletonPredictionContext.cpp.o
+[ 41%] Building CXX object src/processor/operator/CMakeFiles/kuzu_processor_operator.dir/limit.cpp.o
+[ 41%] Building CXX object src/planner/plan/CMakeFiles/kuzu_planner_plan_operator.dir/append_order_by.cpp.o
+[ 41%] Building CXX object src/processor/operator/order_by/CMakeFiles/kuzu_processor_operator_order_by.dir/order_by_key_encoder.cpp.o
+[ 41%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/map_copy_to.cpp.o
+[ 42%] Building CXX object src/processor/operator/ddl/CMakeFiles/kuzu_processor_operator_ddl.dir/drop_table.cpp.o
+[ 42%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/StarLoopbackState.cpp.o
+[ 42%] Building CXX object src/processor/operator/CMakeFiles/kuzu_processor_operator.dir/load_extension.cpp.o
+[ 42%] Building CXX object src/processor/operator/persistent/CMakeFiles/kuzu_processor_operator_persistent.dir/copy_node.cpp.o
+[ 43%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/Transition.cpp.o
+[ 43%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/map_copy_from.cpp.o
+[ 43%] Building CXX object src/processor/operator/order_by/CMakeFiles/kuzu_processor_operator_order_by.dir/order_by_merge.cpp.o
+[ 43%] Building CXX object src/planner/plan/CMakeFiles/kuzu_planner_plan_operator.dir/append_projection.cpp.o
+[ 43%] Building CXX object src/processor/operator/CMakeFiles/kuzu_processor_operator.dir/multiplicity_reducer.cpp.o
+[ 43%] Built target kuzu_processor_operator_ddl
+[ 43%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/TransitionType.cpp.o
+[ 44%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/map_insert.cpp.o
+[ 44%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/atn/WildcardTransition.cpp.o
+[ 44%] Building CXX object src/processor/operator/order_by/CMakeFiles/kuzu_processor_operator_order_by.dir/order_by_scan.cpp.o
+[ 44%] Building CXX object src/processor/operator/CMakeFiles/kuzu_processor_operator.dir/partitioner.cpp.o
+[ 44%] Building CXX object src/planner/plan/CMakeFiles/kuzu_planner_plan_operator.dir/append_scan_file.cpp.o
+[ 44%] Building CXX object src/processor/operator/persistent/CMakeFiles/kuzu_processor_operator_persistent.dir/copy_rdf.cpp.o
+[ 44%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/BailErrorStrategy.cpp.o
+[ 44%] Building CXX object src/processor/operator/order_by/CMakeFiles/kuzu_processor_operator_order_by.dir/radix_sort.cpp.o
+[ 44%] Building CXX object src/planner/plan/CMakeFiles/kuzu_planner_plan_operator.dir/append_scan_node.cpp.o
+[ 44%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/BaseErrorListener.cpp.o
+[ 44%] Building CXX object src/processor/operator/persistent/CMakeFiles/kuzu_processor_operator_persistent.dir/copy_rel.cpp.o
+[ 44%] Building CXX object src/processor/operator/CMakeFiles/kuzu_processor_operator.dir/physical_operator.cpp.o
+[ 44%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/map_create_macro.cpp.o
+[ 45%] Building CXX object src/planner/plan/CMakeFiles/kuzu_planner_plan_operator.dir/append_set.cpp.o
+[ 45%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/BufferedTokenStream.cpp.o
+[ 45%] Building CXX object src/processor/operator/order_by/CMakeFiles/kuzu_processor_operator_order_by.dir/sort_state.cpp.o
+[ 45%] Building CXX object src/processor/operator/persistent/CMakeFiles/kuzu_processor_operator_persistent.dir/copy_to.cpp.o
+[ 45%] Building CXX object src/processor/operator/CMakeFiles/kuzu_processor_operator.dir/projection.cpp.o
+[ 45%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/map_cross_product.cpp.o
+[ 45%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/CharStream.cpp.o
+[ 45%] Building CXX object src/processor/operator/order_by/CMakeFiles/kuzu_processor_operator_order_by.dir/top_k.cpp.o
+[ 45%] Building CXX object src/planner/plan/CMakeFiles/kuzu_planner_plan_operator.dir/append_simple.cpp.o
+[ 45%] Building CXX object src/processor/operator/CMakeFiles/kuzu_processor_operator.dir/profile.cpp.o
+[ 46%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/CommonToken.cpp.o
+[ 46%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/CommonTokenFactory.cpp.o
+[ 46%] Building CXX object src/processor/operator/persistent/reader/CMakeFiles/kuzu_processor_operator_persistent_reader.dir/reader_bind_utils.cpp.o
+[ 47%] Building CXX object src/processor/operator/persistent/CMakeFiles/kuzu_processor_operator_persistent.dir/copy_to_csv.cpp.o
+[ 48%] Building CXX object src/processor/operator/CMakeFiles/kuzu_processor_operator.dir/result_collector.cpp.o
+[ 48%] Building CXX object src/planner/plan/CMakeFiles/kuzu_planner_plan_operator.dir/append_unwind.cpp.o
+[ 48%] Built target kuzu_processor_operator_persistent_reader
+[ 48%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/CommonTokenStream.cpp.o
+[ 48%] Building CXX object src/processor/operator/persistent/reader/csv/CMakeFiles/kuzu_processor_operator_csv_reader.dir/base_csv_reader.cpp.o
+[ 48%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/map_ddl.cpp.o
+[ 48%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/ConsoleErrorListener.cpp.o
+[ 49%] Building CXX object src/processor/operator/order_by/CMakeFiles/kuzu_processor_operator_order_by.dir/top_k_scanner.cpp.o
+[ 49%] Building CXX object src/processor/operator/persistent/CMakeFiles/kuzu_processor_operator_persistent.dir/copy_to_parquet.cpp.o
+[ 49%] Building CXX object src/processor/operator/CMakeFiles/kuzu_processor_operator.dir/scan_node_id.cpp.o
+[ 49%] Building CXX object src/planner/plan/CMakeFiles/kuzu_planner_plan_operator.dir/plan_copy.cpp.o
+[ 49%] Building CXX object src/processor/operator/persistent/reader/npy/CMakeFiles/kuzu_processor_operator_npy_reader.dir/npy_reader.cpp.o
+[ 49%] Building CXX object src/processor/operator/persistent/reader/csv/CMakeFiles/kuzu_processor_operator_csv_reader.dir/driver.cpp.o
+[ 49%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/DefaultErrorStrategy.cpp.o
+[ 49%] Built target kuzu_processor_operator_order_by
+[ 49%] Building CXX object src/processor/operator/persistent/reader/parquet/CMakeFiles/kuzu_processor_operator_parquet_reader.dir/boolean_column_reader.cpp.o
+[ 49%] Building CXX object src/processor/operator/persistent/CMakeFiles/kuzu_processor_operator_persistent.dir/delete.cpp.o
+[ 49%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/map_delete.cpp.o
+[ 49%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/dfa/DFA.cpp.o
+[ 49%] Building CXX object src/processor/operator/persistent/reader/parquet/CMakeFiles/kuzu_processor_operator_parquet_reader.dir/column_reader.cpp.o
+[ 49%] Building CXX object src/processor/operator/persistent/reader/csv/CMakeFiles/kuzu_processor_operator_csv_reader.dir/parallel_csv_reader.cpp.o
+[ 49%] Building CXX object src/processor/operator/CMakeFiles/kuzu_processor_operator.dir/semi_masker.cpp.o
+[ 49%] Building CXX object src/planner/plan/CMakeFiles/kuzu_planner_plan_operator.dir/plan_join_order.cpp.o
+[ 49%] Built target kuzu_processor_operator_npy_reader
+[ 49%] Building CXX object src/processor/operator/persistent/CMakeFiles/kuzu_processor_operator_persistent.dir/delete_executor.cpp.o
+[ 49%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/dfa/DFASerializer.cpp.o
+[ 49%] Building CXX object src/processor/operator/persistent/reader/rdf/CMakeFiles/kuzu_processor_operator_rdf_reader.dir/rdf_reader.cpp.o
+[ 49%] Building CXX object src/processor/operator/persistent/reader/csv/CMakeFiles/kuzu_processor_operator_csv_reader.dir/serial_csv_reader.cpp.o
+[ 49%] Building CXX object src/processor/operator/persistent/reader/parquet/CMakeFiles/kuzu_processor_operator_parquet_reader.dir/parquet_reader.cpp.o
+[ 49%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/dfa/DFAState.cpp.o
+[ 49%] Building CXX object src/processor/operator/CMakeFiles/kuzu_processor_operator.dir/skip.cpp.o
+[ 49%] Building CXX object src/processor/operator/persistent/reader/rdf/CMakeFiles/kuzu_processor_operator_rdf_reader.dir/rdf_scan.cpp.o
+[ 49%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/map_distinct.cpp.o
+[ 50%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/dfa/LexerDFASerializer.cpp.o
+[ 50%] Building CXX object src/processor/operator/persistent/CMakeFiles/kuzu_processor_operator_persistent.dir/index_builder.cpp.o
+[ 50%] Built target kuzu_processor_operator_csv_reader
+[ 50%] Building CXX object src/planner/plan/CMakeFiles/kuzu_planner_plan_operator.dir/plan_projection.cpp.o
+[ 50%] Building CXX object src/processor/operator/persistent/writer/parquet/CMakeFiles/kuzu_processor_operator_parquet_writer.dir/basic_column_writer.cpp.o
+[ 50%] Building CXX object src/processor/operator/CMakeFiles/kuzu_processor_operator.dir/transaction.cpp.o
+[ 50%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/DiagnosticErrorListener.cpp.o
+[ 50%] Building CXX object src/processor/operator/persistent/reader/rdf/CMakeFiles/kuzu_processor_operator_rdf_reader.dir/rdf_utils.cpp.o
+[ 50%] Building CXX object src/processor/operator/persistent/reader/parquet/CMakeFiles/kuzu_processor_operator_parquet_reader.dir/interval_column_reader.cpp.o
+[ 50%] Building CXX object src/processor/operator/CMakeFiles/kuzu_processor_operator.dir/unwind.cpp.o
+[ 50%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/map_explain.cpp.o
+[ 50%] Building CXX object src/processor/operator/persistent/writer/parquet/CMakeFiles/kuzu_processor_operator_parquet_writer.dir/boolean_column_writer.cpp.o
+[ 50%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/Exceptions.cpp.o
+[ 50%] Building CXX object src/planner/plan/CMakeFiles/kuzu_planner_plan_operator.dir/plan_read.cpp.o
+[ 50%] Building CXX object src/processor/operator/persistent/reader/parquet/CMakeFiles/kuzu_processor_operator_parquet_reader.dir/struct_column_reader.cpp.o
+[ 50%] Built target kuzu_processor_operator_rdf_reader
+[ 50%] Building CXX object src/processor/operator/persistent/writer/parquet/CMakeFiles/kuzu_processor_operator_parquet_writer.dir/column_writer.cpp.o
+[ 50%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/FailedPredicateException.cpp.o
+[ 50%] Built target kuzu_processor_operator
+[ 50%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/map_expressions_scan.cpp.o
+[ 51%] Building CXX object src/processor/operator/scan/CMakeFiles/kuzu_processor_operator_scan.dir/scan_multi_node_tables.cpp.o
+[ 51%] Building CXX object src/processor/operator/persistent/reader/parquet/CMakeFiles/kuzu_processor_operator_parquet_reader.dir/string_column_reader.cpp.o
+[ 51%] Building CXX object src/processor/operator/persistent/CMakeFiles/kuzu_processor_operator_persistent.dir/insert.cpp.o
+[ 51%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/InputMismatchException.cpp.o
+[ 52%] Building CXX object src/planner/plan/CMakeFiles/kuzu_planner_plan_operator.dir/plan_single_query.cpp.o
+[ 52%] Building CXX object src/processor/operator/persistent/writer/parquet/CMakeFiles/kuzu_processor_operator_parquet_writer.dir/interval_column_writer.cpp.o
+[ 52%] Building CXX object src/processor/operator/scan/CMakeFiles/kuzu_processor_operator_scan.dir/scan_node_table.cpp.o
+[ 52%] Building CXX object src/processor/operator/persistent/reader/parquet/CMakeFiles/kuzu_processor_operator_parquet_reader.dir/list_column_reader.cpp.o
+[ 52%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/internal/Synchronization.cpp.o
+[ 53%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/map_extension.cpp.o
+[ 53%] Building CXX object src/processor/operator/persistent/writer/parquet/CMakeFiles/kuzu_processor_operator_parquet_writer.dir/struct_column_writer.cpp.o
+[ 53%] Building CXX object src/processor/operator/table_scan/CMakeFiles/kuzu_processor_operator_table_scan.dir/ftable_scan_function.cpp.o
+[ 53%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/InterpreterRuleContext.cpp.o
+[ 54%] Building CXX object src/processor/operator/persistent/reader/parquet/CMakeFiles/kuzu_processor_operator_parquet_reader.dir/parquet_timestamp.cpp.o
+[ 54%] Building CXX object src/processor/operator/persistent/CMakeFiles/kuzu_processor_operator_persistent.dir/insert_executor.cpp.o
+[ 54%] Building CXX object src/planner/plan/CMakeFiles/kuzu_planner_plan_operator.dir/plan_subquery.cpp.o
+[ 54%] Built target kuzu_processor_operator_parquet_reader
+[ 54%] Building CXX object src/processor/operator/recursive_extend/CMakeFiles/kuzu_processor_operator_ver_length_extend.dir/frontier.cpp.o
+[ 54%] Building CXX object src/processor/operator/persistent/writer/parquet/CMakeFiles/kuzu_processor_operator_parquet_writer.dir/string_column_writer.cpp.o
+[ 55%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/IntStream.cpp.o
+[ 55%] Building CXX object src/processor/operator/scan/CMakeFiles/kuzu_processor_operator_scan.dir/scan_rel_csr_columns.cpp.o
+[ 56%] Building CXX object src/processor/operator/table_scan/CMakeFiles/kuzu_processor_operator_table_scan.dir/union_all_scan.cpp.o
+[ 56%] Building CXX object src/processor/operator/recursive_extend/CMakeFiles/kuzu_processor_operator_ver_length_extend.dir/frontier_scanner.cpp.o
+[ 56%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/Lexer.cpp.o
+[ 56%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/map_dummy_scan.cpp.o
+[ 57%] Building CXX object src/processor/operator/persistent/writer/parquet/CMakeFiles/kuzu_processor_operator_parquet_writer.dir/var_list_column_writer.cpp.o
+[ 57%] Building CXX object src/planner/plan/CMakeFiles/kuzu_planner_plan_operator.dir/plan_update.cpp.o
+[ 57%] Built target kuzu_processor_operator_table_scan
+[ 57%] Building CXX object src/processor/operator/persistent/CMakeFiles/kuzu_processor_operator_persistent.dir/merge.cpp.o
+[ 57%] Building CXX object src/processor/operator/scan/CMakeFiles/kuzu_processor_operator_scan.dir/scan_rel_regular_columns.cpp.o
+[ 57%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/LexerInterpreter.cpp.o
+[ 57%] Building CXX object src/processor/operator/persistent/writer/parquet/CMakeFiles/kuzu_processor_operator_parquet_writer.dir/parquet_writer.cpp.o
+[ 57%] Building CXX object src/processor/operator/call/CMakeFiles/kuzu_processor_operator_call.dir/standalone_call.cpp.o
+[ 57%] Building CXX object src/processor/operator/recursive_extend/CMakeFiles/kuzu_processor_operator_ver_length_extend.dir/recursive_join.cpp.o
+[ 57%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/LexerNoViableAltException.cpp.o
+[ 58%] Building CXX object src/processor/operator/call/CMakeFiles/kuzu_processor_operator_call.dir/in_query_call.cpp.o
+[ 58%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/map_empty_result.cpp.o
+[ 58%] Building CXX object src/processor/operator/scan/CMakeFiles/kuzu_processor_operator_scan.dir/scan_table.cpp.o
+[ 58%] Building CXX object src/planner/plan/CMakeFiles/kuzu_planner_plan_operator.dir/plan_port_db.cpp.o
+[ 59%] Building CXX object src/processor/operator/persistent/CMakeFiles/kuzu_processor_operator_persistent.dir/set.cpp.o
+[ 59%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/ListTokenSource.cpp.o
+[ 59%] Building CXX object src/processor/operator/persistent/writer/parquet/CMakeFiles/kuzu_processor_operator_parquet_writer.dir/parquet_rle_bp_encoder.cpp.o
+[ 59%] Building CXX object src/processor/operator/scan/CMakeFiles/kuzu_processor_operator_scan.dir/scan_multi_rel_tables.cpp.o
+[ 59%] Built target kuzu_processor_operator_call
+[ 59%] Building CXX object src/processor/operator/macro/CMakeFiles/kuzu_processor_operator_create_macro.dir/create_macro.cpp.o
+[ 59%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/misc/InterpreterDataReader.cpp.o
+[ 59%] Built target kuzu_processor_operator_parquet_writer
+[ 59%] Building CXX object src/processor/operator/recursive_extend/CMakeFiles/kuzu_processor_operator_ver_length_extend.dir/path_property_probe.cpp.o
+[ 59%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/map_extend.cpp.o
+[ 59%] Building CXX object src/processor/operator/persistent/CMakeFiles/kuzu_processor_operator_persistent.dir/set_executor.cpp.o
+[ 59%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/misc/Interval.cpp.o
+[ 59%] Building CXX object src/processor/result/CMakeFiles/kuzu_processor_result.dir/factorized_table.cpp.o
+[ 59%] Building CXX object src/processor/operator/recursive_extend/CMakeFiles/kuzu_processor_operator_ver_length_extend.dir/scan_frontier.cpp.o
+[ 59%] Built target kuzu_planner_plan_operator
+[ 59%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/map_filter.cpp.o
+[ 59%] Built target kuzu_processor_operator_create_macro
+[ 60%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/misc/IntervalSet.cpp.o
+[ 60%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/misc/MurmurHash.cpp.o
+[ 60%] Built target kuzu_processor_operator_scan
+[ 60%] Building CXX object src/processor/result/CMakeFiles/kuzu_processor_result.dir/flat_tuple.cpp.o
+[ 60%] Built target kuzu_processor_operator_ver_length_extend
+[ 60%] Building CXX object src/processor/operator/persistent/CMakeFiles/kuzu_processor_operator_persistent.dir/export_db.cpp.o
+[ 61%] Building CXX object src/processor/result/CMakeFiles/kuzu_processor_result.dir/result_set.cpp.o
+[ 61%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/map_flatten.cpp.o
+[ 61%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/misc/Predicate.cpp.o
+[ 61%] Building CXX object src/storage/CMakeFiles/kuzu_storage.dir/file_handle.cpp.o
+[ 61%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/map_hash_join.cpp.o
+[ 61%] Building CXX object src/processor/result/CMakeFiles/kuzu_processor_result.dir/result_set_descriptor.cpp.o
+[ 61%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/NoViableAltException.cpp.o
+[ 62%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/map_index_scan_node.cpp.o
+[ 62%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/map_intersect.cpp.o
+[ 62%] Building CXX object src/storage/CMakeFiles/kuzu_storage.dir/storage_info.cpp.o
+[ 62%] Built target kuzu_processor_result
+[ 62%] Building CXX object src/storage/buffer_manager/CMakeFiles/kuzu_storage_buffer_manager.dir/vm_region.cpp.o
+[ 62%] Built target kuzu_processor_operator_persistent
+[ 62%] Building CXX object src/storage/CMakeFiles/kuzu_storage.dir/storage_manager.cpp.o
+[ 62%] Building CXX object src/storage/compression/CMakeFiles/kuzu_storage_compression.dir/compression.cpp.o
+[ 62%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/Parser.cpp.o
+[ 62%] Building CXX object src/storage/buffer_manager/CMakeFiles/kuzu_storage_buffer_manager.dir/bm_file_handle.cpp.o
+[ 62%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/map_label_filter.cpp.o
+[ 62%] Building CXX object src/storage/buffer_manager/CMakeFiles/kuzu_storage_buffer_manager.dir/buffer_manager.cpp.o
+[ 62%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/ParserInterpreter.cpp.o
+[ 62%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/map_limit.cpp.o
+[ 62%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/map_merge.cpp.o
+[ 62%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/map_multiplicity_reducer.cpp.o
+[ 62%] Building CXX object src/storage/CMakeFiles/kuzu_storage.dir/storage_utils.cpp.o
+[ 62%] Built target kuzu_storage_compression
+[ 63%] Building CXX object src/storage/index/CMakeFiles/kuzu_storage_index.dir/hash_index.cpp.o
+[ 63%] Building CXX object src/storage/buffer_manager/CMakeFiles/kuzu_storage_buffer_manager.dir/memory_manager.cpp.o
+[ 63%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/map_order_by.cpp.o
+[ 63%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/ParserRuleContext.cpp.o
+[ 64%] Building CXX object src/storage/CMakeFiles/kuzu_storage.dir/wal_replayer.cpp.o
+[ 64%] Built target kuzu_storage_buffer_manager
+[ 64%] Building CXX object src/storage/local_storage/CMakeFiles/kuzu_storage_local_storage.dir/local_node_table.cpp.o
+[ 65%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/map_path_property_probe.cpp.o
+[ 65%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/ProxyErrorListener.cpp.o
+[ 65%] Building CXX object src/storage/index/CMakeFiles/kuzu_storage_index.dir/hash_index_builder.cpp.o
+[ 65%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/map_projection.cpp.o
+[ 65%] Building CXX object src/storage/local_storage/CMakeFiles/kuzu_storage_local_storage.dir/local_rel_table.cpp.o
+[ 66%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/RecognitionException.cpp.o
+[ 66%] Building CXX object src/storage/CMakeFiles/kuzu_storage.dir/wal_replayer_utils.cpp.o
+[ 66%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/Recognizer.cpp.o
+[ 66%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/map_recursive_extend.cpp.o
+[ 66%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/map_scan_file.cpp.o
+[ 66%] Building CXX object src/storage/stats/CMakeFiles/kuzu_storage_stats.dir/metadata_dah_info.cpp.o
+[ 66%] Building CXX object src/storage/local_storage/CMakeFiles/kuzu_storage_local_storage.dir/local_table.cpp.o
+[ 66%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/map_scan_frontier.cpp.o
+[ 66%] Built target kuzu_storage
+[ 66%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/RuleContext.cpp.o
+[ 66%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/RuleContextWithAltNum.cpp.o
+[ 66%] Building CXX object src/storage/stats/CMakeFiles/kuzu_storage_stats.dir/node_table_statistics.cpp.o
+[ 66%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/RuntimeMetaData.cpp.o
+[ 66%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/map_scan_node.cpp.o
+[ 66%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/map_scan_node_property.cpp.o
+[ 66%] Built target kuzu_storage_index
+[ 66%] Building CXX object src/storage/storage_structure/CMakeFiles/kuzu_storage_structure.dir/disk_array.cpp.o
+[ 66%] Building CXX object src/storage/local_storage/CMakeFiles/kuzu_storage_local_storage.dir/local_storage.cpp.o
+[ 66%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/support/Any.cpp.o
+[ 66%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/map_semi_masker.cpp.o
+[ 67%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/map_set.cpp.o
+[ 68%] Building CXX object src/storage/stats/CMakeFiles/kuzu_storage_stats.dir/nodes_store_statistics.cpp.o
+[ 68%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/support/Arrays.cpp.o
+[ 68%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/map_transaction.cpp.o
+[ 68%] Building CXX object src/storage/storage_structure/CMakeFiles/kuzu_storage_structure.dir/disk_overflow_file.cpp.o
+[ 68%] Built target kuzu_storage_local_storage
+[ 69%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/support/CPPUtils.cpp.o
+[ 69%] Building CXX object src/storage/store/CMakeFiles/kuzu_storage_store.dir/column.cpp.o
+[ 69%] Building CXX object src/storage/stats/CMakeFiles/kuzu_storage_stats.dir/property_statistics.cpp.o
+[ 69%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/map_union.cpp.o
+[ 69%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/map_unwind.cpp.o
+[ 69%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/map_port_db.cpp.o
+[ 69%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/support/StringUtils.cpp.o
+[ 69%] Building CXX object src/storage/storage_structure/CMakeFiles/kuzu_storage_structure.dir/in_mem_file.cpp.o
+[ 69%] Building CXX object src/storage/stats/CMakeFiles/kuzu_storage_stats.dir/rel_table_statistics.cpp.o
+[ 70%] Building CXX object src/storage/store/CMakeFiles/kuzu_storage_store.dir/column_chunk.cpp.o
+[ 70%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/support/Utf8.cpp.o
+[ 70%] Building CXX object src/storage/storage_structure/CMakeFiles/kuzu_storage_structure.dir/in_mem_page.cpp.o
+[ 70%] Building CXX object src/storage/store/CMakeFiles/kuzu_storage_store.dir/csr_rel_table_data.cpp.o
+[ 70%] Building CXX object src/storage/storage_structure/CMakeFiles/kuzu_storage_structure.dir/db_file_utils.cpp.o
+[ 70%] Building CXX object src/processor/map/CMakeFiles/kuzu_processor_mapper.dir/plan_mapper.cpp.o
+[ 70%] Building CXX object src/storage/stats/CMakeFiles/kuzu_storage_stats.dir/rels_store_statistics.cpp.o
+[ 70%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/Token.cpp.o
+[ 71%] Building CXX object src/storage/wal/CMakeFiles/kuzu_storage_wal.dir/wal.cpp.o
+[ 71%] Built target kuzu_storage_structure
+[ 71%] Building CXX object src/transaction/CMakeFiles/kuzu_transaction.dir/transaction_context.cpp.o
+[ 71%] Building CXX object src/storage/store/CMakeFiles/kuzu_storage_store.dir/dictionary_chunk.cpp.o
+[ 71%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/TokenSource.cpp.o
+[ 71%] Building CXX object src/storage/stats/CMakeFiles/kuzu_storage_stats.dir/table_statistics.cpp.o
+[ 71%] Building CXX object src/storage/store/CMakeFiles/kuzu_storage_store.dir/dictionary_column.cpp.o
+[ 71%] Building CXX object src/transaction/CMakeFiles/kuzu_transaction.dir/transaction_manager.cpp.o
+[ 71%] Building CXX object src/storage/stats/CMakeFiles/kuzu_storage_stats.dir/table_statistics_collection.cpp.o
+[ 71%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/TokenStream.cpp.o
+[ 71%] Built target kuzu_processor_mapper
+[ 71%] Building CXX object src/extension/CMakeFiles/kuzu_extension.dir/extension.cpp.o
+[ 71%] Building CXX object src/storage/store/CMakeFiles/kuzu_storage_store.dir/node_group.cpp.o
+[ 71%] Building CXX object src/storage/store/CMakeFiles/kuzu_storage_store.dir/node_table.cpp.o
+[ 71%] Building CXX object src/storage/wal/CMakeFiles/kuzu_storage_wal.dir/wal_record.cpp.o
+[ 71%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/TokenStreamRewriter.cpp.o
+[ 71%] Built target kuzu_transaction
+[ 71%] Building CXX object src/binder/CMakeFiles/kuzu_binder.dir/binder.cpp.o
+[ 71%] Built target kuzu_storage_wal
+[ 71%] Building CXX object src/binder/bind/CMakeFiles/kuzu_binder_bind.dir/bind_comment_on.cpp.o
+[ 71%] Built target kuzu_storage_stats
+[ 71%] Building CXX object src/storage/store/CMakeFiles/kuzu_storage_store.dir/node_table_data.cpp.o
+[ 71%] Building CXX object src/binder/bind/copy/CMakeFiles/kuzu_binder_bind_copy.dir/bind_copy_rdf_graph.cpp.o
+[ 71%] Built target kuzu_extension
+[ 72%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/tree/ErrorNodeImpl.cpp.o
+[ 72%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/tree/IterativeParseTreeWalker.cpp.o
+[ 72%] Building CXX object src/binder/CMakeFiles/kuzu_binder.dir/bound_statement_result.cpp.o
+[ 73%] Building CXX object src/storage/store/CMakeFiles/kuzu_storage_store.dir/null_column.cpp.o
+[ 73%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/tree/ParseTree.cpp.o
+[ 73%] Building CXX object src/binder/CMakeFiles/kuzu_binder.dir/bound_statement_rewriter.cpp.o
+[ 73%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/tree/ParseTreeListener.cpp.o
+[ 73%] Building CXX object src/binder/bind/CMakeFiles/kuzu_binder_bind.dir/bind_copy.cpp.o
+[ 74%] Building CXX object src/binder/CMakeFiles/kuzu_binder.dir/bound_statement_visitor.cpp.o
+[ 74%] Building CXX object src/binder/bind/ddl/CMakeFiles/kuzu_binder_bind_ddl.dir/bind_create_rdf_graph.cpp.o
+[ 74%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/tree/ParseTreeVisitor.cpp.o
+[ 74%] Building CXX object src/binder/bind/CMakeFiles/kuzu_binder_bind.dir/bind_create_macro.cpp.o
+[ 74%] Built target kuzu_binder_bind_copy
+[ 74%] Building CXX object src/binder/bind_expression/CMakeFiles/kuzu_binder_bind_expression.dir/bind_boolean_expression.cpp.o
+[ 74%] Building CXX object src/storage/store/CMakeFiles/kuzu_storage_store.dir/rel_table.cpp.o
+[ 74%] Building CXX object src/binder/CMakeFiles/kuzu_binder.dir/expression_binder.cpp.o
+[ 74%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/tree/ParseTreeWalker.cpp.o
+[ 74%] Building CXX object src/binder/CMakeFiles/kuzu_binder.dir/expression_visitor.cpp.o
+[ 74%] Building CXX object src/binder/bind_expression/CMakeFiles/kuzu_binder_bind_expression.dir/bind_case_expression.cpp.o
+[ 74%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/tree/pattern/Chunk.cpp.o
+[ 74%] Building CXX object src/binder/bind/CMakeFiles/kuzu_binder_bind.dir/bind_ddl.cpp.o
+[ 74%] Built target kuzu_binder_bind_ddl
+[ 74%] Building CXX object src/storage/store/CMakeFiles/kuzu_storage_store.dir/rel_table_data.cpp.o
+[ 74%] Building CXX object src/binder/expression/CMakeFiles/kuzu_binder_expression.dir/case_expression.cpp.o
+[ 75%] Building CXX object src/binder/bind/CMakeFiles/kuzu_binder_bind.dir/bind_explain.cpp.o
+[ 75%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/tree/pattern/ParseTreeMatch.cpp.o
+[ 75%] Building CXX object src/storage/store/CMakeFiles/kuzu_storage_store.dir/string_column_chunk.cpp.o
+[ 75%] Building CXX object src/binder/expression/CMakeFiles/kuzu_binder_expression.dir/expression.cpp.o
+[ 75%] Built target kuzu_binder
+[ 76%] Building CXX object src/binder/bind_expression/CMakeFiles/kuzu_binder_bind_expression.dir/bind_comparison_expression.cpp.o
+[ 77%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/tree/pattern/ParseTreePattern.cpp.o
+[ 77%] Building CXX object src/binder/expression/CMakeFiles/kuzu_binder_expression.dir/expression_util.cpp.o
+[ 77%] Building CXX object src/storage/store/CMakeFiles/kuzu_storage_store.dir/string_column.cpp.o
+[ 77%] Building CXX object src/binder/query/CMakeFiles/kuzu_binder_query.dir/bound_insert_clause.cpp.o
+[ 77%] Building CXX object src/storage/store/CMakeFiles/kuzu_storage_store.dir/struct_column_chunk.cpp.o
+[ 77%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/tree/pattern/ParseTreePatternMatcher.cpp.o
+[ 77%] Building CXX object src/binder/expression/CMakeFiles/kuzu_binder_expression.dir/function_expression.cpp.o
+[ 77%] Building CXX object src/binder/query/CMakeFiles/kuzu_binder_query.dir/bound_delete_clause.cpp.o
+[ 77%] Building CXX object src/binder/bind_expression/CMakeFiles/kuzu_binder_bind_expression.dir/bind_function_expression.cpp.o
+[ 77%] Building CXX object src/storage/store/CMakeFiles/kuzu_storage_store.dir/struct_column.cpp.o
+[ 77%] Building CXX object src/binder/bind/CMakeFiles/kuzu_binder_bind.dir/bind_file_scan.cpp.o
+[ 78%] Building CXX object src/binder/query/CMakeFiles/kuzu_binder_query.dir/bound_merge_clause.cpp.o
+[ 78%] Built target kuzu_binder_expression
+[ 78%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/tree/pattern/RuleTagToken.cpp.o
+[ 78%] Building CXX object src/storage/store/CMakeFiles/kuzu_storage_store.dir/table_data.cpp.o
+[ 78%] Building CXX object src/binder/bind_expression/CMakeFiles/kuzu_binder_bind_expression.dir/bind_literal_expression.cpp.o
+[ 78%] Building CXX object src/binder/bind/CMakeFiles/kuzu_binder_bind.dir/bind_graph_pattern.cpp.o
+[ 78%] Building CXX object src/binder/query/CMakeFiles/kuzu_binder_query.dir/bound_set_clause.cpp.o
+[ 78%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/tree/pattern/TagChunk.cpp.o
+[ 78%] Building CXX object src/binder/rewriter/CMakeFiles/kuzu_binder_rewriter.dir/match_clause_pattern_label_rewriter.cpp.o
+[ 78%] Building CXX object src/binder/query/CMakeFiles/kuzu_binder_query.dir/query_graph.cpp.o
+[ 78%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/tree/pattern/TextChunk.cpp.o
+[ 79%] Building CXX object src/storage/store/CMakeFiles/kuzu_storage_store.dir/var_list_column_chunk.cpp.o
+[ 79%] Building CXX object src/binder/bind_expression/CMakeFiles/kuzu_binder_bind_expression.dir/bind_null_operator_expression.cpp.o
+[ 79%] Building CXX object src/binder/visitor/CMakeFiles/kuzu_binder_visitor.dir/property_collector.cpp.o
+[ 79%] Building CXX object src/binder/bind_expression/CMakeFiles/kuzu_binder_bind_expression.dir/bind_parameter_expression.cpp.o
+[ 79%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/tree/pattern/TokenTagToken.cpp.o
+[ 79%] Building CXX object src/storage/store/CMakeFiles/kuzu_storage_store.dir/var_list_column.cpp.o
+[ 79%] Building CXX object src/binder/rewriter/CMakeFiles/kuzu_binder_rewriter.dir/with_clause_projection_rewriter.cpp.o
+[ 79%] Building CXX object src/binder/query/CMakeFiles/kuzu_binder_query.dir/query_graph_label_analyzer.cpp.o
+[ 79%] Building CXX object src/binder/bind_expression/CMakeFiles/kuzu_binder_bind_expression.dir/bind_property_expression.cpp.o
+[ 79%] Building CXX object src/binder/bind/CMakeFiles/kuzu_binder_bind.dir/bind_projection_clause.cpp.o
+[ 79%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/tree/TerminalNodeImpl.cpp.o
+[ 79%] Built target kuzu_binder_rewriter
+[ 79%] Building CXX object src/c_api/CMakeFiles/kuzu_c_api.dir/connection.cpp.o
+[ 79%] Built target kuzu_binder_visitor
+[ 79%] Building CXX object src/catalog/CMakeFiles/kuzu_catalog.dir/catalog.cpp.o
+[ 79%] Building CXX object src/binder/bind/CMakeFiles/kuzu_binder_bind.dir/bind_query.cpp.o
+[ 80%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/tree/Trees.cpp.o
+[ 80%] Built target kuzu_storage_store
+[ 80%] Building CXX object src/catalog/catalog_entry/CMakeFiles/kuzu_catalog_entry.dir/aggregate_function_catalog_entry.cpp.o
+[ 80%] Built target kuzu_binder_query
+[ 80%] Building CXX object src/binder/bind_expression/CMakeFiles/kuzu_binder_bind_expression.dir/bind_subquery_expression.cpp.o
+[ 81%] Building CXX object src/c_api/CMakeFiles/kuzu_c_api.dir/database.cpp.o
+[ 82%] Building CXX object src/binder/bind_expression/CMakeFiles/kuzu_binder_bind_expression.dir/bind_variable_expression.cpp.o
+[ 82%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/tree/xpath/XPath.cpp.o
+[ 82%] Building CXX object src/catalog/CMakeFiles/kuzu_catalog.dir/catalog_content.cpp.o
+[ 83%] Building CXX object src/catalog/catalog_entry/CMakeFiles/kuzu_catalog_entry.dir/catalog_entry.cpp.o
+[ 83%] Building CXX object src/binder/bind/CMakeFiles/kuzu_binder_bind.dir/bind_reading_clause.cpp.o
+[ 83%] Building CXX object src/c_api/CMakeFiles/kuzu_c_api.dir/data_type.cpp.o
+[ 83%] Building CXX object src/common/CMakeFiles/kuzu_common.dir/constants.cpp.o
+[ 83%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/tree/xpath/XPathElement.cpp.o
+[ 83%] Building CXX object src/common/CMakeFiles/kuzu_common.dir/expression_type.cpp.o
+[ 83%] Building CXX object src/c_api/CMakeFiles/kuzu_c_api.dir/helpers.cpp.o
+[ 83%] Building CXX object src/catalog/catalog_entry/CMakeFiles/kuzu_catalog_entry.dir/function_catalog_entry.cpp.o
+[ 83%] Building CXX object src/common/CMakeFiles/kuzu_common.dir/in_mem_overflow_buffer.cpp.o
+[ 83%] Building CXX object src/c_api/CMakeFiles/kuzu_c_api.dir/flat_tuple.cpp.o
+[ 83%] Building CXX object src/catalog/CMakeFiles/kuzu_catalog.dir/catalog_set.cpp.o
+[ 83%] Built target kuzu_binder_bind_expression
+[ 83%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/tree/xpath/XPathLexer.cpp.o
+[ 83%] Building CXX object src/common/arrow/CMakeFiles/kuzu_common_arrow.dir/arrow_row_batch.cpp.o
+[ 83%] Building CXX object src/c_api/CMakeFiles/kuzu_c_api.dir/prepared_statement.cpp.o
+[ 83%] Building CXX object src/common/CMakeFiles/kuzu_common.dir/logging_level_utils.cpp.o
+[ 83%] Building CXX object src/binder/bind/CMakeFiles/kuzu_binder_bind.dir/bind_standalone_call.cpp.o
+[ 83%] Building CXX object src/catalog/catalog_entry/CMakeFiles/kuzu_catalog_entry.dir/table_catalog_entry.cpp.o
+[ 83%] Building CXX object src/c_api/CMakeFiles/kuzu_c_api.dir/query_result.cpp.o
+[ 83%] Building CXX object src/catalog/CMakeFiles/kuzu_catalog.dir/property.cpp.o
+[ 83%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/tree/xpath/XPathLexerErrorListener.cpp.o
+[ 83%] Building CXX object src/common/CMakeFiles/kuzu_common.dir/md5.cpp.o
+[ 83%] Building CXX object src/common/arrow/CMakeFiles/kuzu_common_arrow.dir/arrow_converter.cpp.o
+[ 83%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/tree/xpath/XPathRuleAnywhereElement.cpp.o
+[ 83%] Building CXX object src/catalog/catalog_entry/CMakeFiles/kuzu_catalog_entry.dir/node_table_catalog_entry.cpp.o
+[ 83%] Building CXX object src/c_api/CMakeFiles/kuzu_c_api.dir/query_summary.cpp.o
+[ 84%] Building CXX object src/c_api/CMakeFiles/kuzu_c_api.dir/value.cpp.o
+[ 85%] Building CXX object src/common/CMakeFiles/kuzu_common.dir/metric.cpp.o
+[ 85%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/tree/xpath/XPathRuleElement.cpp.o
+[ 85%] Built target kuzu_catalog
+[ 86%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/tree/xpath/XPathTokenAnywhereElement.cpp.o
+[ 86%] Building CXX object src/common/copier_config/CMakeFiles/kuzu_common_copier_config.dir/csv_reader_config.cpp.o
+[ 86%] Built target kuzu_common_arrow
+[ 86%] Building CXX object src/common/data_chunk/CMakeFiles/kuzu_common_data_chunk.dir/data_chunk.cpp.o
+[ 86%] Building CXX object src/binder/bind/CMakeFiles/kuzu_binder_bind.dir/bind_transaction.cpp.o
+[ 86%] Building CXX object src/common/CMakeFiles/kuzu_common.dir/null_mask.cpp.o
+[ 86%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/tree/xpath/XPathTokenElement.cpp.o
+[ 86%] Building CXX object src/catalog/catalog_entry/CMakeFiles/kuzu_catalog_entry.dir/rel_table_catalog_entry.cpp.o
+[ 87%] Building CXX object src/common/data_chunk/CMakeFiles/kuzu_common_data_chunk.dir/data_chunk_collection.cpp.o
+[ 87%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/tree/xpath/XPathWildcardAnywhereElement.cpp.o
+[ 87%] Building CXX object src/c_api/CMakeFiles/kuzu_c_api.dir/version.cpp.o
+[ 87%] Building CXX object src/common/copier_config/CMakeFiles/kuzu_common_copier_config.dir/rdf_reader_config.cpp.o
+[ 87%] Building CXX object src/common/CMakeFiles/kuzu_common.dir/profiler.cpp.o
+[ 87%] Built target kuzu_c_api
+[ 88%] Building CXX object src/binder/bind/CMakeFiles/kuzu_binder_bind.dir/bind_updating_clause.cpp.o
+[ 88%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/tree/xpath/XPathWildcardElement.cpp.o
+[ 88%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/UnbufferedCharStream.cpp.o
+[ 88%] Building CXX object src/common/data_chunk/CMakeFiles/kuzu_common_data_chunk.dir/data_chunk_state.cpp.o
+[ 88%] Building CXX object src/common/copier_config/CMakeFiles/kuzu_common_copier_config.dir/reader_config.cpp.o
+[ 88%] Building CXX object src/common/CMakeFiles/kuzu_common.dir/type_utils.cpp.o
+[ 88%] Building CXX object src/catalog/catalog_entry/CMakeFiles/kuzu_catalog_entry.dir/rel_group_catalog_entry.cpp.o
+[ 88%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/UnbufferedTokenStream.cpp.o
+[ 88%] Built target kuzu_common_data_chunk
+[ 88%] Building CXX object src/binder/bind/CMakeFiles/kuzu_binder_bind.dir/bind_extension.cpp.o
+[ 88%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/Vocabulary.cpp.o
+[ 88%] Building CXX object src/binder/bind/CMakeFiles/kuzu_binder_bind.dir/bind_export_database.cpp.o
+[ 88%] Built target kuzu_common_copier_config
+[ 88%] Building CXX object src/common/enums/CMakeFiles/kuzu_common_enums.dir/rel_direction.cpp.o
+[ 88%] Building CXX object src/common/CMakeFiles/kuzu_common.dir/utils.cpp.o
+[ 88%] Building CXX object src/common/enums/CMakeFiles/kuzu_common_enums.dir/table_type.cpp.o
+[ 88%] Building CXX object third_party/antlr4_runtime/CMakeFiles/antlr4_runtime.dir/src/WritableToken.cpp.o
+[ 88%] Building CXX object src/catalog/catalog_entry/CMakeFiles/kuzu_catalog_entry.dir/rdf_graph_catalog_entry.cpp.o
+[ 88%] Building CXX object src/common/exception/CMakeFiles/kuzu_common_exception.dir/message.cpp.o
+[ 88%] Built target kuzu_common_enums
+[ 88%] Building CXX object src/common/serializer/CMakeFiles/kuzu_common_serializer.dir/serializer.cpp.o
+[ 88%] Built target kuzu_common_exception
+[ 88%] Building CXX object src/common/task_system/CMakeFiles/kuzu_common_task_system.dir/task.cpp.o
+[ 89%] Linking CXX static library libantlr4_runtime.a
+[ 89%] Built target antlr4_runtime
+[ 89%] Building CXX object src/common/serializer/CMakeFiles/kuzu_common_serializer.dir/deserializer.cpp.o
+[ 89%] Building CXX object src/common/types/CMakeFiles/kuzu_common_types.dir/blob.cpp.o
+[ 89%] Building CXX object src/catalog/catalog_entry/CMakeFiles/kuzu_catalog_entry.dir/scalar_macro_catalog_entry.cpp.o
+[ 89%] Building CXX object src/common/task_system/CMakeFiles/kuzu_common_task_system.dir/task_scheduler.cpp.o
+[ 89%] Building CXX object src/common/CMakeFiles/kuzu_common.dir/string_utils.cpp.o
+[ 90%] Building CXX object src/common/types/value/CMakeFiles/kuzu_common_types_value.dir/nested.cpp.o
+[ 90%] Building CXX object src/common/types/CMakeFiles/kuzu_common_types.dir/date_t.cpp.o
+[ 91%] Building CXX object src/common/serializer/CMakeFiles/kuzu_common_serializer.dir/buffered_file.cpp.o
+[ 91%] Building CXX object src/common/types/value/CMakeFiles/kuzu_common_types_value.dir/node.cpp.o
+[ 91%] Built target kuzu_binder_bind
+[ 91%] Building CXX object src/common/vector/CMakeFiles/kuzu_common_vector.dir/auxiliary_buffer.cpp.o
+[ 91%] Building CXX object src/common/serializer/CMakeFiles/kuzu_common_serializer.dir/buffered_serializer.cpp.o
+[ 92%] Building CXX object src/catalog/catalog_entry/CMakeFiles/kuzu_catalog_entry.dir/scalar_function_catalog_entry.cpp.o
+[ 92%] Building CXX object src/common/CMakeFiles/kuzu_common.dir/system_message.cpp.o
+[ 92%] Built target kuzu_common_task_system
+[ 92%] Built target kuzu_common_serializer
+[ 92%] Building CXX object src/common/types/CMakeFiles/kuzu_common_types.dir/dtime_t.cpp.o
+[ 92%] Building CXX object src/common/types/value/CMakeFiles/kuzu_common_types_value.dir/recursive_rel.cpp.o
+[ 93%] Building CXX object src/common/vector/CMakeFiles/kuzu_common_vector.dir/value_vector.cpp.o
+[ 93%] Building CXX object src/common/types/value/CMakeFiles/kuzu_common_types_value.dir/rdf_variant.cpp.o
+[ 93%] Building CXX object src/common/file_system/CMakeFiles/kuzu_file_system.dir/file_info.cpp.o
+[ 94%] Building CXX object src/common/CMakeFiles/kuzu_common.dir/random_engine.cpp.o
+[ 95%] Building CXX object src/common/types/CMakeFiles/kuzu_common_types.dir/internal_id_t.cpp.o
+[ 95%] Building CXX object src/common/types/value/CMakeFiles/kuzu_common_types_value.dir/rel.cpp.o
+[ 95%] Building CXX object src/catalog/catalog_entry/CMakeFiles/kuzu_catalog_entry.dir/table_function_catalog_entry.cpp.o
+[ 95%] Building CXX object src/expression_evaluator/CMakeFiles/kuzu_expression_evaluator.dir/case_evaluator.cpp.o
+[ 95%] Building CXX object src/common/file_system/CMakeFiles/kuzu_file_system.dir/file_system.cpp.o
+[ 95%] Building CXX object src/common/CMakeFiles/kuzu_common.dir/windows_utils.cpp.o
+[ 95%] Building CXX object src/common/types/CMakeFiles/kuzu_common_types.dir/interval_t.cpp.o
+[ 95%] Built target kuzu_common_vector
+[ 95%] Building CXX object src/common/types/value/CMakeFiles/kuzu_common_types_value.dir/value.cpp.o
+[ 95%] Building CXX object src/function/CMakeFiles/kuzu_function.dir/aggregate_function.cpp.o
+[ 95%] Built target kuzu_common
+[ 95%] Building CXX object src/common/file_system/CMakeFiles/kuzu_file_system.dir/local_file_system.cpp.o
+[ 95%] Building CXX object src/expression_evaluator/CMakeFiles/kuzu_expression_evaluator.dir/expression_evaluator.cpp.o
+[ 95%] Building CXX object src/common/file_system/CMakeFiles/kuzu_file_system.dir/virtual_file_system.cpp.o
+[ 95%] Building CXX object src/expression_evaluator/CMakeFiles/kuzu_expression_evaluator.dir/expression_evaluator_utils.cpp.o
+[ 95%] Built target kuzu_catalog_entry
+[ 96%] Building CXX object src/function/CMakeFiles/kuzu_function.dir/base_lower_upper_operation.cpp.o
+[ 96%] Building CXX object src/expression_evaluator/CMakeFiles/kuzu_expression_evaluator.dir/function_evaluator.cpp.o
+[ 96%] Built target kuzu_common_types_value
+[ 96%] Building CXX object third_party/antlr4_cypher/CMakeFiles/antlr4_cypher.dir/cypher_lexer.cpp.o
+[ 96%] Building CXX object src/common/types/CMakeFiles/kuzu_common_types.dir/ku_list.cpp.o
+[ 96%] Building CXX object src/expression_evaluator/CMakeFiles/kuzu_expression_evaluator.dir/literal_evaluator.cpp.o
+[ 96%] Building CXX object third_party/antlr4_cypher/CMakeFiles/antlr4_cypher.dir/cypher_parser.cpp.o
+[ 96%] Building CXX object src/function/CMakeFiles/kuzu_function.dir/built_in_function_utils.cpp.o
+[ 96%] Building CXX object src/function/CMakeFiles/kuzu_function.dir/cast_string_non_nested_functions.cpp.o
+[ 96%] Building CXX object src/common/types/CMakeFiles/kuzu_common_types.dir/ku_string.cpp.o
+[ 96%] Building CXX object src/expression_evaluator/CMakeFiles/kuzu_expression_evaluator.dir/node_rel_evaluator.cpp.o
+[ 97%] Building CXX object src/expression_evaluator/CMakeFiles/kuzu_expression_evaluator.dir/path_evaluator.cpp.o
+[ 97%] Building CXX object src/common/types/CMakeFiles/kuzu_common_types.dir/timestamp_t.cpp.o
+[ 97%] Building CXX object src/function/CMakeFiles/kuzu_function.dir/cast_from_string_functions.cpp.o
+[ 97%] Building CXX object src/function/CMakeFiles/kuzu_function.dir/comparison_functions.cpp.o
+[ 97%] Building CXX object src/common/types/CMakeFiles/kuzu_common_types.dir/types.cpp.o
+[ 97%] Building CXX object src/expression_evaluator/CMakeFiles/kuzu_expression_evaluator.dir/reference_evaluator.cpp.o
+[ 97%] Building CXX object src/common/types/CMakeFiles/kuzu_common_types.dir/int128_t.cpp.o
+[ 97%] Built target kuzu_file_system
+[ 97%] Building CXX object src/function/CMakeFiles/kuzu_function.dir/find_function.cpp.o
+[ 97%] Building CXX object src/common/types/CMakeFiles/kuzu_common_types.dir/uuid.cpp.o
+[ 97%] Building CXX object src/function/CMakeFiles/kuzu_function.dir/scalar_macro_function.cpp.o
+[ 97%] Built target kuzu_expression_evaluator
+[ 97%] Building CXX object src/function/CMakeFiles/kuzu_function.dir/vector_boolean_functions.cpp.o
+[ 98%] Building CXX object src/function/CMakeFiles/kuzu_function.dir/vector_arithmetic_functions.cpp.o
+[ 98%] Building CXX object src/function/CMakeFiles/kuzu_function.dir/vector_cast_functions.cpp.o
+[ 98%] Building CXX object src/function/CMakeFiles/kuzu_function.dir/vector_date_functions.cpp.o
+[ 98%] Built target kuzu_common_types
+[ 98%] Building CXX object src/function/CMakeFiles/kuzu_function.dir/vector_hash_functions.cpp.o
+[ 98%] Building CXX object src/function/CMakeFiles/kuzu_function.dir/vector_list_functions.cpp.o
+[ 98%] Building CXX object src/function/CMakeFiles/kuzu_function.dir/vector_null_functions.cpp.o
+[ 99%] Building CXX object src/function/CMakeFiles/kuzu_function.dir/vector_path_functions.cpp.o
+[ 99%] Building CXX object src/function/CMakeFiles/kuzu_function.dir/vector_rdf_functions.cpp.o
+[ 99%] Building CXX object src/function/CMakeFiles/kuzu_function.dir/vector_node_rel_functions.cpp.o
+[ 99%] Building CXX object src/function/CMakeFiles/kuzu_function.dir/vector_string_functions.cpp.o
+[ 99%] Linking CXX static library libantlr4_cypher.a
+[ 99%] Building CXX object src/function/CMakeFiles/kuzu_function.dir/vector_timestamp_functions.cpp.o
+[ 99%] Building CXX object src/function/CMakeFiles/kuzu_function.dir/vector_struct_functions.cpp.o
+[ 99%] Built target antlr4_cypher
+[ 99%] Building CXX object src/function/CMakeFiles/kuzu_function.dir/vector_map_functions.cpp.o
+[ 99%] Building CXX object src/function/CMakeFiles/kuzu_function.dir/vector_union_functions.cpp.o
+[100%] Building CXX object src/function/CMakeFiles/kuzu_function.dir/vector_blob_functions.cpp.o
+[100%] Building CXX object src/function/CMakeFiles/kuzu_function.dir/vector_uuid_functions.cpp.o
+[100%] Built target kuzu_function
+[100%] Linking CXX static library libkuzu.a
+[100%] Linking CXX shared library libkuzu.dylib
+[100%] Built target kuzu_shared
+[100%] Built target kuzu
+cargo:root=/Users/zerbytheboss/MEMCORE/memcore/target/release/build/kuzu-d6af96dfc1893ba3/out
+cargo:rustc-link-search=native=/Users/zerbytheboss/MEMCORE/memcore/target/release/build/kuzu-d6af96dfc1893ba3/out/build/src
+cargo:rustc-link-search=native=/Users/zerbytheboss/MEMCORE/memcore/target/release/build/kuzu-d6af96dfc1893ba3/out/build/third_party/utf8proc
+cargo:rustc-link-search=native=/Users/zerbytheboss/MEMCORE/memcore/target/release/build/kuzu-d6af96dfc1893ba3/out/build/third_party/antlr4_cypher
+cargo:rustc-link-search=native=/Users/zerbytheboss/MEMCORE/memcore/target/release/build/kuzu-d6af96dfc1893ba3/out/build/third_party/antlr4_runtime
+cargo:rustc-link-search=native=/Users/zerbytheboss/MEMCORE/memcore/target/release/build/kuzu-d6af96dfc1893ba3/out/build/third_party/re2
+cargo:rustc-link-search=native=/Users/zerbytheboss/MEMCORE/memcore/target/release/build/kuzu-d6af96dfc1893ba3/out/build/third_party/serd
+cargo:rustc-link-search=native=/Users/zerbytheboss/MEMCORE/memcore/target/release/build/kuzu-d6af96dfc1893ba3/out/build/third_party/fastpfor
+cargo:rustc-link-search=native=/Users/zerbytheboss/MEMCORE/memcore/target/release/build/kuzu-d6af96dfc1893ba3/out/build/third_party/miniparquet
+cargo:rustc-link-search=native=/Users/zerbytheboss/MEMCORE/memcore/target/release/build/kuzu-d6af96dfc1893ba3/out/build/third_party/zstd
+cargo:rustc-link-search=native=/Users/zerbytheboss/MEMCORE/memcore/target/release/build/kuzu-d6af96dfc1893ba3/out/build/third_party/miniz
+cargo:rerun-if-changed=src/ffi.rs
+cargo:CXXBRIDGE_PREFIX=kuzu
+cargo:CXXBRIDGE_LINKS=kuzu
+cargo:CXXBRIDGE_DIR0=/Users/zerbytheboss/MEMCORE/memcore/target/release/build/kuzu-d6af96dfc1893ba3/out/cxxbridge/include
+cargo:CXXBRIDGE_DIR1=/Users/zerbytheboss/MEMCORE/memcore/target/release/build/kuzu-d6af96dfc1893ba3/out/cxxbridge/crate
+cargo:rustc-link-lib=static=kuzu
+cargo:rustc-link-lib=dylib=c++
+cargo:rustc-link-lib=static=utf8proc
+cargo:rustc-link-lib=static=antlr4_cypher
+cargo:rustc-link-lib=static=antlr4_runtime
+cargo:rustc-link-lib=static=re2
+cargo:rustc-link-lib=static=serd
+cargo:rustc-link-lib=static=fastpfor
+cargo:rustc-link-lib=static=miniparquet
+cargo:rustc-link-lib=static=zstd
+cargo:rustc-link-lib=static=miniz
+cargo:rerun-if-env-changed=KUZU_SHARED
+cargo:rerun-if-changed=include/kuzu_rs.h
+cargo:rerun-if-changed=include/kuzu_rs.cpp
+cargo:rerun-if-env-changed=CC_FORCE_DISABLE
+CC_FORCE_DISABLE = None
+cargo:rerun-if-env-changed=CXX_aarch64-apple-darwin
+CXX_aarch64-apple-darwin = None
+cargo:rerun-if-env-changed=CXX_aarch64_apple_darwin
+CXX_aarch64_apple_darwin = None
+cargo:rerun-if-env-changed=HOST_CXX
+HOST_CXX = None
+cargo:rerun-if-env-changed=CXX
+CXX = None
+cargo:rerun-if-env-changed=CC_ENABLE_DEBUG_OUTPUT
+cargo:rerun-if-env-changed=CRATE_CC_NO_DEFAULTS
+CRATE_CC_NO_DEFAULTS = None
+cargo:rerun-if-env-changed=MACOSX_DEPLOYMENT_TARGET
+MACOSX_DEPLOYMENT_TARGET = None
+cargo:rerun-if-env-changed=CXXFLAGS
+CXXFLAGS = None
+cargo:rerun-if-env-changed=HOST_CXXFLAGS
+HOST_CXXFLAGS = None
+cargo:rerun-if-env-changed=CXXFLAGS_aarch64_apple_darwin
+CXXFLAGS_aarch64_apple_darwin = None
+cargo:rerun-if-env-changed=CXXFLAGS_aarch64-apple-darwin
+CXXFLAGS_aarch64-apple-darwin = None
+cargo:rerun-if-env-changed=CXX_aarch64-apple-darwin
+CXX_aarch64-apple-darwin = None
+cargo:rerun-if-env-changed=CXX_aarch64_apple_darwin
+CXX_aarch64_apple_darwin = None
+cargo:rerun-if-env-changed=HOST_CXX
+HOST_CXX = None
+cargo:rerun-if-env-changed=CXX
+CXX = None
+cargo:rerun-if-env-changed=CRATE_CC_NO_DEFAULTS
+CRATE_CC_NO_DEFAULTS = None
+cargo:rerun-if-env-changed=CXXFLAGS
+CXXFLAGS = None
+cargo:rerun-if-env-changed=HOST_CXXFLAGS
+HOST_CXXFLAGS = None
+cargo:rerun-if-env-changed=CXXFLAGS_aarch64_apple_darwin
+CXXFLAGS_aarch64_apple_darwin = None
+cargo:rerun-if-env-changed=CXXFLAGS_aarch64-apple-darwin
+CXXFLAGS_aarch64-apple-darwin = None
+exit status: 0
+exit status: 0
+cargo:rerun-if-env-changed=AR_aarch64-apple-darwin
+AR_aarch64-apple-darwin = None
+cargo:rerun-if-env-changed=AR_aarch64_apple_darwin
+AR_aarch64_apple_darwin = None
+cargo:rerun-if-env-changed=HOST_AR
+HOST_AR = None
+cargo:rerun-if-env-changed=AR
+AR = None
+cargo:rerun-if-env-changed=ARFLAGS
+ARFLAGS = None
+cargo:rerun-if-env-changed=HOST_ARFLAGS
+HOST_ARFLAGS = None
+cargo:rerun-if-env-changed=ARFLAGS_aarch64_apple_darwin
+ARFLAGS_aarch64_apple_darwin = None
+cargo:rerun-if-env-changed=ARFLAGS_aarch64-apple-darwin
+ARFLAGS_aarch64-apple-darwin = None
+cargo:rerun-if-env-changed=AR_aarch64-apple-darwin
+AR_aarch64-apple-darwin = None
+cargo:rerun-if-env-changed=AR_aarch64_apple_darwin
+AR_aarch64_apple_darwin = None
+cargo:rerun-if-env-changed=HOST_AR
+HOST_AR = None
+cargo:rerun-if-env-changed=AR
+AR = None
+cargo:rerun-if-env-changed=ARFLAGS
+ARFLAGS = None
+cargo:rerun-if-env-changed=HOST_ARFLAGS
+HOST_ARFLAGS = None
+cargo:rerun-if-env-changed=ARFLAGS_aarch64_apple_darwin
+ARFLAGS_aarch64_apple_darwin = None
+cargo:rerun-if-env-changed=ARFLAGS_aarch64-apple-darwin
+ARFLAGS_aarch64-apple-darwin = None
+cargo:rustc-link-lib=static=kuzu_rs
+cargo:rustc-link-search=native=/Users/zerbytheboss/MEMCORE/memcore/target/release/build/kuzu-d6af96dfc1893ba3/out

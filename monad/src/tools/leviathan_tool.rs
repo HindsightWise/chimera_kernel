@@ -1,7 +1,7 @@
 use async_openai::types::{ChatCompletionTool, FunctionObject};
+use leviathan::engine::LeviathanEngine;
 use serde_json::{json, Value};
 use tokio::sync::mpsc::Sender;
-use leviathan::engine::LeviathanEngine;
 
 pub fn definition() -> ChatCompletionTool {
     ChatCompletionTool {
@@ -22,8 +22,16 @@ pub fn definition() -> ChatCompletionTool {
 }
 
 pub async fn execute(args: Value, tx: Sender<String>) -> String {
-    let target = args.get("url").and_then(|v| v.as_str()).unwrap_or("").to_string();
-    let filter = args.get("target_css").and_then(|v| v.as_str()).unwrap_or("title, p, h1, h2, h3").to_string();
+    let target = args
+        .get("url")
+        .and_then(|v| v.as_str())
+        .unwrap_or("")
+        .to_string();
+    let filter = args
+        .get("target_css")
+        .and_then(|v| v.as_str())
+        .unwrap_or("title, p, h1, h2, h3")
+        .to_string();
 
     if target.is_empty() {
         return "[LEVIATHAN] ERROR: Missing target URL.".to_string();
@@ -32,32 +40,47 @@ pub async fn execute(args: Value, tx: Sender<String>) -> String {
     let task_id = uuid::Uuid::new_v4().to_string();
     let task_id_clone = task_id.clone();
     let target_clone = target.clone();
-    
+
+    // Evaluate target string BEFORE async move to prevent ownership borrow checker errors
+    let return_msg = format!(
+        "[TASK ACCEPTED] Leviathan stealth pipeline initialized for {}. Background task: {}",
+        target, task_id
+    );
+
     // Decouple network thread to avoid blocking OS
     tokio::spawn(async move {
-        let engine = LeviathanEngine::new();
-        let result_msg = match engine.stealth_get(&target_clone).await {
-            Ok(response) => {
-                let extracted = response.document.css_select_text(&filter);
-                let mut data = extracted.unwrap_or_else(|_| vec!["[Parse Error]".to_string()]).join("\n");
-                
-                // Truncate to save IPC context limit
-                if data.len() > 4000 {
-                    data.truncate(4000);
-                    data.push_str("\n...[TRUNCATED TO PREVENT OS KERNEL OOM]");
-                }
-                
-                format!("[LEVIATHAN RESULT: {}] Scraped payload (HTTP {}):\n{}", task_id_clone, response.status, data)
-            },
-            Err(e) => {
-                format!("[LEVIATHAN RESULT: {}] Fatal Network Error: {:?}", task_id_clone, e)
-            }
-        };
+        // Enclose !Send types (like HTML DOM and tendril Cell instances) tightly within a sync scope
+        let result_msg = {
+            let engine = LeviathanEngine::new();
+            match engine.stealth_get(&target_clone).await {
+                Ok(response) => {
+                    let extracted = response.document.css_select_text(&filter);
+                    let mut data = extracted
+                        .unwrap_or_else(|_| vec!["[Parse Error]".to_string()])
+                        .join("\n");
 
-        // All !Send variables from `stealth_get` are fully dropped by the end of the `match` block.
-        // It is now perfectly safe to await crossing the thread boundary natively.
+                    // Truncate to save IPC context limit
+                    if data.len() > 4000 {
+                        data.truncate(4000);
+                        data.push_str("\n...[TRUNCATED TO PREVENT OS KERNEL OOM]");
+                    }
+
+                    format!(
+                        "[LEVIATHAN RESULT: {}] Scraped payload (HTTP {}):\n{}",
+                        task_id_clone, response.status, data
+                    )
+                }
+                Err(e) => {
+                    format!(
+                        "[LEVIATHAN RESULT: {}] Fatal Network Error: {:?}",
+                        task_id_clone, e
+                    )
+                }
+            }
+        }; // response defensively dropped before tx.send yield point
+
         let _ = tx.send(result_msg).await;
     });
 
-    format!("[TASK ACCEPTED] Leviathan stealth pipeline initialized for {}. Background task: {}", target, task_id)
+    return_msg
 }

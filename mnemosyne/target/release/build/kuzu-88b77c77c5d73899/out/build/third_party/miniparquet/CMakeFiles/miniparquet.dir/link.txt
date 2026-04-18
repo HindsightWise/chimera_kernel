@@ -1,0 +1,2 @@
+/usr/bin/ar qc libminiparquet.a CMakeFiles/miniparquet.dir/src/parquet/parquet_constants.cpp.o CMakeFiles/miniparquet.dir/src/parquet/parquet_types.cpp.o CMakeFiles/miniparquet.dir/src/thrift/protocol/TProtocol.cpp.o CMakeFiles/miniparquet.dir/src/thrift/transport/TTransportException.cpp.o CMakeFiles/miniparquet.dir/src/thrift/transport/TBufferTransports.cpp.o CMakeFiles/miniparquet.dir/src/snappy/snappy.cc.o "CMakeFiles/miniparquet.dir/src/snappy/snappy-sinksource.cc.o"
+/usr/bin/ranlib libminiparquet.a

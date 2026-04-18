@@ -12,29 +12,14 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     tools: [
         {
             name: "execute_stealth_browser",
-            description: "Advanced stealth browser automation using puppeteer-extra with stealth plugin to avoid bot detection. Can test against bot.sannysoft.com or navigate to any URL.",
+            description: "Advanced stealth browser automation using puppeteer-extra with dynamic CFR obfuscation.",
             inputSchema: {
                 type: "object",
                 properties: {
-                    url: {
-                        type: "string",
-                        description: "URL to navigate to"
-                    },
-                    testMode: {
-                        type: "boolean",
-                        description: "Whether to run bot.sannysoft.com detection tests",
-                        default: false
-                    },
-                    headless: {
-                        type: "boolean",
-                        description: "Whether to run in headless mode",
-                        default: true
-                    },
-                    customScripts: {
-                        type: "array",
-                        items: { type: "string" },
-                        description: "Raw JS payload strings to logically inject into the execution scope via evaluateOnNewDocument before navigation occurs."
-                    }
+                    url: { type: "string", description: "URL to navigate to" },
+                    testMode: { type: "boolean", description: "Whether to run multi-validator detection tests", default: false },
+                    headless: { type: "boolean", description: "Whether to run in headless mode", default: true },
+                    customScripts: { type: "array", items: { type: "string" } }
                 },
                 required: ["url"]
             }
@@ -47,184 +32,92 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         const args = request.params.arguments;
         
         async function runLogic(args) {
-            // Import puppeteer-extra dynamically since we're in ES module
             const { default: puppeteer } = await import('puppeteer-extra');
             const StealthPlugin = await import('puppeteer-extra-plugin-stealth');
-            
-            // Use stealth plugin
             puppeteer.use(StealthPlugin.default());
+            
+            // CFR Engine dynamic imports
+            const { StealthMultiValidator } = await import('./multi_validator.js');
+            const { CognitiveFingerprintRotator } = await import('./obfuscation.js');
+            
+            const validator = new StealthMultiValidator();
+            const rotator = new CognitiveFingerprintRotator();
             
             const { url, testMode = false, headless = true, customScripts = [] } = args;
             
-            let browser;
-            try {
-                // Launch browser with stealth configuration
-                browser = await puppeteer.launch({
-                    headless: headless ? 'new' : false,
-                    executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
-                    args: [
-                        '--no-sandbox',
-                        '--disable-setuid-sandbox',
-                        '--disable-web-security',
-                        '--disable-features=IsolateOrigins,site-per-process',
-                        '--disable-blink-features=AutomationControlled',
-                        '--disable-features=AudioServiceOutOfProcess',
-                        '--disable-dev-shm-usage',
-                        '--disable-gpu',
-                        '--window-size=1366,768'
-                    ]
-                });
+            let trustCoefficient = 0;
+            let mutationEpoch = 0;
+            const MAX_EPOCHS = testMode ? 5 : 1;
+            let finalOutput = null;
 
-                const page = await browser.newPage();
-                
-                // Add this AFTER creating the page, BEFORE any navigation
-                await page.evaluateOnNewDocument(() => {
-                    // Remove WebDriver property
-                    Object.defineProperty(navigator, 'webdriver', {
-                        get: () => undefined
+            // AUTONOMIC DARWINIAN EVOLUTION LOOP
+            while (trustCoefficient < validator.minimumAgreement && mutationEpoch < MAX_EPOCHS) {
+                console.log(`[CFR] Launching Epoch ${mutationEpoch + 1}`);
+                let browser;
+                try {
+                    browser = await puppeteer.launch({
+                        headless: headless ? 'new' : false,
+                        executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+                        args: [
+                            '--no-sandbox', '--disable-setuid-sandbox', '--disable-web-security',
+                            '--disable-features=IsolateOrigins,site-per-process',
+                            '--disable-blink-features=AutomationControlled',
+                            '--disable-dev-shm-usage', '--disable-gpu', '--window-size=1366,768'
+                        ]
                     });
+
+                    const page = await browser.newPage();
                     
-                    // Spoof Chrome runtime
-                    window.chrome = {
-                        runtime: {},
-                        loadTimes: () => {},
-                        csi: () => {},
-                        app: {
-                            isInstalled: false,
-                            InstallState: {
-                                DISABLED: 'disabled',
-                                INSTALLED: 'installed',
-                                NOT_INSTALLED: 'not_installed'
-                            },
-                            RunningState: {
-                                CANNOT_RUN: 'cannot_run',
-                                READY_TO_RUN: 'ready_to_run',
-                                RUNNING: 'running'
-                            }
+                    // L3 Sub-deliverable: Cognitive Injector Hook
+                    const activeProfile = rotator.activeProfile;
+                    await page.evaluateOnNewDocument((profile) => {
+                        Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+                        window.chrome = { runtime: {} };
+                        Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en'] });
+                        Object.defineProperty(navigator, 'hardwareConcurrency', { get: () => profile.hardwareConcurrency });
+                        Object.defineProperty(navigator, 'deviceMemory', { get: () => profile.deviceMemory });
+                    }, activeProfile);
+                    
+                    if (customScripts && customScripts.length > 0) {
+                        for (const payloadScriptChunk of customScripts) {
+                            await page.evaluateOnNewDocument(payloadScriptChunk);
                         }
-                    };
-                    
-                    // Overwrite the `plugins` property to mimic human browser
-                    Object.defineProperty(navigator, 'plugins', {
-                        get: () => [1, 2, 3, 4, 5].map(() => ({
-                            name: 'Chrome PDF Plugin',
-                            filename: 'internal-pdf-viewer',
-                            description: 'Portable Document Format'
-                        }))
-                    });
-                    
-                    // Overwrite the `languages` property
-                    Object.defineProperty(navigator, 'languages', {
-                        get: () => ['en-US', 'en']
-                    });
-                });
-                
-                // Dynamically hot-load custom payload scripts from Monad MCP pipeline
-                if (customScripts && customScripts.length > 0) {
-                    for (const payloadScriptChunk of customScripts) {
-                        await page.evaluateOnNewDocument(payloadScriptChunk);
                     }
-                }
-                
-                // Set viewport
-                await page.setViewport({ width: 1366, height: 768 });
-                
-                // Navigate to URL
-                await page.goto(url, {
-                    waitUntil: 'networkidle2',
-                    timeout: 30000
-                });
-
-                // Use promise-based delay instead of detectable timeout
-                await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 1000));
-
-                if (testMode) {
-                    // For bot.sannysoft.com testing
-                    const testResults = await page.evaluate(() => {
-                        const results = {};
-                        
-                        // Get all test results
-                        const tables = document.querySelectorAll('table');
-                        tables.forEach((table) => {
-                            const rows = table.querySelectorAll('tr');
-                            
-                            rows.forEach(row => {
-                                const cells = row.querySelectorAll('td, th');
-                                if (cells.length >= 2) {
-                                    const testName = cells[0].textContent.trim();
-                                    const testResult = cells[1].textContent.trim();
-                                    
-                                    if (testName && testResult && !testName.includes('Test Name')) {
-                                        results[testName] = testResult;
-                                    }
-                                }
-                            });
-                        });
-
-                        // Browser fingerprint
-                        const fingerprint = {
-                            userAgent: navigator.userAgent,
-                            webdriver: navigator.webdriver,
-                            chrome: !!window.chrome,
-                            plugins: {
-                                length: navigator.plugins.length,
-                                names: Array.from(navigator.plugins).map(p => p.name).join(', ')
-                            },
-                            languages: navigator.languages.join(', '),
-                            platform: navigator.platform,
-                            hardwareConcurrency: navigator.hardwareConcurrency,
-                            deviceMemory: navigator.deviceMemory,
-                            screen: {
-                                width: screen.width,
-                                height: screen.height,
-                                colorDepth: screen.colorDepth
-                            },
-                            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-                        };
-
-                        return {
-                            testResults,
-                            fingerprint,
-                            totalTests: Object.keys(results).length,
-                            detectedTests: Object.values(results).filter(r => 
-                                r.includes('failed') || r.includes('present') || r.includes('detected') || r === 'prompt'
-                            ).length
-                        };
-                    });
-
-                    // Take screenshot
-                    const screenshot = await page.screenshot({ encoding: 'base64' });
                     
+                    await page.setViewport({ width: 1366, height: 768 });
+                    await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
+                    await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 1000));
+
+                    if (testMode) {
+                        const validation = await validator.validateStealth(page);
+                        trustCoefficient = validation.consensus;
+
+                        if (trustCoefficient < validator.minimumAgreement) {
+                            console.warn(`[EPOCH ${mutationEpoch + 1}] Validation Failed (τ=${trustCoefficient}). Mutating Vector...`);
+                            rotator.mutateVector(validation.errors);
+                        } else {
+                            finalOutput = { success: true, validation, targetAchieved: true };
+                        }
+                    } else {
+                        const content = await page.content();
+                        finalOutput = { success: true, title: await page.title(), contentLength: content.length };
+                        trustCoefficient = 1.0; 
+                    }
+                    
+                    // Task 6: Explicit memory wipe
+                    await page.close();
                     await browser.close();
-                    
-                    return {
-                        success: true,
-                        testResults,
-                        screenshot: `data:image/png;base64,${screenshot}`,
-                        detectionRate: testResults.detectedTests / testResults.totalTests * 100,
-                        stealthEffectiveness: 100 - (testResults.detectedTests / testResults.totalTests * 100)
-                    };
-                } else {
-                    // Regular navigation - get page content
-                    const content = await page.content();
-                    const title = await page.title();
-                    
-                    await browser.close();
-                    
-                    return {
-                        success: true,
-                        title,
-                        contentLength: content.length,
-                        url: page.url()
-                    };
+                } catch (error) {
+                    if (browser) await browser.close();
+                    if (mutationEpoch >= MAX_EPOCHS - 1) throw new Error(`Evolution boundary error: ${error.message}`);
                 }
-                
-            } catch (error) {
-                if (browser) {
-                    await browser.close();
-                }
-                throw new Error(`Stealth browser error: ${error.message}`);
+                mutationEpoch++;
             }
+            
+            if (testMode && trustCoefficient < validator.minimumAgreement) {
+                return { success: false, error: `Phase Drift Critical: Failed to clear heuristic nodes after ${MAX_EPOCHS} epochs.` };
+            }
+            return finalOutput;
         }
         
         try {

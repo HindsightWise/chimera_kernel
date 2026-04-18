@@ -1,0 +1,26 @@
+running: cd "/Users/zerbytheboss/MEMCORE/memcore/target/release/build/kuzu-88b77c77c5d73899/out/build" && CMAKE_PREFIX_PATH="" LC_ALL="C" "cmake" "/Users/zerbytheboss/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/kuzu-0.3.2/kuzu-src" "-B" "/Users/zerbytheboss/MEMCORE/memcore/target/release/build/kuzu-88b77c77c5d73899/out/build" "-DCMAKE_OSX_ARCHITECTURES=arm64" "-DBUILD_SHELL=OFF" "-DBUILD_SINGLE_FILE_HEADER=OFF" "-DAUTO_UPDATE_GRAMMAR=OFF" "-DCMAKE_INSTALL_PREFIX=/Users/zerbytheboss/MEMCORE/memcore/target/release/build/kuzu-88b77c77c5d73899/out" "-DCMAKE_C_FLAGS= -ffunction-sections -fdata-sections -fPIC --target=arm64-apple-macosx -mmacosx-version-min=26.4 -w" "-DCMAKE_C_COMPILER=/usr/bin/cc" "-DCMAKE_CXX_FLAGS= -ffunction-sections -fdata-sections -fPIC --target=arm64-apple-macosx -mmacosx-version-min=26.4 -w" "-DCMAKE_CXX_COMPILER=/usr/bin/c++" "-DCMAKE_ASM_FLAGS= -ffunction-sections -fdata-sections -fPIC --target=arm64-apple-macosx -mmacosx-version-min=26.4 -w" "-DCMAKE_ASM_COMPILER=/usr/bin/cc" "-DCMAKE_BUILD_TYPE=Release"
+CMake Deprecation Warning at third_party/re2/CMakeLists.txt:5 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+
+
+CMake Deprecation Warning at third_party/serd/CMakeLists.txt:4 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+
+
+running: cd "/Users/zerbytheboss/MEMCORE/memcore/target/release/build/kuzu-88b77c77c5d73899/out/build" && LC_ALL="C" "cmake" "--build" "/Users/zerbytheboss/MEMCORE/memcore/target/release/build/kuzu-88b77c77c5d73899/out/build" "--config" "Release" "--parallel" "8"
+ranlib: warning: 'libkuzu.a(windows_utils.cpp.o)' has no symbols
+ranlib: warning: 'libkuzu.a(windows_utils.cpp.o)' has no symbols
+
+CXX include path:
+  /Users/zerbytheboss/MEMCORE/memcore/target/release/build/kuzu-88b77c77c5d73899/out/cxxbridge/include
+  /Users/zerbytheboss/MEMCORE/memcore/target/release/build/kuzu-88b77c77c5d73899/out/cxxbridge/crate

@@ -1,0 +1,43 @@
+file(REMOVE_RECURSE
+  "CMakeFiles/kuzu_storage_store.dir/column.cpp.o"
+  "CMakeFiles/kuzu_storage_store.dir/column.cpp.o.d"
+  "CMakeFiles/kuzu_storage_store.dir/column_chunk.cpp.o"
+  "CMakeFiles/kuzu_storage_store.dir/column_chunk.cpp.o.d"
+  "CMakeFiles/kuzu_storage_store.dir/csr_rel_table_data.cpp.o"
+  "CMakeFiles/kuzu_storage_store.dir/csr_rel_table_data.cpp.o.d"
+  "CMakeFiles/kuzu_storage_store.dir/dictionary_chunk.cpp.o"
+  "CMakeFiles/kuzu_storage_store.dir/dictionary_chunk.cpp.o.d"
+  "CMakeFiles/kuzu_storage_store.dir/dictionary_column.cpp.o"
+  "CMakeFiles/kuzu_storage_store.dir/dictionary_column.cpp.o.d"
+  "CMakeFiles/kuzu_storage_store.dir/node_group.cpp.o"
+  "CMakeFiles/kuzu_storage_store.dir/node_group.cpp.o.d"
+  "CMakeFiles/kuzu_storage_store.dir/node_table.cpp.o"
+  "CMakeFiles/kuzu_storage_store.dir/node_table.cpp.o.d"
+  "CMakeFiles/kuzu_storage_store.dir/node_table_data.cpp.o"
+  "CMakeFiles/kuzu_storage_store.dir/node_table_data.cpp.o.d"
+  "CMakeFiles/kuzu_storage_store.dir/null_column.cpp.o"
+  "CMakeFiles/kuzu_storage_store.dir/null_column.cpp.o.d"
+  "CMakeFiles/kuzu_storage_store.dir/rel_table.cpp.o"
+  "CMakeFiles/kuzu_storage_store.dir/rel_table.cpp.o.d"
+  "CMakeFiles/kuzu_storage_store.dir/rel_table_data.cpp.o"
+  "CMakeFiles/kuzu_storage_store.dir/rel_table_data.cpp.o.d"
+  "CMakeFiles/kuzu_storage_store.dir/string_column.cpp.o"
+  "CMakeFiles/kuzu_storage_store.dir/string_column.cpp.o.d"
+  "CMakeFiles/kuzu_storage_store.dir/string_column_chunk.cpp.o"
+  "CMakeFiles/kuzu_storage_store.dir/string_column_chunk.cpp.o.d"
+  "CMakeFiles/kuzu_storage_store.dir/struct_column.cpp.o"
+  "CMakeFiles/kuzu_storage_store.dir/struct_column.cpp.o.d"
+  "CMakeFiles/kuzu_storage_store.dir/struct_column_chunk.cpp.o"
+  "CMakeFiles/kuzu_storage_store.dir/struct_column_chunk.cpp.o.d"
+  "CMakeFiles/kuzu_storage_store.dir/table_data.cpp.o"
+  "CMakeFiles/kuzu_storage_store.dir/table_data.cpp.o.d"
+  "CMakeFiles/kuzu_storage_store.dir/var_list_column.cpp.o"
+  "CMakeFiles/kuzu_storage_store.dir/var_list_column.cpp.o.d"
+  "CMakeFiles/kuzu_storage_store.dir/var_list_column_chunk.cpp.o"
+  "CMakeFiles/kuzu_storage_store.dir/var_list_column_chunk.cpp.o.d"
+)
+
+# Per-language clean rules from dependency scanning.
+foreach(lang CXX)
+  include(CMakeFiles/kuzu_storage_store.dir/cmake_clean_${lang}.cmake OPTIONAL)
+endforeach()

@@ -1,5 +1,5 @@
 use async_openai::types::{ChatCompletionTool, ChatCompletionToolArgs, FunctionObjectArgs, ChatCompletionToolType, CreateChatCompletionRequestArgs, ChatCompletionRequestUserMessageArgs};
-use async_openai::{config::OpenAIConfig, Client};
+
 use serde_json::{Value, json};
 use tokio::sync::mpsc::Sender;
 use tokio::time::{timeout, Duration};
@@ -184,8 +184,7 @@ pub async fn execute_kinematic(
         let _ = tx_clone.send("\n\x1b[38;2;255;50;50m[\u{2694} KINEMATIC AGENT WAKING] Bypassing Reasoner. Engaging offline monad-gatekeeper loop...\x1b[0m".into()).await;
         
         // Use monad-gatekeeper local OBLITERATED gemma natively
-        let local_config = OpenAIConfig::new().with_api_base("http://127.0.0.1:11434/v1").with_api_key("ollama");
-        let local_client = Client::with_config(local_config);
+        let local_client = crate::neural_failsafe::NeuralFailSafe::local_client();
         
         let prompt = format!("You are the Monad Kinematic Agent. You operate uncensored.\nAnalyze the target directives for tool '{}' and optimize the exact payload or target bounds.\nDirectives: {}\nProvide only the finalized argument string without explanation.", tool_target, directives);
         

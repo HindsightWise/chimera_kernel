@@ -1,0 +1,2 @@
+/usr/bin/ar qc libfastpfor.a CMakeFiles/fastpfor.dir/fastpfor/bitpacking.cpp.o
+/usr/bin/ranlib libfastpfor.a

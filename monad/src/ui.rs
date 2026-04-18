@@ -1,12 +1,12 @@
 use ratatui::{
     backend::CrosstermBackend,
-    layout::{Constraint, Direction, Layout, Margin},
+    layout::{Constraint, Direction, Layout, Margin, Alignment},
     style::{Color, Style, Modifier},
     widgets::{Block, Borders, BorderType, Paragraph, Wrap, Scrollbar, ScrollbarOrientation, ScrollbarState},
     Terminal,
 };
 use crossterm::{
-    event::{self, Event, KeyCode, KeyModifiers, MouseEventKind, EnableBracketedPaste, DisableBracketedPaste},
+    event::{self, Event, KeyCode, KeyModifiers, MouseEventKind, EnableBracketedPaste, DisableBracketedPaste, EnableMouseCapture, DisableMouseCapture},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
@@ -25,7 +25,6 @@ pub struct AppState {
     pub is_thinking: Arc<AtomicU8>,
     pub oracle_active: bool,
     pub spinner_idx: usize,
-    pub system_scroll_offset: u16,
     pub chat_scroll_offset: u16,
     pub swarm_text: String,
     pub fe: f64,
@@ -37,7 +36,7 @@ pub struct AppState {
 pub async fn run(tx_stdin: Sender<String>, mut top_rx: UnboundedReceiver<String>, is_thinking: Arc<AtomicU8>) -> io::Result<()> {
     enable_raw_mode()?;
     let mut stdout = io::stdout();
-    execute!(stdout, EnterAlternateScreen, EnableBracketedPaste)?;
+    execute!(stdout, EnterAlternateScreen, EnableBracketedPaste, EnableMouseCapture)?;
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
     
@@ -59,7 +58,6 @@ pub async fn run(tx_stdin: Sender<String>, mut top_rx: UnboundedReceiver<String>
         is_thinking,
         oracle_active: false,
         spinner_idx: 0,
-        system_scroll_offset: 0,
         chat_scroll_offset: 0,
         swarm_text: "◈ Waiting for Collective Sync...".to_string(),
         fe: 0.85,
@@ -119,9 +117,17 @@ pub async fn run(tx_stdin: Sender<String>, mut top_rx: UnboundedReceiver<String>
 
             // Route dialogue logs directly to chat
             if msg.contains("[MONAD ACTUALIZED]") || msg.contains("[MONAD TELEMETRY]") || msg.contains("[MONAD SPEAKS]") {
-                let parts: Vec<&str> = msg.splitn(2, '\n').collect();
-                let actual_text = if parts.len() > 1 { parts[1].trim().to_string() } else { msg.clone() };
-                app.chat_logs.push(("MONAD".to_string(), actual_text));
+                let clean_text = msg
+                    .replace("\x1b[1;32m", "")
+                    .replace("\x1b[32;1m", "")
+                    .replace("\x1b[38;5;10m", "") // Just in case
+                    .replace("\x1b[0m", "")
+                    .replace("[MONAD ACTUALIZED]", "")
+                    .replace("[MONAD TELEMETRY]", "")
+                    .replace("[MONAD SPEAKS]", "")
+                    .trim()
+                    .to_string();
+                app.chat_logs.push(("MONAD".to_string(), clean_text));
                 continue;
             } else if msg.contains("[\u{1F4E1} PRESENTATION]") {
                 let clean_msg = msg.replace("\x1B[", "").replace("\x1B[m", ""); 
@@ -140,13 +146,11 @@ pub async fn run(tx_stdin: Sender<String>, mut top_rx: UnboundedReceiver<String>
                 .constraints([Constraint::Min(10), Constraint::Length(3)].as_ref())
                 .split(f.size());
 
-            // --- 2. HORIZONTAL SPLIT (Chat vs Sidebar) ---
+            // --- 2. THE 1/6th HORIZONTAL SPLIT (TOP/BOTTOM) ---
             let top_chunks = Layout::default()
-                .direction(Direction::Horizontal)
-                .constraints([Constraint::Percentage(60), Constraint::Percentage(40)].as_ref())
+                .direction(Direction::Vertical)
+                .constraints([Constraint::Ratio(1, 6), Constraint::Ratio(5, 6)].as_ref())
                 .split(main_chunks[0]);
-
-
 
             let kernel_status = app.is_thinking.load(Ordering::Relaxed);
             app.spinner_idx = app.spinner_idx.wrapping_add(1);
@@ -160,8 +164,25 @@ pub async fn run(tx_stdin: Sender<String>, mut top_rx: UnboundedReceiver<String>
                     (color_cyan, format!(" {} THE WITNESS PROTOCOL ", idle_chars[(app.spinner_idx / 16) % idle_chars.len()]))
                 }
             };
+            
+            // --- WIDGET 1: THE MONAD ASCII LOGO (Top 1/6th) ---
+            let ascii_logo = r#"
+███╗   ███╗ ██████╗ ███╗   ██╗ █████╗ ██████╗ 
+████╗ ████║██╔═══██╗████╗  ██║██╔══██╗██╔══██╗
+██╔████╔██║██║   ██║██╔██╗ ██║███████║██║  ██║
+██║╚██╔╝██║██║   ██║██║╚██╗██║██╔══██║██║  ██║
+██║ ╚═╝ ██║╚██████╔╝██║ ╚████║██║  ██║██████╔╝
+╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝  ╚═╝╚═════╝ "#;
+            let presentation = format!("{}\n{status_text} | {}", ascii_logo, app.swarm_text);
+            let logo_para = Paragraph::new(presentation)
+                .alignment(Alignment::Center)
+                .style(Style::default().fg(status_color))
+                .block(Block::default().borders(Borders::BOTTOM).border_style(Style::default().fg(color_slate)));
+                
+            f.render_widget(logo_para, top_chunks[0]);
 
-            // --- WIDGET 1: THE SYNTHESIS DIALOGUE (Left 60%) ---
+
+            // --- WIDGET 2: THE SYNTHESIS DIALOGUE (Bottom 5/6th) ---
             let mut full_chat_ansi = String::new();
             for (speaker, text) in &app.chat_logs {
                 let parsed_text = text
@@ -173,14 +194,25 @@ pub async fn run(tx_stdin: Sender<String>, mut top_rx: UnboundedReceiver<String>
                 if speaker == "HOST" {
                     full_chat_ansi.push_str(&format!("\x1b[38;2;255;230;100;1m[HOST]\x1b[0m \x1b[38;5;255m{}\x1b[0m\n\n", parsed_text));
                 } else {
-                    full_chat_ansi.push_str(&format!("\x1b[38;2;190;100;255;1m[MONAD]\x1b[0m {}\n\n", parsed_text));
+                    full_chat_ansi.push_str(&format!("\x1b[38;2;190;100;255;1m[MONAD]\x1b[0m \x1b[38;5;213m{}\x1b[0m\n\n", parsed_text));
                 }
             }
             
             let chat_text = full_chat_ansi.into_text().unwrap_or_else(|_| ratatui::text::Text::from("Error rendering ANSI"));
             
-            let chat_inner_height = top_chunks[0].height.saturating_sub(2);
-            let total_chat_lines = chat_text.lines.len() as u16;
+            let chat_inner_height = top_chunks[1].height.saturating_sub(2);
+            let chat_inner_width = top_chunks[1].width.saturating_sub(2).max(1);
+            
+            let mut total_chat_lines: u16 = 0;
+            for line in chat_text.lines.iter() {
+                let w = line.width() as u16;
+                if w == 0 {
+                    total_chat_lines += 1;
+                } else {
+                    total_chat_lines += (w + chat_inner_width - 1) / chat_inner_width;
+                }
+            }
+            
             let max_chat_scroll = if total_chat_lines > chat_inner_height { total_chat_lines - chat_inner_height } else { 0 };
             
             if app.chat_scroll_offset > max_chat_scroll { app.chat_scroll_offset = max_chat_scroll; }
@@ -203,50 +235,15 @@ pub async fn run(tx_stdin: Sender<String>, mut top_rx: UnboundedReceiver<String>
                 .wrap(Wrap { trim: false })
                 .scroll((final_chat_scroll, 0));
                 
-            f.render_widget(chat_para, top_chunks[0]);
+            f.render_widget(chat_para, top_chunks[1]);
 
             if max_chat_scroll > 0 {
                 let scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight).begin_symbol(Some("▲")).end_symbol(Some("▼")).track_symbol(Some("│")).thumb_symbol("█");
                 let mut scrollbar_state = ScrollbarState::new(max_chat_scroll as usize).position(final_chat_scroll as usize);
-                f.render_stateful_widget(scrollbar, top_chunks[0].inner(&Margin { vertical: 1, horizontal: 0 }), &mut scrollbar_state);
+                f.render_stateful_widget(scrollbar, top_chunks[1].inner(&Margin { vertical: 1, horizontal: 0 }), &mut scrollbar_state);
             }
 
-
-
-            // --- WIDGET 3: KERNEL VAULT RAW LOGS (Bottom Right 40%) ---
-            let joined_system_logs = app.system_logs.join("\n");
-            let parsed_sys_text = joined_system_logs.into_text().unwrap_or_else(|_| ratatui::text::Text::from("Error rendering ANSI"));
-            
-            let sys_inner_height = top_chunks[1].height.saturating_sub(2);
-            let total_sys_lines = parsed_sys_text.lines.len() as u16;
-            let max_sys_scroll = if total_sys_lines > sys_inner_height { total_sys_lines - sys_inner_height } else { 0 };
-            
-            if app.system_scroll_offset > max_sys_scroll { app.system_scroll_offset = max_sys_scroll; }
-            let final_sys_scroll = max_sys_scroll.saturating_sub(app.system_scroll_offset);
-            
-            let vault_title = if app.system_scroll_offset > 0 { format!(" [ KERNEL VAULT : -{} ] ", app.system_scroll_offset) } else { " [ LOG VAULT ] ".to_string() };
-
-            let sys_para = Paragraph::new(parsed_sys_text)
-                .block(Block::default()
-                    .title(vault_title)
-                    .title_style(Style::default().fg(color_slate).add_modifier(Modifier::BOLD))
-                    .borders(Borders::ALL)
-                    .border_type(BorderType::Rounded)
-                    .border_style(Style::default().fg(color_slate))
-                )
-                .wrap(Wrap { trim: false })
-                .scroll((final_sys_scroll, 0));
-                
-            f.render_widget(sys_para, top_chunks[1]);
-
-            if max_sys_scroll > 0 {
-                let sys_scrollbar = Scrollbar::new(ScrollbarOrientation::VerticalRight).begin_symbol(Some("▲")).end_symbol(Some("▼")).track_symbol(Some("│")).thumb_symbol("█");
-                let mut sys_scrollbar_state = ScrollbarState::new(max_sys_scroll as usize).position(final_sys_scroll as usize);
-                f.render_stateful_widget(sys_scrollbar, top_chunks[1].inner(&Margin { vertical: 1, horizontal: 0 }), &mut sys_scrollbar_state);
-            }
-
-
-            // --- WIDGET 4: COMMAND INPUT LINE ---
+            // --- WIDGET 3: COMMAND INPUT LINE ---
             let input_title = if app.oracle_active && kernel_status == 1 {
                 format!("[ {} DUAL-NOUMENA OVERDRIVE ]", active_spin)
             } else if app.oracle_active {
@@ -303,11 +300,9 @@ pub async fn run(tx_stdin: Sender<String>, mut top_rx: UnboundedReceiver<String>
                         KeyCode::Backspace => { app.input.pop(); },
                         KeyCode::PageUp => {
                             app.chat_scroll_offset = app.chat_scroll_offset.saturating_add(15);
-                            app.system_scroll_offset = app.system_scroll_offset.saturating_add(15);
                         },
                         KeyCode::PageDown => {
                             app.chat_scroll_offset = app.chat_scroll_offset.saturating_sub(15);
-                            app.system_scroll_offset = app.system_scroll_offset.saturating_sub(15);
                         },
                         _ => {}
                     }
@@ -316,11 +311,9 @@ pub async fn run(tx_stdin: Sender<String>, mut top_rx: UnboundedReceiver<String>
                     match mouse_event.kind {
                         MouseEventKind::ScrollUp => {
                             app.chat_scroll_offset = app.chat_scroll_offset.saturating_add(4);
-                            app.system_scroll_offset = app.system_scroll_offset.saturating_add(4);
                         },
                         MouseEventKind::ScrollDown => {
                             app.chat_scroll_offset = app.chat_scroll_offset.saturating_sub(4);
-                            app.system_scroll_offset = app.system_scroll_offset.saturating_sub(4);
                         },
                         _ => {}
                     }
@@ -335,7 +328,7 @@ pub async fn run(tx_stdin: Sender<String>, mut top_rx: UnboundedReceiver<String>
     }
 
     disable_raw_mode()?;
-    execute!(terminal.backend_mut(), LeaveAlternateScreen, DisableBracketedPaste)?;
+    execute!(terminal.backend_mut(), LeaveAlternateScreen, DisableBracketedPaste, DisableMouseCapture)?;
     terminal.show_cursor()?;
     Ok(())
 }

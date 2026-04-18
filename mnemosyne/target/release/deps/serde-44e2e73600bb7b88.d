@@ -1,0 +1,14 @@
+/Users/zerbytheboss/MEMCORE/memcore/target/release/deps/serde-44e2e73600bb7b88.d: /Users/zerbytheboss/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /Users/zerbytheboss/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /Users/zerbytheboss/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /Users/zerbytheboss/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /Users/zerbytheboss/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /Users/zerbytheboss/MEMCORE/memcore/target/release/build/serde-f69422f16a331049/out/private.rs
+
+/Users/zerbytheboss/MEMCORE/memcore/target/release/deps/libserde-44e2e73600bb7b88.rlib: /Users/zerbytheboss/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /Users/zerbytheboss/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /Users/zerbytheboss/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /Users/zerbytheboss/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /Users/zerbytheboss/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /Users/zerbytheboss/MEMCORE/memcore/target/release/build/serde-f69422f16a331049/out/private.rs
+
+/Users/zerbytheboss/MEMCORE/memcore/target/release/deps/libserde-44e2e73600bb7b88.rmeta: /Users/zerbytheboss/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs /Users/zerbytheboss/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs /Users/zerbytheboss/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs /Users/zerbytheboss/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs /Users/zerbytheboss/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs /Users/zerbytheboss/MEMCORE/memcore/target/release/build/serde-f69422f16a331049/out/private.rs
+
+/Users/zerbytheboss/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/lib.rs:
+/Users/zerbytheboss/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/integer128.rs:
+/Users/zerbytheboss/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/mod.rs:
+/Users/zerbytheboss/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/de.rs:
+/Users/zerbytheboss/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde-1.0.228/src/private/ser.rs:
+/Users/zerbytheboss/MEMCORE/memcore/target/release/build/serde-f69422f16a331049/out/private.rs:
+
+# env-dep:OUT_DIR=/Users/zerbytheboss/MEMCORE/memcore/target/release/build/serde-f69422f16a331049/out

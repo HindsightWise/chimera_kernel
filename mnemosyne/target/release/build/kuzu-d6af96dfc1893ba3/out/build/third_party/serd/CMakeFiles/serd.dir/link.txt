@@ -1,0 +1,2 @@
+/usr/bin/ar qc libserd.a CMakeFiles/serd.dir/src/base64.c.o CMakeFiles/serd.dir/src/byte_source.c.o CMakeFiles/serd.dir/src/env.c.o CMakeFiles/serd.dir/src/n3.c.o CMakeFiles/serd.dir/src/node.c.o CMakeFiles/serd.dir/src/reader.c.o CMakeFiles/serd.dir/src/string.c.o CMakeFiles/serd.dir/src/system.c.o CMakeFiles/serd.dir/src/uri.c.o CMakeFiles/serd.dir/src/writer.c.o
+/usr/bin/ranlib libserd.a

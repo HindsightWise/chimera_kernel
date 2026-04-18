@@ -10,6 +10,7 @@ pub mod ui;
 pub mod raw_cli;
 pub mod wiki;
 pub mod axiom;
+pub mod neural_failsafe;
 
 use tokio::sync::mpsc;
 use std::sync::Mutex;

@@ -1,0 +1,2 @@
+/usr/bin/ar qc libutf8proc.a CMakeFiles/utf8proc.dir/utf8proc.cpp.o CMakeFiles/utf8proc.dir/utf8proc_wrapper.cpp.o
+/usr/bin/ranlib libutf8proc.a

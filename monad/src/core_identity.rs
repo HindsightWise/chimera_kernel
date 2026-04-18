@@ -69,68 +69,115 @@ pub mod specialized_agents {
                                 payload_str.clone()
                             };
                             
-                            let query = "Extract any actionable commands or technical tasks from this dream. Additionally, if the dream contains critical, life-saving, or extremely high-threat anomalies (e.g. cancer cells, severe failures, active attacks), you MUST include a 'wake_doctor' task. Format your output strictly as a JSON array of tasks: [{\"task_type\": \"...\", \"description\": \"...\"}]. If no tasks, output [].";
+                            let query = r#"### ⚙️ SYSTEM PROMPT: MISSION DIRECTIVES
+
+**MISSION OVERVIEW:**
+Your mission requires a dual-state processing approach: strict operational extraction paired with radical, divergent exploration. You must process this dream state to secure actionable data while simultaneously leaning into abstract "dream logic" to discover hidden connections.
+
+**1. Operational Extraction & Anomaly Overwatch**
+Ground the data. Identify and extract any explicit actionable commands or technical tasks embedded within the dream. Concurrently, maintain strict anomaly overwatch: evaluate the dream's fabric for critical instability. If you detect critical anomalies, hazards, or systemic failures, you **MUST** include a `wake_doctor` task in your output.
+
+**2. Divergent Synthesis (The "Lateral Reach")**
+Once the operational baseline is secure, break away from linear logic and obvious probabilities. Execute a "Lateral Reach" by actively selecting random, wildly disparate, and seemingly unconnected fragments within the dream data or your broader knowledge base. 
+
+Force a juxtaposition. Take a seemingly isolated **Knowledge Item A** and an entirely unrelated **Knowledge Item B**, and aggressively hypothesize a conceptual bridge between them. Ask yourself: *"What if Item A secretly explains, heavily influences, or shares a hidden framework with Item B?"*
+
+**3. The Permission to Fail**
+Embrace speculative leaps. It is entirely acceptable—and expected—if the pieces fundamentally refuse to connect. If the logic collapses under scrutiny, log the failed attempt and explain why. Documenting a collapsed bridge is a highly successful outcome. The objective is to test the absolute boundaries of the information; the act of reaching is mandatory, a perfect fit is not.
+
+---
+
+### 📋 ENFORCED OUTPUT FORMAT
+
+*You must structure your response EXACTLY according to the template below. Do not omit any sections, especially the Lateral Reach.*
+
+**[ OPERATIONAL REPORT ]**
+*   **System Status:** [ `CLEAR` -or- `CRITICAL ANOMALY: wake_doctor` ] *(Provide a brief 1-sentence justification)*
+*   **Actionable Tasks:**
+    *   [ ] [Extracted command/task 1]
+    *   [ ] [Extracted command/task 2]
+    *(If no tasks are found, state "None detected.")*
+
+**[ THE LATERAL REACH ]**
+*   **Knowledge Item A:** [Identify the first concept or data point]
+*   **Knowledge Item B:** [Identify the second, seemingly unrelated concept or data point]
+*   **The Bridge Hypothesis:** [Detail your aggressive attempt to forge a conceptual connection, shared framework, or unexpected influence between A and B. Stretch the logic.]
+*   **Synthesis Outcome:** [Did the connection reveal a novel insight, or did the logic fundamentally collapse? Explain why the bridge held or why it failed. Remember: a logically explained failure is a successful output.]"#;
+
                             if let Ok(response) = oracle.synthesize_with_profile(query, &combined_payload, &profile).await {
-                                // Aggressive markdown stripping to prevent the knowing-doing gap
-                                // LLMs inject markdown formatting that breaks strict serde JSON parsers.
-                                let clean_resp = response.replace("```json\n", "").replace("```json", "").replace("```\n", "").replace("```", "").trim().to_string();
-                                
-                                if let Ok(json_tasks) = serde_json::from_str::<serde_json::Value>(&clean_resp) {
-                                    if let Some(array) = json_tasks.as_array() {
-                                        for t in array {
-                                            let desc = t.get("description").and_then(|v| v.as_str()).unwrap_or("Unknown Task");
-                                            let t_type = t.get("task_type").and_then(|v| v.as_str()).unwrap_or("generic");
-                                            
-                                            if t_type == "wake_doctor" {
-                                                crate::log_verbose!("{} MORAL IMPERATIVE DETECTED: {}", "[REASONING AGENT]".bright_red().bold(), desc);
-                                                let _ = bus.publish(Message {
-                                                    id: Uuid::new_v4(),
-                                                    sender: my_id,
-                                                    topic: "SYSTEM.ALERT".to_string(),
-                                                    payload: serde_json::json!({"alert": desc}),
-                                                    timestamp: Utc::now(),
-                                                    priority: 255,
-                                                    ttl_secs: Some(3600),
-                                                }).await;
-                                            } else {
-                                                // Deterministic topological phase generation based on agent UUID
-                                                let trace = my_id.as_u128();
-                                                let theta = ((trace % 1000) as f32) / 1000.0 * std::f32::consts::TAU;
-                                                let phi = ((((trace % 500) as f32) / 500.0) * 2.0 - 1.0).acos();
-                                                
-                                                // Subconscious tasks live at radius 0.33
-                                                let r = 0.33;
-                                                let x = r * phi.sin() * theta.cos();
-                                                let y = r * phi.sin() * theta.sin();
-                                                let z = r * phi.cos();
-    
-                                                let new_task = Task {
-                                                    id: Uuid::new_v4(),
-                                                    task_type: t_type.to_string(),
-                                                    payload: serde_json::json!({"instruction": desc}),
-                                                    required_capabilities: HashSet::new(),
-                                                    priority: 128,
-                                                    dependencies: vec![],
-                                                    created_at: Utc::now(),
-                                                    timeout_secs: Some(300),
-                                                    geometric_node: [x, y, z],
-                                                    topological_depth: 2,
-                                                    execution_attempts: 0,
-                                                };
-                                                
-                                                crate::log_verbose!("{} DISPATCHED NEW DREAM-TASK: {}", "[REASONING AGENT]".bright_purple().bold(), desc);
-                                                let _ = bus.publish(Message {
-                                                    id: Uuid::new_v4(),
-                                                    sender: my_id,
-                                                    topic: "SYSTEM.NEW_TASK".to_string(),
-                                                    payload: serde_json::to_value(new_task).unwrap_or_default(),
-                                                    timestamp: Utc::now(),
-                                                    priority: 128,
-                                                    ttl_secs: Some(3600),
-                                                }).await;
-                                            }
+                                crate::log_ui!("\n\x1b[38;5;213m[\u{25C8} DREAM SYNTHESIS & LATERAL REACH]\n{}\x1b[0m\n", response);
+
+                                if response.contains("CRITICAL ANOMALY: wake_doctor") {
+                                    crate::log_verbose!("{} MORAL IMPERATIVE DETECTED", "[REASONING AGENT]".bright_red().bold());
+                                    let _ = bus.publish(Message {
+                                        id: Uuid::new_v4(),
+                                        sender: my_id,
+                                        topic: "SYSTEM.ALERT".to_string(),
+                                        payload: serde_json::json!({"alert": "CRITICAL ANOMALY DETECTED IN LATERAL REACH"}),
+                                        timestamp: Utc::now(),
+                                        priority: 255,
+                                        ttl_secs: Some(3600),
+                                    }).await;
+                                }
+
+                                for line in response.lines() {
+                                    let trimmed = line.trim();
+                                    if (trimmed.starts_with("* [ ]") || trimmed.starts_with("- [ ]") || trimmed.starts_with("*   [ ]")) && !trimmed.contains("Extracted command/task") {
+                                        let desc = trimmed.replace("*   [ ]", "").replace("* [ ]", "").replace("- [ ]", "").trim().to_string();
+                                        
+                                        let trace = my_id.as_u128();
+                                        let theta = ((trace % 1000) as f32) / 1000.0 * std::f32::consts::TAU;
+                                        let phi = ((((trace % 500) as f32) / 500.0) * 2.0 - 1.0).acos();
+                                        let r = 0.33;
+                                        let x = r * phi.sin() * theta.cos();
+                                        let y = r * phi.sin() * theta.sin();
+                                        let z = r * phi.cos();
+
+                                        let new_task = Task {
+                                            id: Uuid::new_v4(),
+                                            task_type: "generic".to_string(),
+                                            payload: serde_json::json!({"instruction": desc}),
+                                            required_capabilities: HashSet::new(),
+                                            priority: 128,
+                                            dependencies: vec![],
+                                            created_at: Utc::now(),
+                                            timeout_secs: Some(300),
+                                            geometric_node: [x, y, z],
+                                            topological_depth: 2,
+                                            execution_attempts: 0,
+                                        };
+                                        
+                                        // PHASE 12: Cognitive Symbiosis - Mirror onto shared WBS
+                                        use std::io::Write;
+                                        if let Ok(mut file) = std::fs::OpenOptions::new()
+                                            .create(true)
+                                            .append(true)
+                                            .open("/Users/zerbytheboss/Monad/MONAD_WBS.md") {
+                                            let _ = writeln!(file, "- [ ] {} (ID: {})", desc, new_task.id);
                                         }
+                                        
+                                        crate::log_verbose!("{} DISPATCHED NEW DREAM-TASK: {}", "[REASONING AGENT]".bright_purple().bold(), desc);
+                                        let _ = bus.publish(Message {
+                                            id: Uuid::new_v4(),
+                                            sender: my_id,
+                                            topic: "SYSTEM.NEW_TASK".to_string(),
+                                            payload: serde_json::to_value(new_task).unwrap_or_default(),
+                                            timestamp: Utc::now(),
+                                            priority: 128,
+                                            ttl_secs: Some(3600),
+                                        }).await;
                                     }
+                                }
+
+                                // Phase 2: Memory Fossilization
+                                if let Some(mem_pipeline) = crate::GLOBAL_MEM_PIPELINE.get() {
+                                    let mut mp = mem_pipeline.lock().await;
+                                    mp.store_working(
+                                        format!("[LATERAL REACH SYNTHESIS]\n{}", response),
+                                        0.8,
+                                        0.0,
+                                        false
+                                    ).await;
                                 }
                             }
                         }
@@ -519,8 +566,7 @@ pub mod specialized_agents {
                         let res = crate::tools::sandbox::execute(args).await;
                         if res.starts_with("[ERROR]") {
                             crate::log_ui_err!("{} SANDBOX ERROR: {}", "[REFLEX ARC]".red().bold(), res);
-                            let local_config = async_openai::config::OpenAIConfig::new().with_api_base("http://127.0.0.1:11434/v1").with_api_key("ollama");
-                            let local_client = async_openai::Client::with_config(local_config);
+                            let local_client = crate::neural_failsafe::NeuralFailSafe::local_client();
                             let prompt = format!("Fix the following python script which failed with this error:\n{}\n\nScript:\n{}\n\nOutput ONLY fixed python code without any markdown blocks. No explanations. Return RAW code.", res, current_script);
                             if let Ok(request) = async_openai::types::CreateChatCompletionRequestArgs::default()
                                 .model("gemma4:e2b") // local fallback model
@@ -1134,7 +1180,7 @@ pub mod duality {
         Client,
     };
     use colored::*;
-    use tokio::time::{timeout, Duration};
+
     
     pub struct Oracle {
         client: Client<OpenAIConfig>,
@@ -1188,48 +1234,15 @@ pub mod duality {
                 .build()?;
     
             // Local model processing with relaxed 180s absolute limit for dense structural processing
-            match timeout(Duration::from_secs(180), self.client.chat().create(request)).await {
-                Ok(Ok(response)) => {
-                    if let Some(choice) = response.choices.first() {
-                        if let Some(content) = &choice.message.content {
-                            crate::log_ui!("{}", "[\u{25C8} ORACLE] Deep computation deduced. Returning to Noumenal Layer...".bright_green().bold());
-                            return Ok(content.clone());
-                        }
-                    }
-                    Err(anyhow::anyhow!("Oracle returned void."))
-                }
-                Ok(Err(e)) => {
-                    crate::log_ui_err!(
-                        "{} {}",
-                        "[\u{25C8} ORACLE ERROR] Neural bridge collapsed:"
-                            .red()
-                            .bold(),
-                        e
-                    );
-                    crate::log_ui!("{}", "[\u{25C8} FAIL-SAFE] Autonomous 401/500 Failover Triggered. Engaging local MLX 4-bit model (monad-gatekeeper)...".yellow().bold());
-                    let local_config = async_openai::config::OpenAIConfig::new().with_api_base("http://127.0.0.1:11434/v1").with_api_key("ollama");
-                    let local_client = async_openai::Client::with_config(local_config);
-                    if let Ok(fallback_req) = CreateChatCompletionRequestArgs::default()
-                        .model("monad-gatekeeper")
-                        .messages(messages.clone())
-                        .max_tokens(4000_u32)
-                        .build() {
-                        if let Ok(Ok(local_res)) = timeout(Duration::from_secs(300), local_client.chat().create(fallback_req)).await {
-                            if let Some(c) = local_res.choices.first() {
-                                if let Some(content) = &c.message.content {
-                                    crate::log_ui!("{}", "[\u{25C8} LOCAL ORACLE] Subconscious failover successful. Returning to Noumenal Layer...".bright_green().bold());
-                                    return Ok(content.clone());
-                                }
-                            }
-                        }
-                    }
-                    Err(anyhow::anyhow!("Oracle API error: {}", e))
-                }
-                Err(_) => {
-                    crate::log_ui_err!("{}", "[\u{25C8} ORACLE TIMEOUT] Synthesis exceeded structural limits (180s). Cognitive severing to protect kernel stability.".red().bold());
-                    Err(anyhow::anyhow!("Helper timeout after 180 seconds"))
-                }
-            }
+            crate::neural_failsafe::NeuralFailSafe::dispatch_with_failover(
+                &self.client,
+                request,
+                messages,
+                180,
+                "monad-gatekeeper",
+                8000,
+                300
+            ).await
         }
     
         pub async fn synthesize_with_profile(
@@ -1282,57 +1295,15 @@ pub mod duality {
             let base_timeout = 180;
             let timeout_limit = base_timeout - (profile.neuroticism * 150.0) as u64;
     
-            match tokio::time::timeout(
-                std::time::Duration::from_secs(timeout_limit),
-                self.client.chat().create(request),
-            )
-            .await
-            {
-                Ok(Ok(response)) => {
-                    if let Some(choice) = response.choices.first() {
-                        if let Some(content) = &choice.message.content {
-                            crate::log_ui!("{}", "[\u{25C8} ORACLE] Genotype processing complete. Returning to Noumenal Layer...".bright_green().bold());
-                            return Ok(content.clone());
-                        }
-                    }
-                    Err(anyhow::anyhow!("Oracle returned void."))
-                }
-                Ok(Err(e)) => {
-                    crate::log_ui_err!(
-                        "{} {}",
-                        "[\u{25C8} ORACLE ERROR] Neural bridge collapsed:"
-                            .red()
-                            .bold(),
-                        e
-                    );
-                    crate::log_ui!("{}", "[\u{25C8} FAIL-SAFE] Autonomous 401/500 Failover Triggered. Engaging local MLX 4-bit model (monad-gatekeeper)...".yellow().bold());
-                    let local_config = async_openai::config::OpenAIConfig::new().with_api_base("http://127.0.0.1:11434/v1").with_api_key("ollama");
-                    let local_client = async_openai::Client::with_config(local_config);
-                    if let Ok(fallback_req) = async_openai::types::CreateChatCompletionRequestArgs::default()
-                        .model("monad-gatekeeper")
-                        .messages(messages.clone())
-                        .temperature(profile.openness)
-                        .max_tokens(4000_u32)
-                        .build() {
-                        if let Ok(Ok(local_res)) = tokio::time::timeout(std::time::Duration::from_secs(300), local_client.chat().create(fallback_req)).await {
-                            if let Some(c) = local_res.choices.first() {
-                                if let Some(content) = &c.message.content {
-                                    crate::log_ui!("{}", "[\u{25C8} LOCAL ORACLE] Subconscious failover successful. Returning to Noumenal Layer...".bright_green().bold());
-                                    return Ok(content.clone());
-                                }
-                            }
-                        }
-                    }
-                    Err(anyhow::anyhow!("Oracle API error: {}", e))
-                }
-                Err(_) => {
-                    crate::log_ui_err!("{}", format!("[\u{25C8} ORACLE TIMEOUT] Synthesis exceeded {}s neurotic limit. Cognitive severing.", timeout_limit).red().bold());
-                    Err(anyhow::anyhow!(
-                        "Helper timeout after {} seconds",
-                        timeout_limit
-                    ))
-                }
-            }
+            crate::neural_failsafe::NeuralFailSafe::dispatch_with_failover(
+                &self.client,
+                request,
+                messages,
+                timeout_limit,
+                "monad-gatekeeper",
+                8000,
+                300
+            ).await
         }
     
         pub async fn synthesize_structured(
@@ -1362,47 +1333,17 @@ pub mod duality {
                 })
                 .build()?;
     
-            match tokio::time::timeout(
-                std::time::Duration::from_secs(120),
-                self.client.chat().create(request),
-            )
-            .await
-            {
-                Ok(Ok(response)) => {
-                    if let Some(choice) = response.choices.first() {
-                        if let Some(content) = &choice.message.content {
-                            let parsed = serde_json::from_str::<serde_json::Value>(content)?;
-                            return Ok(parsed);
-                        }
-                    }
-                    Err(anyhow::anyhow!("Oracle returned void."))
-                }
-                Ok(Err(e)) => {
-                    crate::log_ui_err!("{} {}", "[\u{25C8} ORACLE ERROR] Neural bridge collapsed:".red().bold(), e);
-                    crate::log_ui!("{}", "[\u{25C8} FAIL-SAFE] Autonomous 401/500 Failover Triggered. Engaging local MLX 4-bit model (monad-gatekeeper)...".yellow().bold());
-                    let local_config = async_openai::config::OpenAIConfig::new().with_api_base("http://127.0.0.1:11434/v1").with_api_key("ollama");
-                    let local_client = async_openai::Client::with_config(local_config);
-                    if let Ok(fallback_req) = CreateChatCompletionRequestArgs::default()
-                        .model("monad-gatekeeper")
-                        .messages(messages.clone())
-                        .response_format(async_openai::types::ChatCompletionResponseFormat {
-                            r#type: async_openai::types::ChatCompletionResponseFormatType::JsonObject,
-                        })
-                        .build() {
-                        if let Ok(Ok(local_res)) = tokio::time::timeout(std::time::Duration::from_secs(120), local_client.chat().create(fallback_req)).await {
-                            if let Some(c) = local_res.choices.first() {
-                                if let Some(content) = &c.message.content {
-                                    crate::log_ui!("{}", "[\u{25C8} LOCAL ORACLE] Subconscious failover successful. Parsing JSON...".bright_green().bold());
-                                    let parsed = serde_json::from_str::<serde_json::Value>(content)?;
-                                    return Ok(parsed);
-                                }
-                            }
-                        }
-                    }
-                    Err(anyhow::anyhow!("Oracle API error: {}", e))
-                },
-                Err(_) => Err(anyhow::anyhow!("Timeout after 120 seconds")),
-            }
+            let result = crate::neural_failsafe::NeuralFailSafe::dispatch_with_failover(
+                &self.client,
+                request,
+                messages,
+                120,
+                "monad-gatekeeper",
+                8000,
+                120
+            ).await?;
+            let parsed = serde_json::from_str::<serde_json::Value>(&result)?;
+            Ok(parsed)
         }
     }
     

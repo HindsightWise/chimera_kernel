@@ -38,6 +38,7 @@ glossopetrae = { path = "../venom/glossopetrae" }
 panopticon = { path = "../venom/panopticon" }
 aegis = { path = "../venom/aegis" }
 leviathan = { path = "../venom/leviathan" }
+lightpanda = { path = "../venom/lightpanda" }
 ratatui = "0.26"
 crossterm = "0.27"
 log = "0.4"

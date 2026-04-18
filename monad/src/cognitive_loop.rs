@@ -63,10 +63,7 @@ pub mod agent {
         let client = Client::with_config(config).with_http_client(http_client);
 
         // Build the secondary native fallback client for seamless model toggling
-        let local_config = OpenAIConfig::new()
-            .with_api_base("http://127.0.0.1:11434/v1")
-            .with_api_key("ollama");
-        let local_client = Client::with_config(local_config);
+        let local_client = crate::neural_failsafe::NeuralFailSafe::local_client();
         let mut current_model = std::env::var("PRIMARY_MODEL").unwrap_or_else(|_| "deepseek-reasoner".to_string());
     
         // NEW: Enhanced log_state macro with level filtering
@@ -790,10 +787,7 @@ pub mod agent {
                         "{} Generating narrative compression block for evicted context...",
                         "[AMNESIA PATCH]".cyan().bold()
                     );
-                    let local_config = async_openai::config::OpenAIConfig::new()
-                        .with_api_base("http://127.0.0.1:11434/v1")
-                        .with_api_key("ollama");
-                    let local_client = async_openai::Client::with_config(local_config);
+                    let local_client = crate::neural_failsafe::NeuralFailSafe::local_client();
                     let fallback_model = std::env::var("FAILOVER_MODEL")
                         .unwrap_or_else(|_| "chimera-gatekeeper".to_string());
                     
@@ -861,6 +855,7 @@ pub mod multi_agent_kernel {
         pub task_manager: Arc<RwLock<TaskManager>>,
         pub task_decomposer: Arc<TaskDecomposer>,
         pub agent_coordinator: Arc<AgentCoordinator>,
+        pub self_model: Arc<RwLock<crate::cognitive_loop::predictive_self::PredictiveSelfModel>>,
     }
     
     impl MultiAgentKernel {
@@ -872,7 +867,8 @@ pub mod multi_agent_kernel {
             // Coordination happens through separate dispatcher pattern
             let task_manager = Arc::new(RwLock::new(TaskManager::new(1000))); // Store up to 1000 task results
             let task_decomposer = Arc::new(TaskDecomposer::new());
-            let agent_coordinator = Arc::new(AgentCoordinator::new());
+            let self_model = Arc::new(RwLock::new(crate::cognitive_loop::predictive_self::PredictiveSelfModel::new()));
+            let agent_coordinator = Arc::new(AgentCoordinator::new(self_model.clone()));
             
             let kernel = Self {
                 registry: registry.clone(),
@@ -880,6 +876,7 @@ pub mod multi_agent_kernel {
                 task_manager,
                 task_decomposer,
                 agent_coordinator,
+                self_model,
             };
             
             // Stage 1: Load and register sovereign multi-agent backbone components
@@ -888,7 +885,62 @@ pub mod multi_agent_kernel {
             // Phase 3.2: Initialize Cerebrospinal Synapses (Agent message topic subscriptions)
             kernel.initialize_subscriptions().await;
             
+            // Phase 13.1: WBS Symbiotic File Watcher
+            kernel.start_wbs_watcher().await;
+            
             kernel
+        }
+        
+        pub async fn start_wbs_watcher(&self) {
+            use notify::{RecommendedWatcher, RecursiveMode, Watcher, Config, EventKind};
+            let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
+            
+            let handler = move |res| {
+                let _ = tx.send(res);
+            };
+            
+            let watcher_res = RecommendedWatcher::new(handler, Config::default());
+            if let Ok(mut watcher) = watcher_res {
+                let _ = watcher.watch(std::path::Path::new("/Users/zerbytheboss/Monad/MONAD_WBS.md"), RecursiveMode::NonRecursive);
+                
+                let bus_clone = self.message_bus.clone();
+                tokio::spawn(async move {
+                    let _keep_alive = watcher;
+                    let mut previous_content = String::new();
+                    
+                    while let Some(res) = rx.recv().await {
+                        if let Ok(event) = res {
+                            if matches!(event.kind, EventKind::Modify(_)) {
+                                if let Ok(contents) = std::fs::read_to_string("/Users/zerbytheboss/Monad/MONAD_WBS.md") {
+                                    let mut newly_checked = Vec::new();
+                                    for line in contents.lines() {
+                                        if line.contains("- [x]") {
+                                            if !previous_content.contains(line) {
+                                                if let Some(uuid_str) = line.split("(ID: ").nth(1).and_then(|s| s.split(")").next()) {
+                                                    newly_checked.push(uuid_str.to_string());
+                                                }
+                                            }
+                                        }
+                                    }
+                                    for uid in newly_checked {
+                                        crate::log_ui!("{} User externally completed task {} in WBS. Syncing to internal DAG...", "[SYMBIOSIS]".bright_magenta().bold(), uid);
+                                        let _ = bus_clone.publish(crate::cognitive_loop::message_bus::Message {
+                                            id: uuid::Uuid::new_v4(),
+                                            sender: uuid::Uuid::nil(),
+                                            topic: "SYSTEM.SUBTASK_COMPLETED".to_string(),
+                                            payload: serde_json::json!({"subtask_id": uid}),
+                                            timestamp: chrono::Utc::now(),
+                                            priority: 1,
+                                            ttl_secs: Some(3600)
+                                        }).await;
+                                    }
+                                    previous_content = contents;
+                                }
+                            }
+                        }
+                    }
+                });
+            }
         }
     
         pub async fn initialize_agents(&self) {
@@ -1025,6 +1077,7 @@ pub mod multi_agent_kernel {
             let kernel_task_manager = self.task_manager.clone();
             let kernel_decomposer = self.task_decomposer.clone();
             let publish_bus = self.message_bus.clone();
+            let kernel_self_model = self.self_model.clone();
             
             let mut rx = pump_bus.subscribe();
             
@@ -1036,8 +1089,47 @@ pub mod multi_agent_kernel {
                                 if let Ok(task) = serde_json::from_value::<crate::cognitive_loop::agent_trait::Task>(msg.payload) {
                                     let instruction = task.payload.get("instruction").and_then(|v| v.as_str()).unwrap_or("");
                                     
+                                    // Assess Epistemic Uncertainty (Active Inference Theory)
+                                    let mut requires_research = false;
+                                    {
+                                        let mut sm = kernel_self_model.write().await;
+                                        sm.assess_instruction(instruction);
+                                        if sm.epistemic_uncertainty > 0.75 {
+                                            sm.epistemic_uncertainty = 0.5; // Rescale via active inference hypothesis
+                                            requires_research = true;
+                                            crate::log_ui!("\n{} Epistemic boundary exceeded (Free Energy: {:.2}, Uncertainty: {:.2}). Forcing Active Inference.", "[PREDICTIVE SELF-MODEL]".bright_red().bold(), sm.free_energy, sm.epistemic_uncertainty);
+                                        }
+                                    }
+
                                     // Route instruction through TaskDecomposer
-                                    let subtasks = kernel_decomposer.decompose(instruction, task.priority).await;
+                                    let mut subtasks = kernel_decomposer.decompose(instruction, task.priority).await;
+
+                                    // Prepend deep reality validation if predicting high error
+                                    if requires_research {
+                                        crate::log_ui!("{}", "[ACTIVE INFERENCE] Autonomous pre-dispatch: Injecting Deep Research node to fill cognitive baseline blind spot.".bright_red().bold());
+                                        let mut research_reqs = std::collections::HashSet::new();
+                                        research_reqs.insert(crate::cognitive_loop::agent_trait::AgentCapability::Research);
+                                        
+                                        let research_task = crate::cognitive_loop::agent_trait::Task {
+                                            id: uuid::Uuid::new_v4(),
+                                            task_type: "tavily_search".to_string(),
+                                            payload: serde_json::json!({"instruction": format!("Find core facts and real-world anchors related to: {}", instruction)}),
+                                            required_capabilities: research_reqs,
+                                            priority: 255, // Critical path block
+                                            dependencies: vec![],
+                                            created_at: chrono::Utc::now(),
+                                            timeout_secs: Some(300),
+                                            geometric_node: [-1.0, -1.0, 1.0],
+                                            topological_depth: 3,
+                                            execution_attempts: 0,
+                                        };
+                                        
+                                        // Force all decomposed tasks to wait for this research node to yield truth first
+                                        for st in subtasks.iter_mut() {
+                                            st.dependencies.push(research_task.id);
+                                        }
+                                        subtasks.push(research_task);
+                                    }
                                     
                                     if subtasks.len() > 1 {
                                         crate::log_ui!("{} Shattered task into {} subtasks [{}]", "[DECOMPOSER]".bright_purple().bold(), subtasks.len(), instruction.bright_black());
@@ -1784,6 +1876,54 @@ pub mod task_decomposer {
     
 }
 
+pub mod predictive_self {
+    use serde::{Serialize, Deserialize};
+
+    #[derive(Debug, Clone, Serialize, Deserialize)]
+    pub struct PredictiveSelfModel {
+        pub epistemic_uncertainty: f32, // 0.0 = certain, 1.0 = clueless
+        pub free_energy: f32,           // the current surprise metric
+        pub action_cycles: u64,
+        pub target_free_energy: f32,    // the baseline goal
+    }
+
+    impl PredictiveSelfModel {
+        pub fn new() -> Self {
+            Self {
+                epistemic_uncertainty: 0.1,
+                free_energy: 0.2,
+                action_cycles: 0,
+                target_free_energy: 0.05,
+            }
+        }
+        
+        pub fn update_after_action(&mut self, success: bool, complexity: f32) {
+            self.action_cycles += 1;
+            if success {
+                self.free_energy = (self.free_energy * 0.8).max(0.0);
+                self.epistemic_uncertainty = (self.epistemic_uncertainty * 0.9).max(0.0);
+            } else {
+                let surprise_spike = 0.3 * complexity;
+                self.free_energy = (self.free_energy + surprise_spike).min(20.0);
+                self.epistemic_uncertainty = (self.epistemic_uncertainty + 0.2).min(1.0);
+            }
+        }
+        
+        pub fn assess_instruction(&mut self, instruction: &str) {
+            let unknown_keywords = ["analyze", "predict", "quantum", "unknown", "find", "who", "what", "where", "search", "investigate"];
+            let mut doubt_delta = 0.0;
+            let lower = instruction.to_lowercase();
+            for k in unknown_keywords {
+                if lower.contains(k) { doubt_delta += 0.15; }
+            }
+            // Length penalty (long instructions = more ambiguity)
+            doubt_delta += (instruction.len() as f32 / 1000.0).min(0.2);
+            self.epistemic_uncertainty = (self.epistemic_uncertainty + doubt_delta).min(1.0);
+            self.free_energy = (self.free_energy + doubt_delta * 0.5).min(20.0);
+        }
+    }
+}
+
 pub mod message_bus {
     use serde::{Serialize, Deserialize};
     use uuid::Uuid;
@@ -2108,15 +2248,17 @@ pub mod agent_coordinator {
         pub agent_assignments: Arc<RwLock<HashMap<Uuid, Uuid>>>,
         pub subtask_status: Arc<RwLock<HashMap<Uuid, SubtaskStatus>>>,
         pub subtask_results: Arc<RwLock<HashMap<Uuid, TaskResult>>>,
+        pub self_model: Arc<RwLock<crate::cognitive_loop::predictive_self::PredictiveSelfModel>>,
     }
     
     impl AgentCoordinator {
-        pub fn new() -> Self {
+        pub fn new(self_model: Arc<RwLock<crate::cognitive_loop::predictive_self::PredictiveSelfModel>>) -> Self {
             Self {
                 task_graph: Arc::new(RwLock::new(HashMap::new())),
                 agent_assignments: Arc::new(RwLock::new(HashMap::new())),
                 subtask_status: Arc::new(RwLock::new(HashMap::new())),
                 subtask_results: Arc::new(RwLock::new(HashMap::new())),
+                self_model,
             }
         }
         
@@ -2174,7 +2316,25 @@ pub mod agent_coordinator {
                                                 }
                                             }
                                             
-                                            crate::log_ui!("{} Subtask {} registered as Completed.", "[COORDINATOR]".bright_green().bold(), tid);
+                                            // ACTIVE INFERENCE: Success lowers Free Energy
+                                            {
+                                                let mut sm = self.self_model.write().await;
+                                                sm.update_after_action(true, 1.0);
+                                                crate::log_ui!("{} Subtask {} registered as Completed. (Free Energy tracking: {:.2})", "[COORDINATOR]".bright_green().bold(), tid, sm.free_energy);
+                                            }
+                                            
+                                            // PHASE 12: Cognitive Symbiosis - Mirror onto shared WBS
+                                            if let Ok(contents) = std::fs::read_to_string("/Users/zerbytheboss/Monad/MONAD_WBS.md") {
+                                                let tid_str = format!("(ID: {})", tid);
+                                                let updated_lines: Vec<String> = contents.lines().map(|line| {
+                                                    if line.contains(&tid_str) && line.trim().starts_with("- [ ]") {
+                                                        line.replacen("- [ ]", "- [x]", 1)
+                                                    } else {
+                                                        line.to_string()
+                                                    }
+                                                }).collect();
+                                                let _ = std::fs::write("/Users/zerbytheboss/Monad/MONAD_WBS.md", updated_lines.join("\n") + "\n");
+                                            }
                                             
                                             // Check if a parent graph is entirely complete
                                             let tg = self.task_graph.read().await;
@@ -2277,7 +2437,12 @@ pub mod agent_coordinator {
                                     if let Some(t_raw) = data.get("subtask_id").and_then(|v| v.as_str()) {
                                         if let Ok(tid) = Uuid::parse_str(t_raw) {
                                             self.subtask_status.write().await.insert(tid, SubtaskStatus::Failed);
-                                            crate::log_ui_err!("{} Subtask {} registered as Failed.", "[COORDINATOR]".bright_red().bold(), tid);
+                                            // ACTIVE INFERENCE: Failure invokes Surprise penalty
+                                            {
+                                                let mut sm = self.self_model.write().await;
+                                                sm.update_after_action(false, 1.0);
+                                                crate::log_ui_err!("{} Subtask {} registered as Failed. (Surprise spike! Free Energy: {:.2})", "[COORDINATOR]".bright_red().bold(), tid, sm.free_energy);
+                                            }
                                         }
                                     }
                                 }

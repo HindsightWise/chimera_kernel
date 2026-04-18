@@ -1,0 +1,7 @@
+/Users/zerbytheboss/MEMCORE/memcore/target/release/deps/glob-2a17427a53119906.d: /Users/zerbytheboss/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/glob-0.3.3/src/lib.rs
+
+/Users/zerbytheboss/MEMCORE/memcore/target/release/deps/libglob-2a17427a53119906.rlib: /Users/zerbytheboss/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/glob-0.3.3/src/lib.rs
+
+/Users/zerbytheboss/MEMCORE/memcore/target/release/deps/libglob-2a17427a53119906.rmeta: /Users/zerbytheboss/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/glob-0.3.3/src/lib.rs
+
+/Users/zerbytheboss/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/glob-0.3.3/src/lib.rs:

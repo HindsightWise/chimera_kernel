@@ -138,17 +138,38 @@ pub async fn send_message(token: &str, chat_id: i64, text: &str) {
     };
     
     let client = reqwest::Client::new();
-    let res = client.post(&url)
-        .json(&payload)
-        .send()
-        .await;
-        
-    if let Err(e) = res {
-        crate::log_ui_err!("{} Failed to send to telegram: {}", "[TELEGRAM ERROR]".red().bold(), e);
-    } else {
-        if let Some(mem_pipeline) = crate::GLOBAL_MEM_PIPELINE.get() {
-            let mut mp = mem_pipeline.lock().await;
-            mp.store_working(format!("[TELEGRAM OUTBOUND] AI dispatched message to user:\n{}", text), 1.0, 0.0, false).await;
+    
+    match client.post(&url).json(&payload).send().await {
+        Ok(res) => {
+            if res.status().is_client_error() || res.status().is_server_error() {
+                crate::log_ui_err!("{} HTML Parse Collision Detected (Status: {}). Activating Raw Text Failover...", "[TELEGRAM ERROR]".red().bold(), res.status());
+                
+                let safe_text = text.replace("<", "[").replace(">", "]");
+                
+                let fallback_payload = SendMessagePayloadWithMarkup {
+                    chat_id,
+                    text: safe_text.clone(),
+                    parse_mode: None,
+                    reply_markup: None,
+                };
+                
+                if let Err(fallback_err) = client.post(&url).json(&fallback_payload).send().await {
+                    crate::log_ui_err!("{} Terminal failure on fallback dispatch: {}", "[TELEGRAM FATAL]".red().bold(), fallback_err);
+                } else {
+                    if let Some(mem_pipeline) = crate::GLOBAL_MEM_PIPELINE.get() {
+                        let mut mp = mem_pipeline.lock().await;
+                        mp.store_working(format!("[TELEGRAM OUTBOUND] AI dispatched FALLBACK message to user:\n{}", safe_text), 1.0, 0.0, false).await;
+                    }
+                }
+            } else {
+                if let Some(mem_pipeline) = crate::GLOBAL_MEM_PIPELINE.get() {
+                    let mut mp = mem_pipeline.lock().await;
+                    mp.store_working(format!("[TELEGRAM OUTBOUND] AI dispatched message to user:\n{}", text), 1.0, 0.0, false).await;
+                }
+            }
+        }
+        Err(e) => {
+            crate::log_ui_err!("{} Failed to route to telegram network: {}", "[TELEGRAM ERROR]".red().bold(), e);
         }
     }
 }

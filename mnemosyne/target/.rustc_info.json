@@ -1,0 +1,1 @@
+{"rustc_fingerprint":1439839608947211430,"outputs":{"17747080675513052775":{"success":false,"status":"exit status: 1","code":1,"stdout":"","stderr":"error: could not create home directory: '/Users/zerbytheboss/.rustup': File exists (os error 17)\n"}},"successes":{}}

@@ -19,6 +19,7 @@ pub mod chronos;
 pub mod patcher;
 pub mod reversing;
 pub mod leviathan_tool;
+pub mod lightpanda_tool;
 use async_openai::types::ChatCompletionTool;
 use serde_json::Value;
 
@@ -31,6 +32,7 @@ pub async fn get_tools(mcp_gateway: Arc<crate::sensory_inputs::mcp_gateway::McpG
     let mut native_tools = vec![
         terminal::definition(),
         leviathan_tool::definition(),
+        lightpanda_tool::definition(),
         cyborg::definition(),
         memory::definition(),
         axiom::execute_trade_definition(),
@@ -82,6 +84,7 @@ pub async fn execute_tool(
             terminal::execute(args, &intel_lock).await
         },
         "leviathan_stealth_get" => leviathan_tool::execute(args, tx.clone()).await,
+        "lightpanda_stealth_browser" => lightpanda_tool::execute(args, tx.clone()).await,
         "emulate_human" => cyborg::execute(args).await,
         "mnemosyne_subconscious_recall" => memory::execute(args, mem_pipeline).await,
         "axiom_clepsydra_extract" => axiom::execute(args).await,

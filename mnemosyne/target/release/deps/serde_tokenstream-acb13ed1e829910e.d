@@ -1,0 +1,10 @@
+/Users/zerbytheboss/MEMCORE/memcore/target/release/deps/serde_tokenstream-acb13ed1e829910e.d: /Users/zerbytheboss/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_tokenstream-0.2.3/src/lib.rs /Users/zerbytheboss/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_tokenstream-0.2.3/src/ibidem.rs /Users/zerbytheboss/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_tokenstream-0.2.3/src/ordered_map.rs /Users/zerbytheboss/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_tokenstream-0.2.3/src/serde_tokenstream.rs
+
+/Users/zerbytheboss/MEMCORE/memcore/target/release/deps/libserde_tokenstream-acb13ed1e829910e.rlib: /Users/zerbytheboss/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_tokenstream-0.2.3/src/lib.rs /Users/zerbytheboss/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_tokenstream-0.2.3/src/ibidem.rs /Users/zerbytheboss/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_tokenstream-0.2.3/src/ordered_map.rs /Users/zerbytheboss/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_tokenstream-0.2.3/src/serde_tokenstream.rs
+
+/Users/zerbytheboss/MEMCORE/memcore/target/release/deps/libserde_tokenstream-acb13ed1e829910e.rmeta: /Users/zerbytheboss/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_tokenstream-0.2.3/src/lib.rs /Users/zerbytheboss/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_tokenstream-0.2.3/src/ibidem.rs /Users/zerbytheboss/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_tokenstream-0.2.3/src/ordered_map.rs /Users/zerbytheboss/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_tokenstream-0.2.3/src/serde_tokenstream.rs
+
+/Users/zerbytheboss/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_tokenstream-0.2.3/src/lib.rs:
+/Users/zerbytheboss/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_tokenstream-0.2.3/src/ibidem.rs:
+/Users/zerbytheboss/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_tokenstream-0.2.3/src/ordered_map.rs:
+/Users/zerbytheboss/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_tokenstream-0.2.3/src/serde_tokenstream.rs:

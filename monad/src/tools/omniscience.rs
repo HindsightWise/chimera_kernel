@@ -1,10 +1,6 @@
-use async_openai::{
-    config::OpenAIConfig,
-    types::{
-        ChatCompletionRequestSystemMessageArgs, ChatCompletionRequestUserMessageArgs,
-        CreateChatCompletionRequestArgs,
-    },
-    Client as OAIClient,
+use async_openai::types::{
+    ChatCompletionRequestSystemMessageArgs, ChatCompletionRequestUserMessageArgs,
+    CreateChatCompletionRequestArgs,
 };
 use reqwest::Client;
 use roxmltree::Document;
@@ -61,10 +57,7 @@ async fn refine_and_ingest(
     title: &str,
     summary: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let local_config = OpenAIConfig::new()
-        .with_api_base("http://127.0.0.1:11434/v1")
-        .with_api_key("ollama");
-    let local_client = OAIClient::with_config(local_config);
+    let local_client = crate::neural_failsafe::NeuralFailSafe::local_client();
 
     let fallback_model =
         std::env::var("FAILOVER_MODEL").unwrap_or_else(|_| "gemma4:e2b".to_string());
