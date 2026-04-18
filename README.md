@@ -76,12 +76,31 @@ By collapsing $n$ into four hyper-dense macro-modules, $S(F) \to 0$. We mathemat
 
 ## ⚙️ Architectural Specifications & Core Routing
 
-Monad OS integrates severe fault-tolerance architectures, seamlessly recovering from external entropy triggers.
+Monad OS abandons traditional sequential processing in favor of a **Tri-Brain Biological Hierarchy**, layering three distinct neural models to balance context preservation, cost, and reaction time.
 
-### 1. The Neural Fail-Safe Protocol (V4.2)
+```mermaid
+graph TD
+    A[DeepSeek <br/> The Neocortex]:::cloud -->|Complex Synthesis| B{Monad OS Kernel}
+    C[Gemma 4 <br/> Autonomic Engine]:::local -->|Compression & Failover| B
+    D[Qwen 0.8B <br/> Spinal Reflex]:::micro -->|Sub-second Zero-Trust| B
+    
+    classDef cloud fill:#0f172a,stroke:#3b82f6,stroke-width:2px,color:#e2e8f0;
+    classDef local fill:#1e1b4b,stroke:#a855f7,stroke-width:2px,color:#e2e8f0;
+    classDef micro fill:#3f1d38,stroke:#ef4444,stroke-width:2px,color:#e2e8f0;
+```
 
-If the primary reasoning engine (`deepseek-reasoner`) hits a `401`, `429`, or network blackout, the runtime does not crash. The internal `NeuralFailSafe` orchestrator physically catches the timeout and universally routes the entire continuous context array to your offline Silicon Node via `monad-gatekeeper`.
-> **Result:** 100% Core Uptime. The Biological Loop never stops.
+### 1. The Neocortex: Sovereign Intelligence (DeepSeek)
+Operating via the cloud API, the primary reasoning engine (`deepseek-reasoner`) handles all complex logic. It drives Dream Synthesis, executes Lateral Reach abstractions, and orchestrates final Graph conclusions. It is the philosophical and architectural core of the Monad.
+
+### 2. The Autonomic Nervous System: Neural Fail-Safe (Gemma 4)
+Triggered via the localized `monad-gatekeeper` alias, this offline system regulates the Monad's raw survival without burning external API tokens:
+* **Failover Uptime:** If the Neocortex hits a `401`, `429`, or network blackout, the runtime physically catches the timeout and routes the entire continuous context array to Gemma. **Result:** 100% Core Uptime.
+* **Amnesia Patching:** When conversation limits are mathematically breached, the subsystem actively compresses old state memory into highly dense narrative blocks (`CURRENT_CONTEXT.md`), avoiding catastrophic context collapse.
+
+### 3. The Spinal Cord: Zero-Trust Intercepts (Qwen 0.8B)
+Wired natively into the kernel's most critical event loops, this microscopic model alias (`monad-spinal-cord`) executes logic in under `800ms` with a strict `max_tokens: 10` boundary and an absolute `0.0` temperature constraint.
+* **Terminal Sandbox Gating:** All bash executions are routed through the Spinal Cord before running. It calculates threat probability and acts as an unyielding Zero-Trust sentinel.
+* **Delta Rhythm Scoring:** Continuous background events and dreams are mathematically scored (`0.0` to `1.0`). If a threat is recognized, it is immediately fossilized into deep memory without needing to consult the upper Neocortex.
 
 ### 2. Telegram Graceful Degradation
 
