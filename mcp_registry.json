@@ -11,7 +11,7 @@
       "args": [
         "-y",
         "@modelcontextprotocol/server-filesystem",
-        "/Users/zerbytheboss/chimera_kernel",
+        "/Users/zerbytheboss/Monad",
         "/Users/zerbytheboss/Mnemosyne-Substrate"
       ],
       "command": "/opt/homebrew/bin/npx",

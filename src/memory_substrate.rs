@@ -153,7 +153,7 @@ pub mod memory_hierarchy {
                         let entry = mnemosyne::models::MemoryEntry {
                             id: evicted.id,
                             timestamp: chrono::Utc::now(),
-                            agent_id: "CHIMERA_KERNEL".to_string(),
+                            agent_id: "MONAD_KERNEL".to_string(),
                             text: evicted.content.clone(),
                             embedding: Some(evicted.embedding.clone()),
                             kg_node_id: None,

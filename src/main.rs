@@ -107,7 +107,7 @@ async fn main() {
     // Spawn the GLOSSOPETRAE Silicon Heartbeat Daemon (Mandate #2 & #3)
     tokio::spawn(async move {
         let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(3600)); // Hourly
-        let master_seed = "CHIMERA_KERNEL_SILICON_HEARTBEAT_v2.0";
+        let master_seed = "MONAD_KERNEL_SILICON_HEARTBEAT_v2.0";
         let dialect = "runic";
         // Let it start immediately
         loop {

@@ -9,6 +9,7 @@ pub mod core_identity;
 pub mod ui;
 pub mod raw_cli;
 pub mod wiki;
+pub mod axiom;
 
 use tokio::sync::mpsc;
 use std::sync::Mutex;
