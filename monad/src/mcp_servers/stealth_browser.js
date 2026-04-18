@@ -85,7 +85,36 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                     }
                     
                     await page.setViewport({ width: 1366, height: 768 });
-                    await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
+                    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+                    
+                    // Cloudflare Turnstile Verification Loop (Wait up to 15 seconds)
+                    let currentTitle = await page.title();
+                    let cfWaitEpochs = 0;
+                    while (currentTitle.includes("Just a moment") && cfWaitEpochs < 15) {
+                        await new Promise(resolve => setTimeout(resolve, 1000));
+                        currentTitle = await page.title();
+                        cfWaitEpochs++;
+                    }
+                    
+                    // Auto-scrolling to trigger lazy-load SPAs (X.com / Substack)
+                    await page.evaluate(async () => {
+                        await new Promise((resolve) => {
+                            let totalHeight = 0;
+                            let distance = 400;
+                            let scrolls = 0;
+                            let timer = setInterval(() => {
+                                window.scrollBy(0, distance);
+                                totalHeight += distance;
+                                scrolls++;
+                                if(scrolls >= 10 || totalHeight >= document.body.scrollHeight) {
+                                    clearInterval(timer);
+                                    resolve();
+                                }
+                            }, 500);
+                        });
+                    });
+                    
+                    // General topological buffer wait
                     await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 1000));
 
                     if (testMode) {
@@ -99,8 +128,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                             finalOutput = { success: true, validation, targetAchieved: true };
                         }
                     } else {
-                        const content = await page.content();
-                        finalOutput = { success: true, title: await page.title(), contentLength: content.length };
+                        // Extract RAW semantic payload natively
+                        const semanticContent = await page.evaluate(() => document.body.innerText);
+                        const trimmedContent = semanticContent.length > 25000 ? semanticContent.substring(0, 25000) + "... [TRUNCATED]" : semanticContent;
+                        finalOutput = { success: true, title: await page.title(), content: trimmedContent, rawLength: semanticContent.length };
                         trustCoefficient = 1.0; 
                     }
                     
