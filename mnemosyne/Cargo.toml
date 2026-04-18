@@ -5,7 +5,7 @@ edition = "2021"
 
 [lib]
 name = "mnemosyne"
-crate-type = ["rlib"] # Compiles exclusively as a native Rust library for the Chimera Kernel
+crate-type = ["cdylib", "rlib"] # Compiles as both a Python C-extension and a native Rust library
 
 [dependencies]
 pyo3 = { version = "0.20", features = ["extension-module"] }
