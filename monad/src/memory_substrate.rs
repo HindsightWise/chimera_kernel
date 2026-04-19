@@ -30,6 +30,8 @@ pub mod memory_hierarchy {
         pub access_records: HashMap<Uuid, u32>,
         #[serde(skip)]
         pub db_connection: Option<mnemosyne::storage::StorageController>,
+        #[serde(skip, default = "crate::eliminator::MonadEliminator::new")]
+        pub eliminative_engine: crate::eliminator::MonadEliminator,
     }
     
     // Global ONNX Session logic (Loaded asynchronously on boot to keep memory overhead clean)
@@ -61,6 +63,7 @@ pub mod memory_hierarchy {
                 total_memories_forged: 1, // Start at 1 because Origin 0 is the Soul
                 access_records: HashMap::new(),
                 db_connection: Some(mnemosyne::storage::StorageController::new()),
+                eliminative_engine: crate::eliminator::MonadEliminator::new(),
             };
             
             let soul = MemoryChunk {
@@ -198,17 +201,34 @@ pub mod memory_hierarchy {
                      // Apply time access penalty to solve 3.2 Time-Decayed Loop Breaking
                      // Score = Cosine_Similarity(Q, M) * exp(-λ * access_count)
                      if let Ok(hits_json) = serde_json::from_str::<Vec<serde_json::Value>>(&hits_str) {
-                         for hit in hit_nodes_to_chunks(hits_json) {
-                         let accesses = *self.access_records.get(&hit.id).unwrap_or(&0) as f32;
-                         let penalization_scalar = (-lambda_decay * accesses).exp();
+                         let all_chunks = hit_nodes_to_chunks(hits_json);
                          
-                         let modified_score = 1.0 * penalization_scalar; // Replace 1.0 with raw cosine similarity if exposed by DB
+                         // 1. Convert candidate chunks to u32 IDs for SIMD eliminator
+                         let mut candidate_ids: Vec<u32> = Vec::new();
+                         let mut chunk_map: HashMap<u32, MemoryChunk> = HashMap::new();
                          
-                         // Keep track of retrieved memories
-                         *self.access_records.entry(hit.id).or_insert(0) += 1;
+                         for chunk in all_chunks {
+                             let id_u32 = chunk.id.as_u128() as u32;
+                             candidate_ids.push(id_u32);
+                             chunk_map.insert(id_u32, chunk);
+                         }
                          
-                         recovered_chunks.push((hit, modified_score));
-                     }
+                         // 2. Mathematically eliminate invalid contexts using NEON intrinsic bypass
+                         let uneliminated_ids = self.eliminative_engine.consolidate_llm_context(candidate_ids);
+                         crate::log_ui!("[ELIMINATOR] Substrate processed {} memory chunks -> {} survived NEON prune.", chunk_map.len(), uneliminated_ids.len());
+                         
+                         for uid in uneliminated_ids {
+                             if let Some(hit) = chunk_map.remove(&uid) {
+                                 let accesses = *self.access_records.get(&hit.id).unwrap_or(&0) as f32;
+                                 let penalization_scalar = (-lambda_decay * accesses).exp();
+                                 let modified_score = 1.0 * penalization_scalar; // Replace 1.0 with raw cosine similarity if exposed by DB
+                                 
+                                 // Keep track of retrieved memories
+                                 *self.access_records.entry(hit.id).or_insert(0) += 1;
+                                 
+                                 recovered_chunks.push((hit, modified_score));
+                             }
+                         }
                      // Sort descending by modified score to suppress heavily repeated loop traps
                      recovered_chunks.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
                      }

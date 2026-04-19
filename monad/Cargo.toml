@@ -30,6 +30,8 @@ rusqlite = "0.31.0"
 notify = "6.1.1"
 sha2 = "0.10"
 futures = "0.3"
+roaring = "0.10"
+cuckoofilter = "0.5"
 
 mnemosyne = { path = "../mnemosyne" }
 parseltongue = { path = "../venom/parseltongue" }

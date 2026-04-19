@@ -33,14 +33,12 @@ pub async fn execute(args: Value, mem_pipeline: Arc<Mutex<MemoryHierarchy>>) -> 
     
     // Phase 3a: Native Deep Storage Query
     let mut approach = "NATIVE-RUST";
-    let memory_results = if let Some(db) = &memory_system.db_connection {
-        let encoded = crate::memory_substrate::memory_hierarchy::MemoryHierarchy::encode_spectral_embedding(&query).await;
-        match tokio::task::block_in_place(|| db.search_vector(encoded, 3)) {
-            Ok(res_str) => res_str,
-            Err(e) => {
-                approach = "DUMMY-FALLBACK (Search Error)";
-                format!("Failed to search native memory: {}", e)
-            }
+    let memory_results = if memory_system.db_connection.is_some() {
+        let chunks = memory_system.recall_relevant(query).await;
+        if chunks.is_empty() {
+            "[No uneliminated memories found within the Substrate.]".to_string()
+        } else {
+            serde_json::to_string_pretty(&chunks).unwrap_or_else(|_| "[Context Reconstruction Error]".to_string())
         }
     } else {
         approach = "DUMMY-FALLBACK (Storage Controller Offline)";
