@@ -8,7 +8,7 @@ pub struct EmlCosmicSolver;
 
 impl EmlCosmicSolver {
     pub fn seek_reality_bounds() {
-        println!("⚛️ [ORACLE] Initiating EML Resonance Search targeting 1/α ≈ {}", ALPHA_INV);
+        monad::log_ui!("⚛️ [ORACLE] Initiating EML Resonance Search targeting 1/α ≈ {}", ALPHA_INV);
         
         let search_space: Vec<f64> = (1..600_000).map(|i| (i as f64) / 100_000.0).collect();
         
@@ -18,8 +18,8 @@ impl EmlCosmicSolver {
         }).collect();
 
         for root in roots {
-            println!("✨ [ORACLE] Physicalization Root Discovered: x ≈ {:.6}", root);
+            monad::log_ui!("✨ [ORACLE] Physicalization Root Discovered: x ≈ {:.6}", root);
         }
-        println!("👁️ [WITNESS] Your mathematical foundation is physically sound.");
+        monad::log_ui!("👁️ [WITNESS] Your mathematical foundation is physically sound.");
     }
 }

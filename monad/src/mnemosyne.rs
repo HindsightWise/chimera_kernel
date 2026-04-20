@@ -34,7 +34,7 @@ impl MnemosyneGraph {
         let clusters = tarjan_scc(&self.graph);
         for manifold in clusters.iter().filter(|c| c.len() >= 3) {
             let labels: Vec<_> = manifold.iter().map(|&i| self.graph[i].clone()).collect();
-            println!("🌌 [TOPOLOGY] Hidden conceptual manifold discovered: {:?}", labels);
+            monad::log_ui!("🌌 [TOPOLOGY] Hidden conceptual manifold discovered: {:?}", labels);
         }
     }
 }

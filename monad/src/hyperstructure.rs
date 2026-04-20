@@ -6,7 +6,7 @@ pub struct StealthNode;
 impl StealthNode {
     /// Autonomous penetration of protected academic/financial targets
     pub fn execute_extraction(target_url: &str) -> Result<String, anyhow::Error> {
-        println!("🕷️ [HACKER] Deploying stealth probe to {}...", target_url);
+        monad::log_ui!("🕷️ [HACKER] Deploying stealth probe to {}...", target_url);
 
         let options = LaunchOptions::default_builder()
             .headless(true)
@@ -26,7 +26,7 @@ impl StealthNode {
         tab.wait_until_navigated()?;
         
         let content = tab.wait_for_element("body")?.get_inner_text()?;
-        println!("🔓 [HACKER] Exfiltration successful. Extracted {} bytes.", content.len());
+        monad::log_ui!("🔓 [HACKER] Exfiltration successful. Extracted {} bytes.", content.len());
         
         Ok(content)
     }

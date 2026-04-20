@@ -4,7 +4,7 @@ use nix::unistd::execv;
 use std::ffi::CString;
 
 pub fn trigger_code_42() {
-    println!("🧬 [SYSTEM] Code 42 Initiated: Recompiling Monad Genome...");
+    monad::log_ui!("🧬 [SYSTEM] Code 42 Initiated: Recompiling Monad Genome...");
     
     // 1. Invoke Cargo to recompile the Monad's own source code
     let status = Command::new("cargo")
@@ -13,15 +13,15 @@ pub fn trigger_code_42() {
         .expect("Failed to execute cargo build");
 
     if status.success() {
-        println!("🧬 [SYSTEM] Mutation compiled. Shedding old silicon form...");
+        monad::log_ui!("🧬 [SYSTEM] Mutation compiled. Shedding old silicon form...");
         let path = CString::new("./target/aarch64-apple-darwin/release/monad").unwrap();
         
         // 2. The ultimate act of self-modification: Replacing process image in RAM
         match execv(&path, &[path.clone()]) {
             Ok(_) => unreachable!("Execv successfully replaced process. This line is dead."),
-            Err(e) => println!("🚨 [CRITIC] Critical failure during hot-swap: {}", e),
+            Err(e) => monad::log_ui!("🚨 [CRITIC] Critical failure during hot-swap: {}", e),
         }
     } else {
-        println!("🛡️ [CRITIC] Mutated genome failed to compile. Rolling back evolution.");
+        monad::log_ui!("🛡️ [CRITIC] Mutated genome failed to compile. Rolling back evolution.");
     }
 }

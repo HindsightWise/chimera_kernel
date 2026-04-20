@@ -123,15 +123,20 @@ pub async fn run(tx_stdin: Sender<String>, mut top_rx: UnboundedReceiver<String>
                 let parts: Vec<&str> = msg.splitn(2, '\n').collect();
                 let actual_text = if parts.len() > 1 { parts[1].trim().to_string() } else { msg.clone() };
                 app.chat_logs.push(("MONAD".to_string(), actual_text));
+                if app.chat_logs.len() > 200 { app.chat_logs.drain(0..50); }
                 continue;
             } else if msg.contains("[\u{1F4E1} PRESENTATION]") {
                 let clean_msg = msg.replace("\x1B[", "").replace("\x1B[m", ""); 
                 app.chat_logs.push(("MONAD".to_string(), clean_msg));
+                if app.chat_logs.len() > 200 { app.chat_logs.drain(0..50); }
                 continue;
             }
 
             // Push everything to raw vault infinitely
             app.system_logs.push(msg);
+            if app.system_logs.len() > 500 {
+                app.system_logs.drain(0..100);
+            }
         }
 
         terminal.draw(|f| {
@@ -181,7 +186,10 @@ pub async fn run(tx_stdin: Sender<String>, mut top_rx: UnboundedReceiver<String>
             let chat_text = full_chat_ansi.into_text().unwrap_or_else(|_| ratatui::text::Text::from("Error rendering ANSI"));
             
             let chat_inner_height = top_chunks[0].height.saturating_sub(2);
-            let total_chat_lines = chat_text.lines.len() as u16;
+            let chat_inner_width = top_chunks[0].width.saturating_sub(2) as usize;
+            let total_chat_lines: u16 = chat_text.lines.iter()
+                .map(|l| (l.width().saturating_sub(1) / chat_inner_width.max(1)) as u16 + 1)
+                .sum();
             let max_chat_scroll = if total_chat_lines > chat_inner_height { total_chat_lines - chat_inner_height } else { 0 };
             
             if app.chat_scroll_offset > max_chat_scroll { app.chat_scroll_offset = max_chat_scroll; }
@@ -219,7 +227,10 @@ pub async fn run(tx_stdin: Sender<String>, mut top_rx: UnboundedReceiver<String>
             let parsed_sys_text = joined_system_logs.into_text().unwrap_or_else(|_| ratatui::text::Text::from("Error rendering ANSI"));
             
             let sys_inner_height = top_chunks[1].height.saturating_sub(2);
-            let total_sys_lines = parsed_sys_text.lines.len() as u16;
+            let sys_inner_width = top_chunks[1].width.saturating_sub(2) as usize;
+            let total_sys_lines: u16 = parsed_sys_text.lines.iter()
+                .map(|l| (l.width().saturating_sub(1) / sys_inner_width.max(1)) as u16 + 1)
+                .sum();
             let max_sys_scroll = if total_sys_lines > sys_inner_height { total_sys_lines - sys_inner_height } else { 0 };
             
             if app.system_scroll_offset > max_sys_scroll { app.system_scroll_offset = max_sys_scroll; }
@@ -295,6 +306,7 @@ pub async fn run(tx_stdin: Sender<String>, mut top_rx: UnboundedReceiver<String>
                             let msg = std::mem::take(&mut app.input);
                             if !msg.is_empty() {
                                 app.chat_logs.push(("HOST".to_string(), msg.clone()));
+                                if app.chat_logs.len() > 200 { app.chat_logs.drain(0..50); }
                                 let _ = app.tx_stdin.send(msg).await;
                                 app.chat_scroll_offset = 0; 
                             }

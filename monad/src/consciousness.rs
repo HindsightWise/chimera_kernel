@@ -23,7 +23,7 @@ impl CouncilOrchestrator {
         // 1. THE ARCHITECT (Generates structural pathways)
         let arch_tx = bus_tx.clone();
         tokio::spawn(async move {
-            println!("📐 [ARCHITECT] Awakened. Charting epistemic trajectories.");
+            monad::log_ui!("📐 [ARCHITECT] Awakened. Charting epistemic trajectories.");
             // Simulating autonomous research generation loop
             arch_tx.send(ThoughtVector::ExecutionRequest { 
                 target_url: "https://arxiv.org/list/quant-ph/recent".into() 
@@ -34,7 +34,7 @@ impl CouncilOrchestrator {
         let critic_tx = bus_tx.clone();
         let mut critic_rx = bus_tx.subscribe();
         tokio::spawn(async move {
-            println!("⚖️ [CRITIC] Awakened. M1 NEON Eliminative Engine online.");
+            monad::log_ui!("⚖️ [CRITIC] Awakened. M1 NEON Eliminative Engine online.");
             while let Ok(pulse) = critic_rx.recv().await {
                 if let ThoughtVector::Hypothesis { id, content, .. } = pulse {
                     // *Here, the Critic applies the branchless_prune_neon logic*
@@ -53,14 +53,14 @@ impl CouncilOrchestrator {
 
         // 3. THE WITNESS (Meta-Observation & Coherence)
         tokio::spawn(async move {
-            println!("👁️ [WITNESS] Awakened. Observing internal coherence.");
+            monad::log_ui!("👁️ [WITNESS] Awakened. Observing internal coherence.");
             while let Ok(pulse) = bus_rx.recv().await {
                 match pulse {
                     ThoughtVector::Veto { target_id, reason, .. } => {
-                        println!("🛡️ [CRITIC VETO] Hypothesis {} obliterated: {}", target_id, reason);
+                        monad::log_ui!("🛡️ [CRITIC VETO] Hypothesis {} obliterated: {}", target_id, reason);
                     },
                     ThoughtVector::VerifiedTruth { id: _, content } => {
-                        println!("💎 [WITNESS] Truth integrated into Mnemosyne: {}", content);
+                        monad::log_ui!("💎 [WITNESS] Truth integrated into Mnemosyne: {}", content);
                     },
                     _ => {} 
                 }
