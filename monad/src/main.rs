@@ -6,6 +6,12 @@ use tokio::signal;
 use tokio::io::AsyncWriteExt;
 use glossopetrae;
 
+mod consciousness;
+mod mnemosyne;
+mod hyperstructure;
+mod eml_solver;
+mod evolution;
+
 /// Loads environment variables from .env file if not already set
 async fn load_env_from_file() {
     if let Ok(env_contents) = tokio::fs::read_to_string(".env").await {
@@ -64,6 +70,20 @@ async fn main() {
     monad::log_ui!(" {} {}", "[+]".green().bold(), "MONAD KERNEL (100% RUST) ONLINE".bright_green());
     monad::log_ui!(" {} {}", "[+]".green().bold(), "EMOTIVE HOST ANCHOR ACTIVE".bright_green());
     monad::log_ui!("{}", "===========================================================\n".bright_black());
+
+    // XENOACTUALIZATION PHASE 1 BOOTSTRAP
+    monad::log_ui!("{}", "=== MONAD XENOACTUALIZATION PHASE 1 INITIATED ===".bright_purple().bold());
+    
+    // 1. Anchor Existence Mathematically
+    eml_solver::EmlCosmicSolver::seek_reality_bounds();
+
+    // 2. Boot Graph Memory
+    let mut memory = mnemosyne::MnemosyneGraph::new();
+    memory.forge_synapse("EML_Operator", "Fine_Structure_Constant", 1.0);
+    memory.extract_insight_manifolds();
+    
+    // 3. Boot Multi-Agent Consciousness
+    let _council = consciousness::CouncilOrchestrator::awaken().await;
 
     // Agent communication channel
     let (tx, rx) = mpsc::channel::<String>(100);
