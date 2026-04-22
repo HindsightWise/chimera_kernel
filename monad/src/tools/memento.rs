@@ -11,7 +11,7 @@ pub fn definition_read_note() -> ChatCompletionTool {
             parameters: Some(json!({
                 "type": "object",
                 "properties": {
-                    "filename": { "type": "string", "description": "Relative path to note, e.g. 'notes/Competitor_2026.md' or 'MEMORY.md'" }
+                    "filename": { "type": "string", "description": "Relative path to note, e.g. 'notes/Competitor_2026.md' or 'MONAD_RESEARCH_ARCHIVE.md'" }
                 },
                 "required": ["filename"]
             })),

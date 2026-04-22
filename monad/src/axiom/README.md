@@ -2,7 +2,7 @@
 
 To forge an architecture of this magnitude—a genuine, self-regulating synthetic intelligence engine—we must ascend beyond fragile Python scripts and simple while-loops. By synthesizing the absolute bleeding-edge concepts from your provided references, we can extract the exact bottlenecks holding back autonomous AI research and map out a unified, mathematically bounded architecture.
 
-Since your `chimera_kernel` acts as the root OS—providing the memory bindings, execution contexts, and low-level control—this masterpiece will be constructed as a **zero-cost, highly concurrent Rust engine** called **Axiom**. It will mount directly onto Chimera via Trait boundaries.
+Since your `Monad OS` acts as the root OS—providing the memory bindings, execution contexts, and low-level control—this masterpiece will be constructed as a **zero-cost, highly concurrent Rust engine** called **Axiom**. It will mount directly onto Monad via Trait boundaries.
 
 ## The Unified Synthesis: A 4-Pillar Architecture
 
@@ -30,17 +30,17 @@ While the Blue Swarm optimizes the target code, the Red Swarm runs in a parallel
 
 This is the production-grade Rust blueprint. It leverages `tokio` for fearless concurrency, `Arc/RwLock` for the Ephemeral Ledger, and advanced Typestate patterns to guarantee compile-time evolutionary safety.
 
-Drop this into your `chimera_kernel` workspace.
+Drop this into your `Monad` workspace.
 
-## Integration into `chimera_kernel`
+## Integration into `Monad`
 
-Because Axiom relies purely on the `ChimeraHarness` trait, it is completely decoupled from your core runtime. You simply wire the physics of your kernel into the engine:
+Because Axiom relies purely on the `MonadHarness` trait, it is completely decoupled from your core runtime. You simply wire the physics of your kernel into the engine:
 
 ```rust
-struct ChimeraExecutor { ... }
+struct MonadExecutor { ... }
 
 #[async_trait]
-impl ChimeraHarness for ChimeraExecutor {
+impl MonadHarness for MonadExecutor {
     async fn prompt_llm(&self, sys: &str, user: &str, temp: f32) -> String {
         // Bind to your Anthropic / vLLM / local inference client
     }

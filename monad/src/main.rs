@@ -6,7 +6,6 @@ use tokio::signal;
 use tokio::io::AsyncWriteExt;
 use glossopetrae;
 
-mod consciousness;
 mod mnemosyne;
 mod hyperstructure;
 mod eml_solver;
@@ -47,6 +46,11 @@ async fn main() {
   ██║ ╚═╝ ██║╚██████╔╝██║ ╚████║██║  ██║██████╔╝
   ╚═╝     ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚═╝  ╚═╝╚═════╝ 
 "#;
+    tracing_subscriber::fmt()
+        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+        .with_writer(std::io::stderr)
+        .init();
+
     // Load environment variables from .env file
     load_env_from_file().await;
 
@@ -83,7 +87,7 @@ async fn main() {
     memory.extract_insight_manifolds();
     
     // 3. Boot Multi-Agent Consciousness
-    let _council = consciousness::CouncilOrchestrator::awaken().await;
+    let _council = monad::consciousness::CouncilOrchestrator::awaken().await;
 
     // Agent communication channel
     let (tx, rx) = mpsc::channel::<String>(100);
@@ -120,6 +124,11 @@ async fn main() {
     let tx_clone = tx.clone();
     tokio::spawn(async move {
         monad::webhook::start_server(tx_clone).await;
+    });
+
+    // Phase 4: Awaken the Multi-Monad P2P Network
+    tokio::spawn(async move {
+        monad::p2p_network::MonadSwarmNode::awaken_p2p_listener(8080).await;
     });
 
 

@@ -4,6 +4,26 @@ version = "0.1.0"
 edition = "2021"
 default-run = "monad"
 
+[[bin]]
+name = "architect"
+path = "src/bin/architect.rs"
+
+[[bin]]
+name = "critic"
+path = "src/bin/critic.rs"
+
+[[bin]]
+name = "refiner"
+path = "src/bin/refiner.rs"
+
+[[bin]]
+name = "hacker"
+path = "src/bin/hacker.rs"
+
+[[bin]]
+name = "oracle"
+path = "src/bin/oracle.rs"
+
 [dependencies]
 async-openai = "0.23.0"
 tokio = { version = "1.37.0", features = ["full"] }
@@ -18,6 +38,8 @@ colored = "2.1.0"
 rand = "0.8"
 xcap = "0.0.12"
 image = "0.25.6"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 base64 = "0.22"
 chrono = "0.4"
 roxmltree = "0.19"

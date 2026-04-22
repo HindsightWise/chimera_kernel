@@ -42,3 +42,4 @@ node_modules/
 build_errors.txt
 test_*
 quick_gitnexus_test
+tests/browser_stealth/chrome-headless-shell/

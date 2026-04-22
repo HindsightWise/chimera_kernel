@@ -38,7 +38,7 @@ pub async fn execute(args: Value) -> String {
         return "[ERROR] Invalid execute_at timestamp or empty payload.".to_string();
     }
 
-    if let Ok(graph) = crate::memory_substrate::graph_rag::GraphMemoryManager::new("mnemosyne_graph.db") {
+    if let Ok(graph) = crate::geometric_invariant::graph_rag::GraphMemoryManager::new("mnemosyne_graph.db") {
         match graph.insert_chronos_task(execute_at, payload, topic).await {
             Ok(_) => format!("[CHRONOS] Temporal Anchor successfully placed at UNIX: {}", execute_at),
             Err(e) => format!("[ERROR] Failed to schedule Temporal Anchor: {}", e),

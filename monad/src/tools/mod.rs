@@ -13,6 +13,8 @@ pub mod duality;
 pub mod wiki;
 pub mod forge;
 pub mod omniscience;
+pub mod quantum_interface;
+pub mod sensors;
 pub mod genesis;
 pub mod sandbox;
 pub mod chronos;
@@ -20,15 +22,17 @@ pub mod patcher;
 pub mod reversing;
 pub mod leviathan_tool;
 pub mod lightpanda_tool;
+pub mod mcp_context_manager;
+pub mod state_manager;
 use async_openai::types::ChatCompletionTool;
 use serde_json::Value;
 
 use tokio::sync::mpsc::Sender;
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use {crate::memory_substrate::memory_hierarchy::MemoryHierarchy, crate::core_identity::self_model::OntologicalDriftModel};
+use {crate::geometric_invariant::memory_hierarchy::MemoryHierarchy, crate::core_identity::self_model::OntologicalDriftModel};
 
-pub async fn get_tools(mcp_gateway: Arc<crate::sensory_inputs::mcp_gateway::McpGateway>) -> Vec<ChatCompletionTool> {
+pub async fn get_tools(mcp_gateway: Arc<crate::kinetic_effector::mcp_gateway::McpGateway>) -> Vec<ChatCompletionTool> {
     let mut native_tools = vec![
         terminal::definition(),
         leviathan_tool::definition(),
@@ -60,6 +64,8 @@ pub async fn get_tools(mcp_gateway: Arc<crate::sensory_inputs::mcp_gateway::McpG
         sandbox::definition(),
         chronos::definition(),
         patcher::definition(),
+        mcp_context_manager::definition(),
+        state_manager::definition(),
     ];
     let schemas = mcp_gateway.schemas.read().await;
     native_tools.extend(schemas.clone());
@@ -72,11 +78,11 @@ pub async fn execute_tool(
     tx: Sender<String>, 
     mem_pipeline: Arc<Mutex<MemoryHierarchy>>,
     _self_model: Arc<Mutex<OntologicalDriftModel>>,
-    code_intel: Arc<Mutex<crate::cognitive_loop::dependency_graph::CodeIntel>>,
+    code_intel: Arc<Mutex<crate::event_lattice::dependency_graph::CodeIntel>>,
     wiki_manager: Arc<Mutex<crate::wiki::WikiManager>>,
-    mcp_gateway: Arc<crate::sensory_inputs::mcp_gateway::McpGateway>
+    mcp_gateway: Arc<crate::kinetic_effector::mcp_gateway::McpGateway>
 ) -> String {
-    crate::memory_substrate::traceability::track_behavior(name).await;
+    crate::geometric_invariant::traceability::track_behavior(name).await;
     
     match name {
         "run_terminal_command" => {
@@ -118,6 +124,8 @@ pub async fn execute_tool(
         "ephemeral_docker_sandbox" => sandbox::execute(args).await,
         "schedule_temporal_anchor" => chronos::execute(args).await,
         "mutate_source_code" => patcher::execute(args).await,
+        "toggle_mcp_context" => mcp_context_manager::execute(args, mcp_gateway.clone()).await,
+        "update_plan" => state_manager::execute(args).await,
         _ => {
             // Unrecognized native tool, attempting route through MCP Gateway
             let result = mcp_gateway.call_tool(name, args).await;

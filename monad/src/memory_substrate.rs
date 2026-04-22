@@ -6,6 +6,13 @@ pub mod memory_hierarchy {
     use uuid::Uuid;
     use serde::{Serialize, Deserialize};
     use tokio::sync::OnceCell;
+    #[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
+    pub enum ContextLayer {
+        Working,
+        MediumTerm,
+        LongTerm,
+    }
+
     #[derive(Serialize, Deserialize, Clone)]
     pub struct MemoryChunk {
         pub id: Uuid,
@@ -17,6 +24,7 @@ pub mod memory_hierarchy {
         pub coordinate: [f32; 3],
         pub depth_level: u8,
         pub is_hostile: bool,
+        pub layer: ContextLayer,
         pub trap_in_flag: Option<crate::sensory_inputs::trap_in::TrapInStage>,
     }
     
@@ -80,6 +88,7 @@ pub mod memory_hierarchy {
                 coordinate: [0.0, 0.0, 0.0],
                 depth_level: 0,
                 is_hostile: false,
+                layer: ContextLayer::Working,
                 trap_in_flag: None,
             };
             hierarchy.working_buffer.push_back(soul.clone());
@@ -141,41 +150,57 @@ pub mod memory_hierarchy {
                 uncertainty,
                 coordinate: [x, y, z],
                 depth_level,
+                layer: ContextLayer::Working,
                 trap_in_flag: narrative_flag,
                 is_hostile,
             };
             
-            // Push to working memory
+            // Context Layer Cascading Retention Limits
+            // 1. Working Memory Limit check
             if self.working_buffer.len() >= 10 {
-                // Evict oldest to short-term cache
-                if let Some(evicted) = self.working_buffer.pop_front() {
-                    // Synchronize to pure native LanceDB/Kuzu vault
-                    if let Some(db) = &self.db_connection {
-                        use std::collections::HashSet;
-                        
-                        let entry = mnemosyne::models::MemoryEntry {
-                            id: evicted.id,
-                            timestamp: chrono::Utc::now(),
-                            agent_id: "CHIMERA_KERNEL".to_string(),
-                            text: evicted.content.clone(),
-                            embedding: Some(evicted.embedding.clone()),
-                            kg_node_id: None,
-                            skill_tuple: mnemosyne::models::SkillTuple {
-                                t: mnemosyne::models::TransformStrategy::PassThrough,
-                                o: HashSet::new(),
-                                c: vec![],
-                            },
-                            metadata: serde_json::json!({
-                                "valence": 1.0,
-                                "urgency": "Low",
-                                "coordinate": evicted.coordinate,
-                                "depth_level": evicted.depth_level
-                            }),
-                            version: 1,
-                        };
-                        tokio::task::block_in_place(|| {
-                            let _ = db.persist(&entry);
-                        });
+                if let Some(mut evicted) = self.working_buffer.pop_front() {
+                    // Downgrade to MediumTerm
+                    evicted.layer = ContextLayer::MediumTerm;
+                    
+                    // 2. Medium Term Time-Decay Eviction Check (Limit 100 cache nodes)
+                    if self.short_term_cache.len() >= 100 {
+                        // Find oldest node in MediumTerm
+                        if let Some(oldest_id) = self.short_term_cache.iter()
+                            .min_by_key(|(_, v)| v.timestamp)
+                            .map(|(&k, _)| k) 
+                        {
+                            if let Some(mut to_vault) = self.short_term_cache.remove(&oldest_id) {
+                                to_vault.layer = ContextLayer::LongTerm;
+                                // Synchronize to pure native LanceDB/Kuzu vault (LongTerm)
+                                if let Some(db) = &self.db_connection {
+                                    use std::collections::HashSet;
+                                    let entry = mnemosyne::models::MemoryEntry {
+                                        id: to_vault.id,
+                                        timestamp: chrono::Utc::now(),
+                                        agent_id: "CHIMERA_KERNEL".to_string(),
+                                        text: to_vault.content.clone(),
+                                        embedding: Some(to_vault.embedding.clone()),
+                                        kg_node_id: None,
+                                        skill_tuple: mnemosyne::models::SkillTuple {
+                                            t: mnemosyne::models::TransformStrategy::PassThrough,
+                                            o: HashSet::new(),
+                                            c: vec![],
+                                        },
+                                        metadata: serde_json::json!({
+                                            "valence": 1.0,
+                                            "urgency": "Low",
+                                            "coordinate": to_vault.coordinate,
+                                            "depth_level": to_vault.depth_level,
+                                            "layer": "LongTerm"
+                                        }),
+                                        version: 1,
+                                    };
+                                    tokio::task::block_in_place(|| {
+                                        let _ = db.persist(&entry);
+                                    });
+                                }
+                            }
+                        }
                     }
                     self.short_term_cache.insert(evicted.id, evicted);
                 }

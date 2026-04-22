@@ -73,11 +73,49 @@ impl MnemosyneEngine {
             Err(e) => return Err(PyValueError::new_err(format!("[ENCRYPTION FAILURE] {}", e)))
         }
 
+        // Semantic Entity Extraction (Knowledge Graph Activation)
+        // Happens synchronously over local Ollama to ensure the node is fully processed before insertion.
+        let extraction_text = entry.text.clone();
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        let extract_tuples: Vec<(String, String, String)> = rt.block_on(async {
+            let prompt = format!(
+                "Extract knowledge graph triples from the text. Output ONLY valid JSON array of 3-element string arrays: [[\"Subject\", \"PREDICATE\", \"Object\"]]. No markdown or other text. Text: {}",
+                extraction_text
+            );
+            let client = reqwest::Client::new();
+            let body = serde_json::json!({
+                "model": "monad-gatekeeper",
+                "prompt": prompt,
+                "stream": false,
+                "format": "json"
+            });
+            match client.post("http://127.0.0.1:11434/api/generate").json(&body).send().await {
+                Ok(res) => {
+                    if let Ok(json) = res.json::<serde_json::Value>().await {
+                        if let Some(resp_str) = json.get("response").and_then(|r| r.as_str()) {
+                            if let Ok(tuples) = serde_json::from_str::<Vec<(String, String, String)>>(resp_str) {
+                                return tuples;
+                            }
+                        }
+                    }
+                    vec![]
+                },
+                Err(_) => vec![]
+            }
+        });
+
+        if !extract_tuples.is_empty() {
+            if let Err(e) = self.storage.insert_graph_edges(extract_tuples) {
+                // We don't abort the whole memory save on graph extraction failure, just log it.
+                eprintln!("[GRAPH EXTRACTION NON-FATAL] {}", e);
+            }
+        }
+
         // 3. (Production) Execute hybrid Kùzu/LanceDB write using vaulted_entry
         if let Err(e) = self.storage.persist(&vaulted_entry) {
              return Err(PyValueError::new_err(format!("[STORAGE REJECTION] {}", e)));
         }
-        Ok(format!("Memory {} validated and committed to Vault.", entry.id))
+        Ok(format!("Memory {} validated, semantic edges mapped, and committed to Vault.", entry.id))
     }
 
     fn query_semantic_memory(&mut self, embedding_json: String, limit: usize) -> PyResult<String> {

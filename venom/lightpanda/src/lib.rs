@@ -1,6 +1,7 @@
 pub mod cdp;
 pub mod wss;
 pub mod fingerprint;
+pub mod orchestrator;
 
 pub struct LightpandaDriver {
     _endpoint: String,

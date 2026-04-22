@@ -21,7 +21,7 @@ pub fn definition() -> ChatCompletionTool {
     }
 }
 
-pub async fn execute(args: Value, gateway: std::sync::Arc<crate::sensory_inputs::mcp_gateway::McpGateway>) -> String {
+pub async fn execute(args: Value, gateway: std::sync::Arc<crate::kinetic_effector::mcp_gateway::McpGateway>) -> String {
     let skill_name = args.get("skill_name").and_then(|v| v.as_str()).unwrap_or("anon_skill");
     let javascript_code = args.get("javascript_code").and_then(|v| v.as_str()).unwrap_or("");
     let parameters_schema = args.get("parameters_schema").cloned().unwrap_or(serde_json::json!({}));

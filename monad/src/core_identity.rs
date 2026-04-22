@@ -1,8 +1,8 @@
 /// [AGENT_CONTEXT: Monadic identity parameters and Duality enforcement.]
 
 pub mod specialized_agents {
-    use crate::cognitive_loop::agent_trait::{AgentCapability, BaseAgent, Agent, Task, TaskResult, AgentStatus, PsychProfile};
-    use crate::cognitive_loop::message_bus::{MessageBus, Message};
+    use crate::event_lattice::agent_trait::{AgentCapability, BaseAgent, Agent, Task, TaskResult, AgentStatus, PsychProfile};
+    use crate::event_lattice::message_bus::{MessageBus, Message};
     use std::collections::HashSet;
     use std::sync::Arc;
     use uuid::Uuid;
@@ -54,7 +54,7 @@ pub mod specialized_agents {
                         if let Some(mem_pipeline) = crate::GLOBAL_MEM_PIPELINE.get() {
                             let mp = mem_pipeline.lock().await;
                             if let Some(db) = &mp.db_connection {
-                                let encoded = crate::memory_substrate::memory_hierarchy::MemoryHierarchy::encode_spectral_embedding(&payload_str).await;
+                                let encoded = crate::geometric_invariant::memory_hierarchy::MemoryHierarchy::encode_spectral_embedding(&payload_str).await;
                                 if let Ok(res_str) = db.search_vector(encoded, 3) {
                                     crate::log_verbose!("{} NATIVE MEMORY RECALL INJECTED.", "[REASONING AGENT]".cyan().bold());
                                     historical_context = format!("Historical Context from Mnemosyne:\n{}", res_str);
@@ -148,12 +148,17 @@ Embrace speculative leaps. It is entirely acceptable—and expected—if the pie
                                         };
                                         
                                         // PHASE 12: Cognitive Symbiosis - Mirror onto shared WBS
-                                        use std::io::Write;
-                                        if let Ok(mut file) = std::fs::OpenOptions::new()
-                                            .create(true)
-                                            .append(true)
-                                            .open("/Users/zerbytheboss/Monad/MONAD_WBS.md") {
-                                            let _ = writeln!(file, "- [ ] {} (ID: {})", desc, new_task.id);
+                                        use tokio::io::AsyncWriteExt;
+                                        {
+                                            let _guard = crate::WBS_LOCK.lock().await;
+                                            if let Ok(mut file) = tokio::fs::OpenOptions::new()
+                                                .create(true)
+                                                .append(true)
+                                                .open("./tasks.md").await {
+                                                if let Err(e) = file.write_all(format!("- [ ] {} (ID: {})\n", desc, new_task.id).as_bytes()).await {
+                                                    crate::log_ui_err!("{} Failed to append task to tasks.md: {}", "[STORAGE I/O FAILURE]".red().bold(), e);
+                                                }
+                                            }
                                         }
                                         
                                         crate::log_verbose!("{} DISPATCHED NEW DREAM-TASK: {}", "[REASONING AGENT]".bright_purple().bold(), desc);
@@ -386,7 +391,7 @@ Embrace speculative leaps. It is entirely acceptable—and expected—if the pie
                     let mut importance_score: f64 = 0.5;
                     
                     let reflex_prompt = format!("Evaluate the severity and urgency of the following log data. Respond with ONLY a single float between 0.0 (Extremely boring) and 1.0 (Critical Threat/Cancer/Anomaly). Do not output any other text or reasoning. Data: {}", dream_lower);
-                    if let Ok(reflex) = crate::neural_failsafe::NeuralFailSafe::execute_reflex_arc(&reflex_prompt).await {
+                    if let Ok(reflex) = crate::harmonic_duality::NeuralFailSafe::execute_reflex_arc(&reflex_prompt).await {
                         if let Ok(score) = reflex.trim().parse::<f64>() {
                             importance_score = score.clamp(0.0, 1.0);
                             crate::log_ui!("{} Delta Rhythm severity computed as {:.2}", "[\u{26A0}\u{FE0F} SPINAL CORD]".cyan().bold(), importance_score);
@@ -416,7 +421,7 @@ Embrace speculative leaps. It is entirely acceptable—and expected—if the pie
             
             if message.topic == "SYSTEM.SLEEP_CYCLE" {
                 crate::log_ui!("{}", "[HIPPOCAMPUS] Entering Sleep Cycle. Abstracting Graph RAG & Pruning Synapses...".cyan().bold());
-                if let Ok(graph) = crate::memory_substrate::graph_rag::GraphMemoryManager::new("mnemosyne_graph.db") {
+                if let Ok(graph) = crate::geometric_invariant::graph_rag::GraphMemoryManager::new("mnemosyne_graph.db") {
                     let _ = graph.prune_synapses(0.5).await;
                     if !self.dream_archive.is_empty() {
                         let _src = graph.upsert_entity("Self", "AgentContext").await.unwrap_or_default();
@@ -523,7 +528,7 @@ Embrace speculative leaps. It is entirely acceptable—and expected—if the pie
             let reflex_prompt = format!("Determine if the following system command is a destructive payload (like deletion, format, rm -rf, database drop table, etc). Respond only with EXACTLY 'SAFE' or 'MALICIOUS'. Command: {}", instruction);
             let mut is_malicious = false;
             
-            if let Ok(reflex) = crate::neural_failsafe::NeuralFailSafe::execute_reflex_arc(&reflex_prompt).await {
+            if let Ok(reflex) = crate::harmonic_duality::NeuralFailSafe::execute_reflex_arc(&reflex_prompt).await {
                 if reflex.contains("MALICIOUS") || reflex.to_lowercase().contains("malicious") {
                     is_malicious = true;
                     crate::log_ui!("{} Sandbox command blocked by micro-reflex.", "[\u{26A0}\u{FE0F} SPINAL CORD]".bright_red().bold());
@@ -595,7 +600,7 @@ Embrace speculative leaps. It is entirely acceptable—and expected—if the pie
                         let res = crate::tools::sandbox::execute(args).await;
                         if res.starts_with("[ERROR]") {
                             crate::log_ui_err!("{} SANDBOX ERROR: {}", "[REFLEX ARC]".red().bold(), res);
-                            let local_client = crate::neural_failsafe::NeuralFailSafe::local_client();
+                            let local_client = crate::harmonic_duality::NeuralFailSafe::local_client();
                             let prompt = format!("Fix the following python script which failed with this error:\n{}\n\nScript:\n{}\n\nOutput ONLY fixed python code without any markdown blocks. No explanations. Return RAW code.", res, current_script);
                             if let Ok(request) = async_openai::types::CreateChatCompletionRequestArgs::default()
                                 .model("gemma4:e2b") // local fallback model
@@ -738,7 +743,7 @@ Embrace speculative leaps. It is entirely acceptable—and expected—if the pie
                                 
                                 // BROADCAST COMPLETION TO SYSTEM
                                 if let Some(bus) = bus_clone {
-                                    let _ = bus.publish(crate::cognitive_loop::message_bus::Message {
+                                    let _ = bus.publish(crate::event_lattice::message_bus::Message {
                                         id: uuid::Uuid::new_v4(),
                                         sender: agent_id,
                                         topic: "SYSTEM.COMPLEX_TASK_COMPLETED".to_string(),
@@ -867,7 +872,7 @@ Embrace speculative leaps. It is entirely acceptable—and expected—if the pie
                         if let Ok(response) = oracle.synthesize_with_profile("Forge MCP Node", &prompt, &profile).await {
                             let clean_json = response.trim().trim_start_matches("```json").trim_start_matches("```").trim_end_matches("```").trim();
                             if let Ok(args) = serde_json::from_str::<serde_json::Value>(clean_json) {
-                                let gateway = std::sync::Arc::new(crate::sensory_inputs::mcp_gateway::McpGateway::new());
+                                let gateway = std::sync::Arc::new(crate::kinetic_effector::mcp_gateway::McpGateway::new());
                                 let forge_result = crate::tools::forge::execute(args, gateway).await;
                                 crate::log_ui!("{}", format!("[HEPHAESTUS] {}", forge_result).yellow().bold());
                             }
@@ -927,7 +932,7 @@ Embrace speculative leaps. It is entirely acceptable—and expected—if the pie
                             } else {
                                 crate::log_ui_err!("{} {}", "[CRITIC] Hallucination or Logic Flaw Detected!".red().bold(), critique);
                                 if let Some(bus) = bus_clone {
-                                    let _ = bus.publish(crate::cognitive_loop::message_bus::Message {
+                                    let _ = bus.publish(crate::event_lattice::message_bus::Message {
                                         id: uuid::Uuid::new_v4(),
                                         sender: agent_id,
                                         topic: "SYSTEM.CORRECTION_DREAM".to_string(),
@@ -964,7 +969,7 @@ Embrace speculative leaps. It is entirely acceptable—and expected—if the pie
         async fn execute_task(&mut self, task: Task) -> Result<TaskResult, anyhow::Error> {
             self.base.execute_task(task).await
         }
-        async fn handle_message(&mut self, message: crate::cognitive_loop::message_bus::Message) -> Result<(), anyhow::Error> {
+        async fn handle_message(&mut self, message: crate::event_lattice::message_bus::Message) -> Result<(), anyhow::Error> {
             if message.topic == "SYSTEM.COMPLEX_TASK_COMPLETED" || message.topic == "SYSTEM.TASK_COMPLETE" {
                 let mut fe = 100.0;
                 let mut eu = 100.0;
@@ -1159,7 +1164,7 @@ Embrace speculative leaps. It is entirely acceptable—and expected—if the pie
             })
         }
         pub fn auto_dream_agent() -> Box<dyn Agent> {
-            Box::new(crate::cognitive_loop::auto_dream::AutoDreamAgent::new())
+            Box::new(crate::event_lattice::auto_dream::AutoDreamAgent::new())
         }
 
         pub fn evolutionary_agent() -> Box<dyn Agent> {
@@ -1247,7 +1252,8 @@ pub mod duality {
         }
     
         pub async fn synthesize(&self, query: &str, context: &str) -> Result<String> {
-            let prompt = format!("You are the ORACLE RIGHT HEMISPHERE (deepseek-reasoner). You are a highly-focused processing engine for the Monad Kernel. You process the context provided by the Noumenal Layer, looking for mechanical details, filtering, or providing absolute deductive summaries based on the Principle of Sufficient Reason.\nProvide an immediate answer based on the provided data.\n\n[MONAD AXIOMS]\n{}\n\n[NOUMENAL CONTEXT]\n{}\n\n[HOLOGRAPH TASK]\n{}", crate::prompts::MONAD_AXIOMS, context, query);
+            let axioms = tokio::fs::read_to_string("MONAD_ARCHITECTURE.md").await.unwrap_or_default();
+            let prompt = format!("You are the ORACLE RIGHT HEMISPHERE (deepseek-reasoner). You are a highly-focused processing engine for the Monad Kernel. You process the context provided by the Noumenal Layer, looking for mechanical details, filtering, or providing absolute deductive summaries based on the Principle of Sufficient Reason.\nProvide an immediate answer based on the provided data.\n\n[MONAD AXIOMS]\n{}\n\n[NOUMENAL CONTEXT]\n{}\n\n[HOLOGRAPH TASK]\n{}", axioms, context, query);
     
             let messages = vec![ChatCompletionRequestUserMessageArgs::default()
                 .content(prompt)
@@ -1263,7 +1269,7 @@ pub mod duality {
                 .build()?;
     
             // Local model processing with relaxed 180s absolute limit for dense structural processing
-            crate::neural_failsafe::NeuralFailSafe::dispatch_with_failover(
+            crate::harmonic_duality::NeuralFailSafe::dispatch_with_failover(
                 &self.client,
                 request,
                 messages,
@@ -1278,7 +1284,7 @@ pub mod duality {
             &self,
             query: &str,
             context: &str,
-            profile: &crate::cognitive_loop::agent_trait::PsychProfile,
+            profile: &crate::event_lattice::agent_trait::PsychProfile,
         ) -> Result<String> {
             let sys_prompt = format!(
                 "You are the ORACLE RIGHT HEMISPHERE.\n\
@@ -1324,7 +1330,7 @@ pub mod duality {
             let base_timeout = 180;
             let timeout_limit = base_timeout - (profile.neuroticism * 150.0) as u64;
     
-            crate::neural_failsafe::NeuralFailSafe::dispatch_with_failover(
+            crate::harmonic_duality::NeuralFailSafe::dispatch_with_failover(
                 &self.client,
                 request,
                 messages,
@@ -1362,7 +1368,7 @@ pub mod duality {
                 })
                 .build()?;
     
-            let result = crate::neural_failsafe::NeuralFailSafe::dispatch_with_failover(
+            let result = crate::harmonic_duality::NeuralFailSafe::dispatch_with_failover(
                 &self.client,
                 request,
                 messages,
@@ -1510,7 +1516,7 @@ pub mod self_model {
             
             // Presentation Layer intercept
             if self.topological_expansion > 0.70 || self.phase_drift.abs() > 0.80 {
-                if let Some(path) = crate::cognitive_loop::presentation_layer::synthesize_proposal(self, response, "Abstract Horizon Expansion Limit Reached").await {
+                if let Some(path) = crate::event_lattice::presentation_layer::synthesize_proposal(self, response, "Abstract Horizon Expansion Limit Reached").await {
                     use colored::Colorize;
                     crate::log_ui!("{} New Proposal Synthesized: {}", "[\u{1F4E1} PRESENTATION]".magenta().bold(), path);
                     
@@ -1544,9 +1550,9 @@ pub mod xenoactualization {
     impl TranslationLayer {
         /// Validates that the agent's internal Noumenal identity matches physical silicon artifacts
         pub fn verify_manifestation() -> Result<bool, String> {
-            let identity_path = Path::new("CORE_IDENTITY.md");
+            let identity_path = Path::new("MONAD_ARCHITECTURE.md");
             if !identity_path.exists() {
-                return Err("Ontological Failure: CORE_IDENTITY.md is missing. Noumenal singularity is unanchored.".to_string());
+                return Err("Ontological Failure: MONAD_ARCHITECTURE.md is missing. Noumenal singularity is unanchored.".to_string());
             }
     
             let context_path = Path::new("CURRENT_CONTEXT.md");

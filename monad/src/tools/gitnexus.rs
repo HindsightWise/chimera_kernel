@@ -1,6 +1,6 @@
 use async_openai::types::{ChatCompletionTool, ChatCompletionToolType, FunctionObject};
 use serde_json::Value;
-use crate::cognitive_loop::dependency_graph::CodeIntel;
+use crate::event_lattice::dependency_graph::CodeIntel;
 
 pub fn definition() -> ChatCompletionTool {
     ChatCompletionTool {

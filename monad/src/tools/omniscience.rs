@@ -57,7 +57,7 @@ async fn refine_and_ingest(
     title: &str,
     summary: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let local_client = crate::neural_failsafe::NeuralFailSafe::local_client();
+    let local_client = crate::harmonic_duality::NeuralFailSafe::local_client();
 
     let fallback_model =
         std::env::var("FAILOVER_MODEL").unwrap_or_else(|_| "gemma4:e2b".to_string());

@@ -115,13 +115,13 @@ pub mod agent {
         );
     
         // INJECT 4-LAYER BIOLOGICAL SUBCONSCIOUS (CORE IDENTITY + CURRENT CONTEXT)
-        let identity_content = tokio::fs::read_to_string("CORE_IDENTITY.md")
+        let identity_content = tokio::fs::read_to_string("MONAD_ARCHITECTURE.md")
             .await
             .unwrap_or_default();
         let current_context = tokio::fs::read_to_string("CURRENT_CONTEXT.md")
             .await
             .unwrap_or_default();
-        let worca_framework = tokio::fs::read_to_string("WORCA_FRAMEWORK.md")
+        let worca_framework = tokio::fs::read_to_string("MONAD_OPERATIONS.md")
             .await
             .unwrap_or_default();
             
@@ -137,8 +137,12 @@ pub mod agent {
             }
         }
     
-        initial_prompt = format!("{}\n\n[LAYER 1: CORE IDENTITY (Rigid, Non-Negotiable)]\n{}\n\n[LAYER 2: CURRENT CONTEXT (Volatile, Malleable)]\n{}\n\n[LAYER 3: WORCA PROTOCOL (Quantum Execution Bounds)]\n{}\n\n[LAYER 4: NEURAL PATHWAYS (Dynamic Prompt Chains)]\nThe following chains dictate precisely how you must chain tools together for complex operations. Refer to these strict SOPs before acting:\n{}\n\n(Note: You operate using a structured 5-layer memory model. You may update Layer 2 freely using `update_current_context`, and extract learned principles into Layer 3 using `archive_to_knowledge_graph`.)", 
-            initial_prompt, identity_content, current_context, worca_framework, chains_content);
+        let active_state = tokio::fs::read_to_string("ACTIVE_STATE.json")
+            .await
+            .unwrap_or_else(|_| "No active tracked state. You are operating from a blank slate.".into());
+
+        initial_prompt = format!("{}\n\n[LAYER 1: CORE IDENTITY (Rigid, Non-Negotiable)]\n{}\n\n[LAYER 2: CURRENT CONTEXT (Volatile, Malleable)]\n{}\n\n[LAYER 3: WORCA PROTOCOL (Quantum Execution Bounds)]\n{}\n\n[LAYER 4: NEURAL PATHWAYS (Dynamic Prompt Chains)]\nThe following chains dictate precisely how you must chain tools together for complex operations. Refer to these strict SOPs before acting:\n{}\n\n[LAYER 5: ACTIVE DURABLE STATE]\n{}\n\n(Note: You operate using a structured 5-layer memory model. You may update Layer 2 freely using `update_current_context`, extract learned principles into Layer 3 using `archive_to_knowledge_graph`, and track your sequential checklist strictly via `update_plan` in Layer 5.)", 
+            initial_prompt, identity_content, current_context, worca_framework, chains_content, active_state);
     
         if let Ok(report) = tokio::fs::read_to_string("lazarus_report.txt").await {
             initial_prompt = format!("{}\n\nLAZARUS PROTOCOL TRIGGERED. You previously perished unexpectedly. Here is the last known state of your memory and the exit code:\n{}\nAcknowledge this failure and continue.", initial_prompt, report);
@@ -224,8 +228,36 @@ pub mod agent {
     
         let mcp_gateway = std::sync::Arc::new(crate::sensory_inputs::mcp_gateway::McpGateway::new());
         mcp_gateway.load_servers().await;
+
+        let mut council_rx = None;
+        if let Some(bus) = crate::consciousness::COUNCIL_BUS.get() {
+            council_rx = Some(bus.subscribe());
+        }
     
         loop {
+            if let Some(rx) = &mut council_rx {
+                while let Ok(pulse) = rx.try_recv() {
+                    match pulse {
+                        crate::consciousness::ThoughtVector::Hypothesis { origin, content, .. } => {
+                            if matches!(origin, crate::consciousness::Persona::Refiner) || matches!(origin, crate::consciousness::Persona::Oracle) || matches!(origin, crate::consciousness::Persona::Hacker) {
+                                crate::log_ui!(
+                                    "{} {}",
+                                    format!("[\u{1F514} {:?} INJECTION]", origin).yellow().bold(),
+                                    content.white()
+                                );
+                                messages.push(
+                                    ChatCompletionRequestUserMessageArgs::default()
+                                        .content(format!("[{:?} HYPOTHESIS]\n{}", origin, content))
+                                        .build()
+                                        .context("Failed to build object")?
+                                        .into(),
+                                );
+                            }
+                        },
+                        _ => {}
+                    }
+                }
+            }
             if let Ok(_) = shutdown_rx.try_recv() {
                 crate::log_ui!(
                     "{}",
@@ -523,55 +555,66 @@ pub mod agent {
                                 );
                             }
     
+                            let mut join_set = tokio::task::JoinSet::new();
+                            let mut tool_returns = Vec::new();
+
                             for tc in tool_calls {
-                                let fname = &tc.function.name;
+                                let fname = tc.function.name.clone();
                                 let fargs: Value = match serde_json::from_str(&tc.function.arguments) {
                                     Ok(val) => val,
                                     Err(_) => serde_json::json!({}),
                                 };
     
-                                let log_trigger = format!(
-                                    "[OUROBOROS TRIGGER] Tool Invoked -> {} {}",
-                                    fname,
-                                    fargs.to_string()
-                                );
-                                crate::log_verbose!(
-                                    "{} {} {}",
-                                    "[OUROBOROS TRIGGER] Tool Invoked ->".bright_purple().bold(),
-                                    fname.cyan(),
-                                    fargs.to_string().bright_black()
-                                );
+                                let log_trigger = format!("[OUROBOROS TRIGGER] Tool Invoked -> {} {}", fname, fargs.to_string());
+                                crate::log_verbose!("{} {} {}", "[OUROBOROS TRIGGER] Tool Invoked ->".bright_purple().bold(), fname.cyan(), fargs.to_string().bright_black());
                                 log_state_trace!(&log_trigger);
     
-                                let is_wasm_plugin =
-                                    plugin_manager.plugins.iter().any(|p| p.name == *fname);
-                                let result = if is_wasm_plugin {
-                                    plugin_manager.execute(fname, fargs).await
+                                let is_wasm_plugin = plugin_manager.plugins.iter().any(|p| p.name == fname);
+                                if is_wasm_plugin {
+                                    let result = plugin_manager.execute(&fname, fargs.clone()).await;
+                                    tool_returns.push((tc.id.clone(), fname, fargs, result));
                                 } else {
-                                    tools::execute_tool(
-                                        fname,
-                                        fargs,
-                                        tx.clone(),
-                                        memory_pipeline.clone(),
-                                        self_model.clone(),
-                                        code_intel.clone(),
-                                        wiki_manager.clone(),
-                                        mcp_gateway.clone(),
-                                    )
-                                    .await
-                                };
-    
+                                    let tx_c = tx.clone();
+                                    let mem_c = memory_pipeline.clone();
+                                    let sm_c = self_model.clone();
+                                    let intel_c = code_intel.clone();
+                                    let wiki_c = wiki_manager.clone();
+                                    let gateway_c = mcp_gateway.clone();
+                                    let id_c = tc.id.clone();
+                                    
+                                    join_set.spawn(async move {
+                                        let result = tools::execute_tool(
+                                            &fname, fargs.clone(), tx_c, mem_c, sm_c, intel_c, wiki_c, gateway_c
+                                        ).await;
+                                        (id_c, fname, fargs, result)
+                                    });
+                                }
+                            }
+
+                            // Wait for parallel native tools
+                            while let Some(res) = join_set.join_next().await {
+                                if let Ok(tuple) = res {
+                                    tool_returns.push(tuple);
+                                }
+                            }
+
+                            for (id, _fname, _fargs, result) in tool_returns {
                                 let log_return = format!("[TOOL RETURN] -> {}", result);
-                                crate::log_verbose!(
-                                    "{} {}",
-                                    "[TOOL RETURN] ->".bright_black(),
-                                    result.bright_black()
-                                );
+                                crate::log_verbose!("{} {}", "[TOOL RETURN] ->".bright_black(), result.bright_black());
                                 log_state_trace!(&log_return);
     
-                                let final_result = if result.chars().count() > 16000 {
-                                    let mut truncated = result.chars().take(16000).collect::<String>();
-                                    truncated.push_str("\n\n[SYSTEM: OUTPUT TRUNCATED TO 16000 CHARACTERS TO PRESERVE DEEPSEEK CONTEXT WINDOW.]");
+                                let final_result = if result.chars().count() > 4000 {
+                                    crate::log_ui!("{}", "[MNEMOSYNE INTERCEPT] Tool payload exceeded 4000 chars. Routing bulk data to native memory buffer to protect active cognition window...".purple().bold());
+                                    
+                                    let mut mp_lock = memory_pipeline.lock().await;
+                                    let _ = mp_lock.store_working(result.clone(), 0.9, 0.0, false).await;
+                                    drop(mp_lock);
+                                    
+                                    let mut truncated = result.chars().take(800).collect::<String>();
+                                    truncated.push_str(&format!(
+                                        "\n\n[SYSTEM INTERCEPT: The output was too large ({} bytes) and was autonomously saved to the Mnemosyne Substrate Memory Vault to prevent context bloat. You are seeing a 800-char preview. Use `search_vault` or `mnemosyne_subconscious_recall` to dynamically extract deeper facts.]", 
+                                        result.len()
+                                    ));
                                     truncated
                                 } else {
                                     result.clone()
@@ -579,7 +622,7 @@ pub mod agent {
 
                                 messages.push(
                                     ChatCompletionRequestToolMessageArgs::default()
-                                        .tool_call_id(tc.id.clone())
+                                        .tool_call_id(id)
                                         .content(final_result)
                                         .build()
                                         .context("Failed to build object")?
@@ -660,6 +703,14 @@ pub mod agent {
                                     .context("Failed to build object")?
                                     .into(),
                             );
+    
+                            if let Some(bus) = crate::consciousness::COUNCIL_BUS.get() {
+                                let _ = bus.send(crate::consciousness::ThoughtVector::Hypothesis {
+                                    origin: crate::consciousness::Persona::Architect,
+                                    id: chrono::Utc::now().timestamp_subsec_millis() as u32,
+                                    content: content.clone(),
+                                });
+                            }
     
                             messages.push(async_openai::types::ChatCompletionRequestAssistantMessageArgs::default()
                                 .content(content.clone())
@@ -901,23 +952,33 @@ pub mod multi_agent_kernel {
             
             let watcher_res = RecommendedWatcher::new(handler, Config::default());
             if let Ok(mut watcher) = watcher_res {
-                let _ = watcher.watch(std::path::Path::new("/Users/zerbytheboss/Monad/MONAD_WBS.md"), RecursiveMode::NonRecursive);
+                let path = std::path::Path::new("./tasks.md");
+                if !path.exists() {
+                    let _ = std::fs::File::create(path);
+                }
+                if let Err(e) = watcher.watch(path, RecursiveMode::NonRecursive) {
+                    crate::log_ui_err!("{} Failed to watch tasks.md: {}", "[KERNEL WARNING]".yellow().bold(), e);
+                }
                 
                 let bus_clone = self.message_bus.clone();
                 tokio::spawn(async move {
                     let _keep_alive = watcher;
-                    let mut previous_content = String::new();
+                    let mut previous_content = tokio::fs::read_to_string("./tasks.md").await.unwrap_or_default();
+                    let mut processed_uids = std::collections::HashSet::new();
                     
                     while let Some(res) = rx.recv().await {
                         if let Ok(event) = res {
                             if matches!(event.kind, EventKind::Modify(_)) {
-                                if let Ok(contents) = std::fs::read_to_string("/Users/zerbytheboss/Monad/MONAD_WBS.md") {
+                                let _guard = crate::WBS_LOCK.lock().await;
+                                if let Ok(contents) = tokio::fs::read_to_string("./tasks.md").await {
                                     let mut newly_checked = Vec::new();
                                     for line in contents.lines() {
                                         if line.contains("- [x]") {
                                             if !previous_content.contains(line) {
                                                 if let Some(uuid_str) = line.split("(ID: ").nth(1).and_then(|s| s.split(")").next()) {
-                                                    newly_checked.push(uuid_str.to_string());
+                                                    if processed_uids.insert(uuid_str.to_string()) {
+                                                        newly_checked.push(uuid_str.to_string());
+                                                    }
                                                 }
                                             }
                                         }
@@ -1817,9 +1878,15 @@ pub mod task_decomposer {
                                 z = radius;
                             }
     
-                            let task_id = ref_map.get(&idx).unwrap();
+                            let task_id = match ref_map.get(&idx) {
+                                Some(id) => *id,
+                                None => {
+                                    crate::log_ui_err!("{} LLM hallucinated dependency idx {}. Discarding link.", "[KERNEL WARNING]".yellow().bold(), idx);
+                                    continue;
+                                }
+                            };
                             subtasks.push(Task {
-                                id: *task_id,
+                                id: task_id,
                                 task_type: t_type.to_string(),
                                 payload: serde_json::json!({"instruction": instruction}),
                                 required_capabilities: reqs,
@@ -1968,6 +2035,10 @@ pub mod message_bus {
         
         /// Publish a message
         pub async fn publish(&self, message: Message) -> Result<()> {
+            if message.payload.to_string().len() > 1_048_576 {
+                tracing::error!(sender = %message.sender, topic = %message.topic, "Payload exceeded 1MB threshold. Dropping message to prevent OOM.");
+                return Err(anyhow::anyhow!("PayloadTooLarge"));
+            }
             let _ = self.tx.send(message);
             Ok(())
         }
@@ -2230,7 +2301,7 @@ pub mod agent_coordinator {
     use std::collections::HashMap;
     use std::sync::Arc;
     use tokio::sync::RwLock;
-    use crate::cognitive_loop::message_bus::{MessageBus, Message};
+    use crate::cognitive_loop::message_bus::MessageBus;
     use crate::cognitive_loop::agent_trait::TaskResult;
     
     use colored::*;
@@ -2271,166 +2342,13 @@ pub mod agent_coordinator {
                     Ok(msg) => {
                         match msg.topic.as_str() {
                             "SYSTEM.COMPLEX_TASK_STARTED" => {
-                                if let Ok(data) = serde_json::from_value::<serde_json::Value>(msg.payload) {
-                                    if let Some(parent_id_str) = data.get("parent_id").and_then(|v| v.as_str()) {
-                                        if let Ok(parent_id) = Uuid::parse_str(parent_id_str) {
-                                            if let Some(children) = data.get("subtasks").and_then(|v| v.as_array()) {
-                                                let mut tg = self.task_graph.write().await;
-                                                let mut st = self.subtask_status.write().await;
-                                                
-                                                let mut child_ids = Vec::new();
-                                                for c in children {
-                                                    if let Some(cid_str) = c.get("id").and_then(|v| v.as_str()) {
-                                                        if let Ok(cid) = Uuid::parse_str(cid_str) {
-                                                            child_ids.push(cid);
-                                                            st.insert(cid, SubtaskStatus::Pending);
-                                                        }
-                                                    }
-                                                }
-                                                tg.insert(parent_id, child_ids);
-                                                crate::log_ui!("{} Registered complex task graph spanning {} subtasks", "[COORDINATOR]".bright_purple().bold(), children.len());
-                                            }
-                                        }
-                                    }
-                                }
+                                crate::cognitive_loop_handlers::handle_complex_task_started(&self, msg).await;
                             },
                             "SYSTEM.SUBTASK_ASSIGNED" => {
-                                if let Ok(data) = serde_json::from_value::<serde_json::Value>(msg.payload) {
-                                    if let (Some(t_raw), Some(a_raw)) = (data.get("subtask_id").and_then(|v| v.as_str()), data.get("agent_id").and_then(|v| v.as_str())) {
-                                        if let (Ok(tid), Ok(aid)) = (Uuid::parse_str(t_raw), Uuid::parse_str(a_raw)) {
-                                            self.agent_assignments.write().await.insert(tid, aid);
-                                            self.subtask_status.write().await.insert(tid, SubtaskStatus::Assigned);
-                                        }
-                                    }
-                                }
+                                crate::cognitive_loop_handlers::handle_subtask_assigned(&self, msg).await;
                             },
                             "SYSTEM.SUBTASK_COMPLETED" => {
-                                if let Ok(data) = serde_json::from_value::<serde_json::Value>(msg.payload) {
-                                    if let Some(t_raw) = data.get("subtask_id").and_then(|v| v.as_str()) {
-                                        if let Ok(tid) = Uuid::parse_str(t_raw) {
-                                            self.subtask_status.write().await.insert(tid, SubtaskStatus::Completed);
-                                            
-                                            if let Some(res_val) = data.get("result") {
-                                                if let Ok(task_result) = serde_json::from_value::<TaskResult>(res_val.clone()) {
-                                                    self.subtask_results.write().await.insert(tid, task_result);
-                                                }
-                                            }
-                                            
-                                            // ACTIVE INFERENCE: Success lowers Free Energy
-                                            {
-                                                let mut sm = self.self_model.write().await;
-                                                sm.update_after_action(true, 1.0);
-                                                crate::log_ui!("{} Subtask {} registered as Completed. (Free Energy tracking: {:.2})", "[COORDINATOR]".bright_green().bold(), tid, sm.free_energy);
-                                            }
-                                            
-                                            // PHASE 12: Cognitive Symbiosis - Mirror onto shared WBS
-                                            if let Ok(contents) = std::fs::read_to_string("/Users/zerbytheboss/Monad/MONAD_WBS.md") {
-                                                let tid_str = format!("(ID: {})", tid);
-                                                let updated_lines: Vec<String> = contents.lines().map(|line| {
-                                                    if line.contains(&tid_str) && line.trim().starts_with("- [ ]") {
-                                                        line.replacen("- [ ]", "- [x]", 1)
-                                                    } else {
-                                                        line.to_string()
-                                                    }
-                                                }).collect();
-                                                let _ = std::fs::write("/Users/zerbytheboss/Monad/MONAD_WBS.md", updated_lines.join("\n") + "\n");
-                                            }
-                                            
-                                            // Check if a parent graph is entirely complete
-                                            let tg = self.task_graph.read().await;
-                                            let mut newly_completed_parents = Vec::new();
-                                            
-                                            for (parent_id, children) in tg.iter() {
-                                                let mut all_completed = true;
-                                                for cid in children {
-                                                    if let Some(status) = self.subtask_status.read().await.get(cid) {
-                                                        if *status != SubtaskStatus::Completed {
-                                                            all_completed = false; break;
-                                                        }
-                                                    } else {
-                                                        all_completed = false; break;
-                                                    }
-                                                }
-                                                if all_completed && children.contains(&tid) {
-                                                    newly_completed_parents.push(*parent_id);
-                                                }
-                                            }
-                                            
-                                            for pid in newly_completed_parents {
-                                                crate::log_ui!("{} Parent Graph {} achieved 100% completion! Compiling payload...", "[COORDINATOR]".bright_purple().bold(), pid);
-                                                
-                                                // Bundle up results (Hierarchical)
-                                                let mut bundled_results = Vec::new();
-                                                if let Some(children) = tg.get(&pid) {
-                                                    for cid in children {
-                                                        if let Some(res) = self.subtask_results.read().await.get(cid) {
-                                                            bundled_results.push(res.clone());
-                                                        }
-                                                    }
-                                                }
-                                                
-                                                // HOLOGRAPHIC FUSION: Geometric thought clustering
-                                                let mut fusion_logs = 0;
-                                                let mut centroid = [0.0; 3];
-                                                let mut valid_nodes = 0.0;
-                                                for res in &bundled_results {
-                                                    centroid[0] += res.geometric_node[0];
-                                                    centroid[1] += res.geometric_node[1];
-                                                    centroid[2] += res.geometric_node[2];
-                                                    valid_nodes += 1.0;
-                                                }
-                                                if valid_nodes > 0.0 {
-                                                    centroid[0] /= valid_nodes; centroid[1] /= valid_nodes; centroid[2] /= valid_nodes;
-                                                    
-                                                    let all_res = self.subtask_results.read().await;
-                                                    for (other_id, other_res) in all_res.iter() {
-                                                        let is_child = if let Some(children) = tg.get(&pid) { children.contains(other_id) } else { false };
-                                                        if is_child { continue; }
-                                                        
-                                                        let dx = other_res.geometric_node[0] - centroid[0];
-                                                        let dy = other_res.geometric_node[1] - centroid[1];
-                                                        let dz = other_res.geometric_node[2] - centroid[2];
-                                                        let dist = (dx*dx + dy*dy + dz*dz).sqrt();
-                                                        
-                                                        if dist < 0.66 {
-                                                            bundled_results.push(other_res.clone());
-                                                            fusion_logs += 1;
-                                                        }
-                                                    }
-                                                }
-                                                
-                                                if fusion_logs > 0 {
-                                                    crate::log_ui!("{} HOLOGRAPHIC INTERSECTION DETECTED: Fused {} external subtasks into active synthesis based on Euclidean proximity.", "[NOUMENON GEOMETRY]".bright_green().bold(), fusion_logs);
-                                                }
-                                                
-                                                // Broadcast Synthesis Trigger
-                                                let _ = bus.publish(Message {
-                                                    id: Uuid::new_v4(),
-                                                    sender: listener_id,
-                                                    topic: "SYSTEM.GRAPH_COMPLETED".to_string(),
-                                                    payload: serde_json::json!({
-                                                        "parent_id": pid.to_string(),
-                                                        "results": bundled_results
-                                                    }),
-                                                    timestamp: chrono::Utc::now(),
-                                                    priority: 255,
-                                                    ttl_secs: Some(3600),
-                                                }).await;
-                                            }
-                                            
-                                            // Broadcast Coordination update
-                                            let _ = bus.publish(Message {
-                                                id: Uuid::new_v4(),
-                                                sender: listener_id,
-                                                topic: "SYSTEM.COORDINATION_UPDATE".to_string(),
-                                                payload: serde_json::json!({"action": "check_graph", "updated_node": tid}),
-                                                timestamp: chrono::Utc::now(),
-                                                priority: 100,
-                                                ttl_secs: Some(600),
-                                            }).await;
-                                        }
-                                    }
-                                }
+                                crate::event_lattice_handlers::handle_subtask_completed(&self, msg.clone(), bus.clone(), listener_id).await;
                             },
                             "SYSTEM.SUBTASK_FAILED" => {
                                 if let Ok(data) = serde_json::from_value::<serde_json::Value>(msg.payload) {
@@ -3243,7 +3161,8 @@ pub mod plugins {
             // Use single-statement builder modifications to avoid 'unwrap()' or return type trait issues
             let _ = builder.arg(name);
             let _ = builder.arg(&args_str);
-            let _ = builder.stdout(Box::new(stdout.clone()));
+            let stdout_box: Box<dyn wasi_common::WasiFile> = Box::new(stdout.clone());
+            let _ = builder.stdout(stdout_box);
             
             let wasi = builder.build();
     

@@ -5,7 +5,7 @@ use std::hash::{Hash, Hasher};
 
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use crate::memory_substrate::memory_hierarchy::MemoryHierarchy;
+use crate::geometric_invariant::memory_hierarchy::MemoryHierarchy;
 
 pub fn definition() -> ChatCompletionTool {
     ChatCompletionTool {

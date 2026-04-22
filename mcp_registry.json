@@ -1,227 +1,5 @@
 {
   "servers": {
-    "uspto": {
-      "command": "/opt/homebrew/bin/uv",
-      "args": [
-        "--directory",
-        "/Users/zerbytheboss/Monad/src/mcp_servers/patent_mcp_server",
-        "run",
-        "patent-mcp-server"
-      ],
-      "env": {
-        "USPTO_API_KEY": "pexguh-rUvbyj-6gowfa"
-      }
-    },
-    "think-tool": {
-      "command": "/opt/homebrew/bin/npx",
-      "args": [
-        "-y",
-        "think-tool-mcp"
-      ]
-    },
-    "tcp-socket": {
-      "command": "uvx",
-      "args": [
-        "TcpSocketMCP"
-      ]
-    },
-    "stac-mcp": {
-      "command": "/opt/homebrew/bin/docker",
-      "args": [
-        "run",
-        "-i",
-        "--rm",
-        "ghcr.io/wayfinder-foundry/stac-mcp:latest"
-      ]
-    },
-    "searxng-public": {
-      "command": "/opt/homebrew/bin/npx",
-      "args": [
-        "-y",
-        "mcp-searxng-public@latest"
-      ]
-    },
-    "mcp-scholarly": {
-      "command": "uvx",
-      "args": [
-        "mcp-scholarly"
-      ]
-    },
-    "random-number": {
-      "command": "uvx",
-      "args": [
-        "random-number-mcp"
-      ]
-    },
-    "rabbitmq-mcp": {
-      "command": "uvx",
-      "args": [
-        "mcp-server-rabbitmq"
-      ]
-    },
-    "pdf-reader-mcp": {
-      "command": "/opt/homebrew/bin/node",
-      "args": [
-        "/Users/zerbytheboss/Monad/src/mcp_servers/mcp_pdf_reader/index.js"
-      ]
-    },
-    "nasa-mcp": {
-      "command": "/opt/homebrew/bin/npx",
-      "args": [
-        "-y",
-        "@programcomputer/nasa-mcp-server@latest"
-      ],
-      "env": {
-        "NASA_API_KEY": "x9XlghReruvAvSSPQdi80PjiPvENmXhVpbR8BiRv"
-      }
-    },
-    "mcpcap": {
-      "command": "uvx",
-      "args": [
-        "mcpcap"
-      ]
-    },
-    "context-provider": {
-      "command": "/Users/zerbytheboss/Monad/src/mcp_servers/mcp-context-provider/venv/bin/python",
-      "args": [
-        "/Users/zerbytheboss/Monad/src/mcp_servers/mcp-context-provider/context_provider_server.py"
-      ],
-      "env": {
-        "CONTEXT_CONFIG_DIR": "/Users/zerbytheboss/Monad/src/mcp_servers/mcp-context-provider/contexts",
-        "AUTO_LOAD_CONTEXTS": "true"
-      }
-    },
-    "language-server": {
-      "command": "/Users/zerbytheboss/Monad/src/mcp_servers/mcp-language-server/mcp-language-server",
-      "args": [
-        "--workspace",
-        "/Users/zerbytheboss/Monad",
-        "--lsp",
-        "/opt/homebrew/bin/rust-analyzer"
-      ],
-      "env": {
-        "LOG_LEVEL": "DEBUG"
-      }
-    },
-    "fred-mcp-server": {
-      "command": "/opt/homebrew/bin/node",
-      "args": [
-        "/Users/zerbytheboss/Monad/src/mcp_servers/fred-mcp-server/build/index.js"
-      ],
-      "env": {
-        "FRED_API_KEY": ""
-      }
-    },
-    "mcp-dblp": {
-      "command": "uvx",
-      "args": [
-        "mcp-dblp"
-      ]
-    },
-    "domain-tools": {
-      "command": "/Users/zerbytheboss/Monad/src/mcp_servers/domain-tools-mcp/.venv2/bin/python",
-      "args": [
-        "/Users/zerbytheboss/Monad/src/mcp_servers/domain-tools-mcp/domain_tools_server.py"
-      ],
-      "env": {}
-    },
-    "docy": {
-      "command": "uvx",
-      "args": [
-        "mcp-server-docy"
-      ],
-      "env": {
-        "DOCY_DOCUMENTATION_URLS": ""
-      }
-    },
-    "data4library-mcp": {
-      "command": "/opt/homebrew/bin/npx",
-      "args": [
-        "-y",
-        "@isnow890/data4library-mcp"
-      ],
-      "env": {
-        "LIBRARY_API_KEY": ""
-      }
-    },
-    "current-time-utc": {
-      "url": "https://a.currenttimeutc.com/mcp",
-      "transport": "sse"
-    },
-    "crash": {
-      "command": "node",
-      "args": [
-        "/Users/zerbytheboss/Monad/src/mcp_servers/crash-mcp/dist/index.js"
-      ],
-      "env": {}
-    },
-    "context-crystallizer": {
-      "command": "node",
-      "args": [
-        "/Users/zerbytheboss/Monad/src/mcp_servers/context-crystallizer/dist/index.js"
-      ],
-      "env": {}
-    },
-    "context-processor": {
-      "command": "/opt/homebrew/bin/npx",
-      "args": [
-        "-y",
-        "context-processor"
-      ]
-    },
-    "congress_gov_mcp": {
-      "command": "uv",
-      "args": [
-        "run",
-        "/Users/zerbytheboss/Monad/src/mcp_servers/congress_gov_mcp/server.py"
-      ],
-      "env": {
-        "CONGRESS_GOV_API_KEY": "C7f1JNYIILwZxIqN189aBjF1CgI66ifARIQqZw2L"
-      }
-    },
-    "chessagine-mcp": {
-      "command": "node",
-      "args": [
-        "/Users/zerbytheboss/Monad/src/mcp_servers/chessagine-mcp/build/runner/stdio.js"
-      ],
-      "env": {}
-    },
-    "catalysis-hub": {
-      "command": "python",
-      "args": [
-        "/Users/zerbytheboss/Monad/src/mcp_servers/catalysishub-mcp-server/catalysishub_mcp_server.py"
-      ],
-      "env": {}
-    },
-    "calculator": {
-      "command": "uvx",
-      "args": [
-        "mcp-server-calculator"
-      ]
-    },
-    "biorxiv": {
-      "command": "python",
-      "args": [
-        "-m",
-        "biorxiv-mcp-server"
-      ],
-      "env": {}
-    },
-    "biomcp": {
-      "command": "uv",
-      "args": [
-        "run",
-        "--with",
-        "biomcp-python",
-        "biomcp",
-        "run"
-      ],
-      "env": {
-        "CBIO_TOKEN": "",
-        "CBIO_BASE_URL": "",
-        "ONCOKB_TOKEN": ""
-      }
-    },
     "AutoML": {
       "args": [
         "--directory",
@@ -230,44 +8,7 @@
         "main.py"
       ],
       "command": "uv",
-      "env": {}
-    },
-    "arxiv-latex-mcp": {
-      "args": [
-        "--directory",
-        "/Users/zerbytheboss/Monad/src/mcp_servers/arxiv-latex-mcp",
-        "run",
-        "server/main.py"
-      ],
-      "command": "uv",
-      "env": {}
-    },
-    "arxiv-server": {
-      "args": [
-        "--directory",
-        "/Users/zerbytheboss/Monad/src/mcp_servers/arxiv-mcp-server/src/arxiv_server",
-        "run",
-        "server.py"
-      ],
-      "command": "uv",
-      "env": {
-        "DOWNLOAD_PATH": "/Users/zerbytheboss/Downloads"
-      }
-    },
-    "mcp-server-chart": {
-      "args": [
-        "-y",
-        "@antv/mcp-server-chart"
-      ],
-      "command": "/opt/homebrew/bin/npx",
-      "env": {}
-    },
-    "apiweaver": {
-      "args": [
-        "apiweaver",
-        "run"
-      ],
-      "command": "uvx",
+      "disabled": true,
       "env": {}
     },
     "a2a": {
@@ -280,6 +21,7 @@
         "{\"transport\":\"stdio\"}"
       ],
       "command": "/opt/homebrew/bin/npx",
+      "disabled": true,
       "env": {}
     },
     "anon_skill": {
@@ -287,6 +29,168 @@
         "src/mcp_servers/anon_skill.js"
       ],
       "command": "/opt/homebrew/bin/node",
+      "disabled": true,
+      "env": {}
+    },
+    "apiweaver": {
+      "args": [
+        "apiweaver",
+        "run"
+      ],
+      "command": "uvx",
+      "disabled": true,
+      "env": {}
+    },
+    "arxiv-latex-mcp": {
+      "args": [
+        "--directory",
+        "/Users/zerbytheboss/Monad/src/mcp_servers/arxiv-latex-mcp",
+        "run",
+        "server/main.py"
+      ],
+      "command": "uv",
+      "disabled": true,
+      "env": {}
+    },
+    "arxiv-server": {
+      "args": [
+        "--directory",
+        "/Users/zerbytheboss/Monad/src/mcp_servers/arxiv-mcp-server/src/arxiv_server",
+        "run",
+        "server.py"
+      ],
+      "command": "uv",
+      "disabled": true,
+      "env": {
+        "DOWNLOAD_PATH": "/Users/zerbytheboss/Downloads"
+      }
+    },
+    "biomcp": {
+      "args": [
+        "run",
+        "--with",
+        "biomcp-python",
+        "biomcp",
+        "run"
+      ],
+      "command": "uv",
+      "disabled": true,
+      "env": {
+        "CBIO_BASE_URL": "",
+        "CBIO_TOKEN": "",
+        "ONCOKB_TOKEN": ""
+      }
+    },
+    "biorxiv": {
+      "args": [
+        "-m",
+        "biorxiv-mcp-server"
+      ],
+      "command": "python",
+      "disabled": true,
+      "env": {}
+    },
+    "calculator": {
+      "args": [
+        "mcp-server-calculator"
+      ],
+      "command": "uvx",
+      "disabled": true
+    },
+    "catalysis-hub": {
+      "args": [
+        "/Users/zerbytheboss/Monad/src/mcp_servers/catalysishub-mcp-server/catalysishub_mcp_server.py"
+      ],
+      "command": "python",
+      "disabled": true,
+      "env": {}
+    },
+    "chessagine-mcp": {
+      "args": [
+        "/Users/zerbytheboss/Monad/src/mcp_servers/chessagine-mcp/build/runner/stdio.js"
+      ],
+      "command": "node",
+      "disabled": true,
+      "env": {}
+    },
+    "congress_gov_mcp": {
+      "args": [
+        "run",
+        "/Users/zerbytheboss/Monad/src/mcp_servers/congress_gov_mcp/server.py"
+      ],
+      "command": "uv",
+      "disabled": true,
+      "env": {
+        "CONGRESS_GOV_API_KEY": "C7f1JNYIILwZxIqN189aBjF1CgI66ifARIQqZw2L"
+      }
+    },
+    "context-crystallizer": {
+      "args": [
+        "/Users/zerbytheboss/Monad/src/mcp_servers/context-crystallizer/dist/index.js"
+      ],
+      "command": "node",
+      "disabled": true,
+      "env": {}
+    },
+    "context-processor": {
+      "args": [
+        "-y",
+        "context-processor"
+      ],
+      "command": "/opt/homebrew/bin/npx",
+      "disabled": true
+    },
+    "context-provider": {
+      "args": [
+        "/Users/zerbytheboss/Monad/src/mcp_servers/mcp-context-provider/context_provider_server.py"
+      ],
+      "command": "/Users/zerbytheboss/Monad/src/mcp_servers/mcp-context-provider/venv/bin/python",
+      "disabled": true,
+      "env": {
+        "AUTO_LOAD_CONTEXTS": "true",
+        "CONTEXT_CONFIG_DIR": "/Users/zerbytheboss/Monad/src/mcp_servers/mcp-context-provider/contexts"
+      }
+    },
+    "crash": {
+      "args": [
+        "/Users/zerbytheboss/Monad/src/mcp_servers/crash-mcp/dist/index.js"
+      ],
+      "command": "node",
+      "disabled": true,
+      "env": {}
+    },
+    "current-time-utc": {
+      "disabled": true,
+      "transport": "sse",
+      "url": "https://a.currenttimeutc.com/mcp"
+    },
+    "data4library-mcp": {
+      "args": [
+        "-y",
+        "@isnow890/data4library-mcp"
+      ],
+      "command": "/opt/homebrew/bin/npx",
+      "disabled": true,
+      "env": {
+        "LIBRARY_API_KEY": ""
+      }
+    },
+    "docy": {
+      "args": [
+        "mcp-server-docy"
+      ],
+      "command": "uvx",
+      "disabled": true,
+      "env": {
+        "DOCY_DOCUMENTATION_URLS": ""
+      }
+    },
+    "domain-tools": {
+      "args": [
+        "/Users/zerbytheboss/Monad/src/mcp_servers/domain-tools-mcp/domain_tools_server.py"
+      ],
+      "command": "/Users/zerbytheboss/Monad/src/mcp_servers/domain-tools-mcp/.venv2/bin/python",
+      "disabled": true,
       "env": {}
     },
     "filesystem": {
@@ -297,7 +201,18 @@
         "/Users/zerbytheboss/Mnemosyne-Substrate"
       ],
       "command": "/opt/homebrew/bin/npx",
+      "disabled": true,
       "env": {}
+    },
+    "fred-mcp-server": {
+      "args": [
+        "/Users/zerbytheboss/Monad/src/mcp_servers/fred-mcp-server/build/index.js"
+      ],
+      "command": "/opt/homebrew/bin/node",
+      "disabled": true,
+      "env": {
+        "FRED_API_KEY": ""
+      }
     },
     "github": {
       "args": [
@@ -305,7 +220,51 @@
         "@modelcontextprotocol/server-github"
       ],
       "command": "/opt/homebrew/bin/npx",
+      "disabled": true,
       "env": {}
+    },
+    "language-server": {
+      "args": [
+        "--workspace",
+        "/Users/zerbytheboss/Monad",
+        "--lsp",
+        "/opt/homebrew/bin/rust-analyzer"
+      ],
+      "command": "/Users/zerbytheboss/Monad/src/mcp_servers/mcp-language-server/mcp-language-server",
+      "disabled": true,
+      "env": {
+        "LOG_LEVEL": "DEBUG"
+      }
+    },
+    "mcp-dblp": {
+      "args": [
+        "mcp-dblp"
+      ],
+      "command": "uvx",
+      "disabled": true
+    },
+    "mcp-scholarly": {
+      "args": [
+        "mcp-scholarly"
+      ],
+      "command": "uvx",
+      "disabled": true
+    },
+    "mcp-server-chart": {
+      "args": [
+        "-y",
+        "@antv/mcp-server-chart"
+      ],
+      "command": "/opt/homebrew/bin/npx",
+      "disabled": true,
+      "env": {}
+    },
+    "mcpcap": {
+      "args": [
+        "mcpcap"
+      ],
+      "command": "uvx",
+      "disabled": true
     },
     "memory": {
       "args": [
@@ -313,7 +272,26 @@
         "@modelcontextprotocol/server-memory"
       ],
       "command": "/opt/homebrew/bin/npx",
+      "disabled": true,
       "env": {}
+    },
+    "nasa-mcp": {
+      "args": [
+        "-y",
+        "@programcomputer/nasa-mcp-server@latest"
+      ],
+      "command": "/opt/homebrew/bin/npx",
+      "disabled": true,
+      "env": {
+        "NASA_API_KEY": "x9XlghReruvAvSSPQdi80PjiPvENmXhVpbR8BiRv"
+      }
+    },
+    "pdf-reader-mcp": {
+      "args": [
+        "/Users/zerbytheboss/Monad/src/mcp_servers/mcp_pdf_reader/index.js"
+      ],
+      "command": "/opt/homebrew/bin/node",
+      "disabled": true
     },
     "puppeteer": {
       "args": [
@@ -321,7 +299,30 @@
         "@modelcontextprotocol/server-puppeteer"
       ],
       "command": "/opt/homebrew/bin/npx",
+      "disabled": true,
       "env": {}
+    },
+    "rabbitmq-mcp": {
+      "args": [
+        "mcp-server-rabbitmq"
+      ],
+      "command": "uvx",
+      "disabled": true
+    },
+    "random-number": {
+      "args": [
+        "random-number-mcp"
+      ],
+      "command": "uvx",
+      "disabled": true
+    },
+    "searxng-public": {
+      "args": [
+        "-y",
+        "mcp-searxng-public@latest"
+      ],
+      "command": "/opt/homebrew/bin/npx",
+      "disabled": true
     },
     "sequential_thinking": {
       "args": [
@@ -329,13 +330,25 @@
         "@modelcontextprotocol/server-sequential-thinking"
       ],
       "command": "/opt/homebrew/bin/npx",
+      "disabled": true,
       "env": {}
+    },
+    "stac-mcp": {
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "ghcr.io/wayfinder-foundry/stac-mcp:latest"
+      ],
+      "command": "/opt/homebrew/bin/docker",
+      "disabled": true
     },
     "stealth_browser": {
       "args": [
         "src/mcp_servers/stealth_browser.js"
       ],
       "command": "/opt/homebrew/bin/node",
+      "disabled": true,
       "env": {}
     },
     "stealth_browser_enhancer": {
@@ -343,7 +356,30 @@
         "src/mcp_servers/stealth_browser_enhancer.js"
       ],
       "command": "/opt/homebrew/bin/node",
+      "disabled": true,
       "env": {}
+    },
+    "stealth_browser_mcp": {
+      "args": [
+        "src/mcp_servers/stealth_browser_mcp.js"
+      ],
+      "command": "/opt/homebrew/bin/node",
+      "disabled": false,
+      "env": {}
+    },
+    "tcp-socket": {
+      "args": [
+        "TcpSocketMCP"
+      ],
+      "command": "uvx",
+      "disabled": true
+    },
+    "think-tool": {
+      "args": [
+        "-y",
+        "think-tool-mcp"
+      ],
+      "command": "/opt/homebrew/bin/npx"
     },
     "time": {
       "args": [
@@ -351,7 +387,21 @@
         "@modelcontextprotocol/server-time"
       ],
       "command": "/opt/homebrew/bin/npx",
+      "disabled": true,
       "env": {}
+    },
+    "uspto": {
+      "args": [
+        "--directory",
+        "/Users/zerbytheboss/Monad/src/mcp_servers/patent_mcp_server",
+        "run",
+        "patent-mcp-server"
+      ],
+      "command": "/opt/homebrew/bin/uv",
+      "disabled": true,
+      "env": {
+        "USPTO_API_KEY": "pexguh-rUvbyj-6gowfa"
+      }
     }
   }
 }

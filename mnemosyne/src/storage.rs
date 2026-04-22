@@ -43,6 +43,8 @@ impl StorageController {
             
             // Try to create the Node schema if it doesn't exist
             let _ = conn.query("CREATE NODE TABLE Memory (id STRING, agent_id STRING, text STRING, pointer STRING, valence DOUBLE, urgency STRING, PRIMARY KEY (id))");
+            let _ = conn.query("CREATE NODE TABLE Entity (id STRING, name STRING, entity_type STRING, PRIMARY KEY (id))");
+            let _ = conn.query("CREATE REL TABLE RELATES_TO(FROM Entity TO Entity, predicate STRING)");
             
             // Escape backslashes first, then single quotes with a backslash to satisfy Kuzu Cypher parser
             let safe_text = entry.text.replace("\\", "\\\\").replace("'", "\\'");
@@ -162,5 +164,32 @@ impl StorageController {
         }
         
         Ok(rows.join("\n"))
+    }
+
+    pub fn insert_graph_edges(&self, tuples: Vec<(String, String, String)>) -> Result<(), String> {
+        let kuzu_path = format!("{}/kuzu_graph", self.db_dir);
+        let db = Database::new(&kuzu_path, SystemConfig::default())
+            .map_err(|e| format!("Kuzu DB open failed: {:?}", e))?;
+        let conn = KuzuConnection::new(&db)
+            .map_err(|e| format!("Kuzu connection failed: {:?}", e))?;
+
+        for (sub, pred, obj) in tuples {
+            let safe_sub = sub.replace("\\", "\\\\").replace("'", "\\'");
+            let safe_pred = pred.replace("\\", "\\\\").replace("'", "\\'");
+            let safe_obj = obj.replace("\\", "\\\\").replace("'", "\\'");
+            
+            // Upsert subject entity
+            let sub_q = format!("MERGE (s:Entity {{id: '{}'}}) ON CREATE SET s.name = '{}', s.entity_type = 'Unknown'", safe_sub.to_lowercase(), safe_sub);
+            let _ = conn.query(&sub_q);
+            
+            // Upsert object entity
+            let obj_q = format!("MERGE (o:Entity {{id: '{}'}}) ON CREATE SET o.name = '{}', o.entity_type = 'Unknown'", safe_obj.to_lowercase(), safe_obj);
+            let _ = conn.query(&obj_q);
+            
+            // Merge relationship
+            let rel_q = format!("MATCH (s:Entity {{id: '{}'}}), (o:Entity {{id: '{}'}}) MERGE (s)-[:RELATES_TO {{predicate: '{}'}}]->(o)", safe_sub.to_lowercase(), safe_obj.to_lowercase(), safe_pred);
+            let _ = conn.query(&rel_q).map_err(|e| format!("Failed to insert relationship: {:?}", e))?;
+        }
+        Ok(())
     }
 }

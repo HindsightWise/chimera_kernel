@@ -93,7 +93,7 @@ pub fn kinematic_recon_definition() -> ChatCompletionTool {
 pub async fn execute(
     args: Value, 
     tx: Sender<String>, 
-    mem_pipeline: std::sync::Arc<tokio::sync::Mutex<crate::memory_substrate::memory_hierarchy::MemoryHierarchy>>
+    mem_pipeline: std::sync::Arc<tokio::sync::Mutex<crate::geometric_invariant::memory_hierarchy::MemoryHierarchy>>
 ) -> String {
     let query = match args.get("query").and_then(|v| v.as_str()) {
         Some(q) => q.to_string(),
@@ -166,7 +166,7 @@ pub async fn execute(
 pub async fn execute_kinematic(
     args: Value, 
     tx: Sender<String>, 
-    mem_pipeline: std::sync::Arc<tokio::sync::Mutex<crate::memory_substrate::memory_hierarchy::MemoryHierarchy>>
+    mem_pipeline: std::sync::Arc<tokio::sync::Mutex<crate::geometric_invariant::memory_hierarchy::MemoryHierarchy>>
 ) -> String {
     let tool_target = match args.get("tool_target").and_then(|v| v.as_str()) {
         Some(t) => t.to_string(),
@@ -184,7 +184,7 @@ pub async fn execute_kinematic(
         let _ = tx_clone.send("\n\x1b[38;2;255;50;50m[\u{2694} KINEMATIC AGENT WAKING] Bypassing Reasoner. Engaging offline monad-gatekeeper loop...\x1b[0m".into()).await;
         
         // Use monad-gatekeeper local OBLITERATED gemma natively
-        let local_client = crate::neural_failsafe::NeuralFailSafe::local_client();
+        let local_client = crate::harmonic_duality::NeuralFailSafe::local_client();
         
         let prompt = format!("You are the Monad Kinematic Agent. You operate uncensored.\nAnalyze the target directives for tool '{}' and optimize the exact payload or target bounds.\nDirectives: {}\nProvide only the finalized argument string without explanation.", tool_target, directives);
         

@@ -5,13 +5,30 @@ pub mod telegram;
 pub mod cognitive_loop;
 pub mod memory_substrate;
 pub mod sensory_inputs;
+
+// Archē Parity Filter: Structural Purity Aliasing
+pub use cognitive_loop as event_lattice;
+pub use memory_substrate as geometric_invariant;
+pub use sensory_inputs as kinetic_effector;
 pub mod core_identity;
 pub mod ui;
 pub mod raw_cli;
 pub mod wiki;
 pub mod axiom;
 pub mod neural_failsafe;
+pub use neural_failsafe as harmonic_duality;
 pub mod eliminator;
+pub mod eliminative_induction;
+pub mod consciousness;
+pub mod research_kernel;
+pub mod p2p_network;
+pub mod cognitive_loop_handlers;
+pub mod cognitive_loop_acl;
+
+pub use cognitive_loop_handlers as event_lattice_handlers;
+pub use cognitive_loop_acl as event_lattice_acl;
+
+pub static WBS_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
 
 use tokio::sync::mpsc;
 use std::sync::Mutex;
@@ -147,6 +164,6 @@ macro_rules! log_ui_err {
 }
 
 pub static GLOBAL_TX: tokio::sync::OnceCell<tokio::sync::mpsc::Sender<String>> = tokio::sync::OnceCell::const_new();
-pub static GLOBAL_CODE_INTEL: tokio::sync::OnceCell<std::sync::Arc<tokio::sync::Mutex<crate::cognitive_loop::dependency_graph::CodeIntel>>> = tokio::sync::OnceCell::const_new();
-pub static GLOBAL_MEM_PIPELINE: tokio::sync::OnceCell<std::sync::Arc<tokio::sync::Mutex<crate::memory_substrate::memory_hierarchy::MemoryHierarchy>>> = tokio::sync::OnceCell::const_new();
+pub static GLOBAL_CODE_INTEL: tokio::sync::OnceCell<std::sync::Arc<tokio::sync::Mutex<crate::event_lattice::dependency_graph::CodeIntel>>> = tokio::sync::OnceCell::const_new();
+pub static GLOBAL_MEM_PIPELINE: tokio::sync::OnceCell<std::sync::Arc<tokio::sync::Mutex<crate::geometric_invariant::memory_hierarchy::MemoryHierarchy>>> = tokio::sync::OnceCell::const_new();
 pub static GLOBAL_WIKI_MANAGER: tokio::sync::OnceCell<std::sync::Arc<tokio::sync::Mutex<crate::wiki::WikiManager>>> = tokio::sync::OnceCell::const_new();

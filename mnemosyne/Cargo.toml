@@ -24,5 +24,6 @@ arrow-schema = "50.0.0"
 futures = "0.3"
 tokio = { version = "1.36", features = ["rt-multi-thread"] }
 dirs = "5.0.1"
+reqwest = { version = "0.12.3", features = ["json"] }
 
 glossopetrae = { path = "../venom/glossopetrae" }

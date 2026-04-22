@@ -1,13 +1,4 @@
-# OS Workspace Tracking (MONAD_WBS)
+# THIS FILE HAS BEEN TOPOLOGICALLY FLATTENED
 
-This file is automatically monitored and edited natively by the `ReasoningAgent` and `AgentCoordinator`. It serves as the symbiotic boundary between the User, Antigravity, and Monad.
-
----
-
-## [Phase 12 Genesis] Cognitive Symbiosis Checklist
-
-When Monad dreams, Subconscious Tasks extracted from its Vector Memory will physically manifest below as Boolean Tasks. When the subtasks execute successfully inside the Swarm, the AgentCoordinator intercepts the UUID and natively checks them off.
-
-*The list below is dynamically appended: Do not rely solely on manual modifications.*
-
-- [x] Genesis Configuration Verified (ID: INTERNAL-SYSTEM-NO-UUID)
+Please see `MONAD_ARCHITECTURE.md` at the root of the workspace for this file's contents.
+This file has been deprecated to maintain DAMP AI-First principles.

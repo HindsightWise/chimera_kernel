@@ -1,4 +1,6 @@
 //! Distributed Stealth Browser Hyperstructure
+#![allow(dead_code)]
+
 use headless_chrome::{Browser, LaunchOptions};
 
 pub struct StealthNode;
@@ -18,16 +20,22 @@ impl StealthNode {
 
         let browser = Browser::new(options)?;
         let tab = browser.new_tab()?;
-        
+
         // OVERRIDE: Eliminate `navigator.webdriver` via JS injection
-        tab.evaluate(r#"Object.defineProperty(navigator, 'webdriver', { get: () => undefined });"#, false)?;
-        
+        tab.evaluate(
+            r#"Object.defineProperty(navigator, 'webdriver', { get: () => undefined });"#,
+            false,
+        )?;
+
         tab.navigate_to(target_url)?;
         tab.wait_until_navigated()?;
-        
+
         let content = tab.wait_for_element("body")?.get_inner_text()?;
-        monad::log_ui!("🔓 [HACKER] Exfiltration successful. Extracted {} bytes.", content.len());
-        
+        monad::log_ui!(
+            "🔓 [HACKER] Exfiltration successful. Extracted {} bytes.",
+            content.len()
+        );
+
         Ok(content)
     }
 }
