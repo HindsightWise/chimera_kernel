@@ -90,7 +90,6 @@ pub async fn execute_tool(
             terminal::execute(args, &intel_lock).await
         },
         "leviathan_stealth_get" => leviathan_tool::execute(args, tx.clone()).await,
-        "lightpanda_stealth_browser" => lightpanda_tool::execute(args, tx.clone()).await,
         "emulate_human" => cyborg::execute(args).await,
         "mnemosyne_subconscious_recall" => memory::execute(args, mem_pipeline).await,
         "axiom_clepsydra_extract" => axiom::execute(args).await,
@@ -101,7 +100,26 @@ pub async fn execute_tool(
         "spider_rss" => research::execute_spider(args).await,
         "deep_read_url" => research::execute_deep_read(args).await,
         "tavily_search" => research::execute_tavily_search(args).await,
-        "browser_actuation" => research::execute_browser_actuation(args).await,
+        "lightpanda_stealth_browser" | "browser_actuation" | "puppeteer_navigate" | "stealth_browser_navigate" | "stealth_browser_enhancer_navigate" => {
+            if let Some(orchestrator) = crate::GLOBAL_BROWSER_ORCHESTRATOR.get() {
+                let url = args.get("url").and_then(|v| v.as_str()).unwrap_or("").to_string();
+                let req = crate::architecture::browser_orchestrator::BrowserRequest {
+                    url,
+                    operation_type: name.to_string(),
+                    headless: true,
+                    timeout_ms: 30000,
+                    metadata: std::collections::HashMap::new(),
+                };
+                let resp = orchestrator.dispatch(req).await;
+                if resp.success { 
+                    resp.content 
+                } else { 
+                    format!("[ERROR] Browser Orchestration Failed: {}", resp.error.unwrap_or_else(|| "Unknown error".to_string())) 
+                }
+            } else {
+                "[ERROR] Browser Orchestrator not initialized".to_string()
+            }
+        },
         "vision_parsing" => research::execute_vision_parsing(args).await,
         "read_note" => memento::execute_read_note(args).await,
         "search_vault" => memento::execute_search_vault(args).await,

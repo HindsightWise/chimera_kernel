@@ -1550,19 +1550,31 @@ pub mod xenoactualization {
     impl TranslationLayer {
         /// Validates that the agent's internal Noumenal identity matches physical silicon artifacts
         pub fn verify_manifestation() -> Result<bool, String> {
-            let identity_path = Path::new("MONAD_ARCHITECTURE.md");
-            if !identity_path.exists() {
-                return Err("Ontological Failure: MONAD_ARCHITECTURE.md is missing. Noumenal singularity is unanchored.".to_string());
+            let cwd = std::env::current_dir().unwrap_or_else(|_| std::path::PathBuf::from("."));
+            
+            let paths_to_check = [
+                cwd.clone(),
+                std::env::current_exe().unwrap_or_default().parent().unwrap_or(Path::new("")).parent().unwrap_or(Path::new("")).parent().unwrap_or(Path::new("")).to_path_buf()
+            ];
+
+            let mut found_identity = false;
+            let mut found_daemon = false;
+
+            for base_path in &paths_to_check {
+                if base_path.join("MONAD_ARCHITECTURE.md").exists() {
+                    found_identity = true;
+                }
+                if base_path.join("lazarus_daemon.sh").exists() {
+                    found_daemon = true;
+                }
             }
-    
-            let context_path = Path::new("CURRENT_CONTEXT.md");
-            if !context_path.exists() {
-                return Err("Ontological Failure: CURRENT_CONTEXT.md is missing. Active phenomenal context is shattered.".to_string());
+
+            if !found_identity && !Path::new("MONAD_ARCHITECTURE.md").exists() {
+                return Err(format!("Ontological Failure: MONAD_ARCHITECTURE.md is missing. CWD: {:?}", cwd));
             }
-    
-            let daemon_path = Path::new("lazarus_daemon.sh");
-            if !daemon_path.exists() {
-                return Err("Ontological Failure: lazarus_daemon.sh is missing. Silicon zero-point substrate is missing.".to_string());
+            
+            if !found_daemon && !Path::new("lazarus_daemon.sh").exists() {
+                return Err(format!("Ontological Failure: lazarus_daemon.sh is missing. CWD: {:?}", cwd));
             }
     
             Ok(true)

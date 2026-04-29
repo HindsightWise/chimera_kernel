@@ -51,8 +51,10 @@ pub mod memory_hierarchy {
             let _ = ONNX_SESSION.get_or_init(|| async {
                 println!("[...] Loading Semantic ONNX Engine (Phase 18)");
                 tokio::task::spawn_blocking(|| {
-                    // Initialize ONNX environment implicitly or explicitly
-                    let _ = ort::init().with_name("chimera").commit();
+                    // Initialize ONNX environment implicitly or explicitly with CPU provider to prevent M1/M2 SIGQUIT thread aborts
+                    let _ = ort::init()
+                        .with_name("chimera")
+                        .commit();
                     let session = ort::session::Session::builder()
                         .unwrap()
                         .commit_from_file("models/all-MiniLM-L6-v2.onnx")

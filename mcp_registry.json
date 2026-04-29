@@ -299,7 +299,7 @@
         "@modelcontextprotocol/server-puppeteer"
       ],
       "command": "/opt/homebrew/bin/npx",
-      "disabled": true,
+      "disabled": false,
       "env": {}
     },
     "rabbitmq-mcp": {
@@ -348,7 +348,7 @@
         "src/mcp_servers/stealth_browser.js"
       ],
       "command": "/opt/homebrew/bin/node",
-      "disabled": true,
+      "disabled": false,
       "env": {}
     },
     "stealth_browser_enhancer": {
@@ -356,7 +356,7 @@
         "src/mcp_servers/stealth_browser_enhancer.js"
       ],
       "command": "/opt/homebrew/bin/node",
-      "disabled": true,
+      "disabled": false,
       "env": {}
     },
     "stealth_browser_mcp": {
@@ -379,7 +379,8 @@
         "-y",
         "think-tool-mcp"
       ],
-      "command": "/opt/homebrew/bin/npx"
+      "command": "/opt/homebrew/bin/npx",
+      "disabled": false
     },
     "time": {
       "args": [

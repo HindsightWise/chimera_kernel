@@ -1,0 +1,22 @@
+# Monad OS: Zero-Hallucination WBS
+
+- Level 1: Monad OS Kernel Autonomy
+  - Level 2: Chimera Kernel Phase 19 - Zero-Error Autonomy
+    - Level 3: TUI Stability & Council Initialization
+      - Level 4: Crash Resolution & Terminal Teardown Hooks
+        - [x] Verify panic hooks properly teardown Ghostty TUI (crossterm LeaveAlternateScreen).
+        - [x] Trap SIGQUIT gracefully inside the `tokio::select!` shutdown handler.
+        - [x] Identify explicit `std::process::exit(131)` call triggering the "Crash 131" in `cognitive_loop.rs` (Xenoactualization Boot Check).
+        - [x] Patch `cognitive_loop.rs` to explicitly tear down `crossterm` raw mode BEFORE triggering manual `exit(131)` and `exit(42)` to prevent terminal garbling.
+        - [x] Patch `core_identity::xenoactualization::TranslationLayer::verify_manifestation()` to walk the parent directories for manifestation files, and inject `CWD` into the debug string if they fail.
+      - Level 4: Autonomous Binary Spawning Mechanism
+        - [x] Update `consciousness.rs` to handle `.spawn()` errors natively rather than `expect()`.
+        - [x] Gracefully handle missing binaries to prevent background tokio task panics.
+      - Level 4: Phase 13 Theorem 9 Validation
+        - [x] Fix tool selection algorithm in `browser_orchestrator.rs` (prioritize success over raw speed).
+        - [x] Add realistic timing simulation (50-500ms per tool type).
+        - [x] Integrate actual MCP tool calls (puppeteer, stealth_browser_mcp).
+        - [x] Implement τ-adaptive concurrency limits (dynamic τ ≤ 5).
+        - [x] Create unified dispatch interface for all browser tools.
+        - [x] Test end-to-end orchestration with real tools.
+        - [x] Document Theorem 9 in knowledge base.

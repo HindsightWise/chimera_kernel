@@ -1,0 +1,66 @@
+[
+  {
+    "tool_name": "system",
+    "operation_type": "python_check",
+    "tau_ms": 12.19,
+    "success": true,
+    "timestamp": "2026-04-22T11:37:50.460700",
+    "output_preview": "Python 3.14.3"
+  },
+  {
+    "tool_name": "system",
+    "operation_type": "node_check",
+    "tau_ms": 26.57,
+    "success": true,
+    "timestamp": "2026-04-22T11:37:50.487313",
+    "output_preview": "v25.9.0"
+  },
+  {
+    "tool_name": "system",
+    "operation_type": "docker_check",
+    "tau_ms": 92.22,
+    "success": true,
+    "timestamp": "2026-04-22T11:37:50.579584",
+    "output_preview": "Docker version 28.5.2, build ecc6942"
+  },
+  {
+    "tool_name": "puppeteer",
+    "operation_type": "js_check",
+    "tau_ms": 110.14,
+    "success": true,
+    "timestamp": "2026-04-22T11:37:50.689795",
+    "output_preview": "puppeteer JS file check OK"
+  },
+  {
+    "tool_name": "stealth_browser",
+    "operation_type": "js_check",
+    "tau_ms": 63.72,
+    "success": true,
+    "timestamp": "2026-04-22T11:37:50.753588",
+    "output_preview": "stealth_browser JS file check OK"
+  },
+  {
+    "tool_name": "stealth_browser_enhancer",
+    "operation_type": "js_check",
+    "tau_ms": 63.32,
+    "success": true,
+    "timestamp": "2026-04-22T11:37:50.816981",
+    "output_preview": "stealth_browser_enhancer JS file check OK"
+  },
+  {
+    "tool_name": "stealth_browser_mcp",
+    "operation_type": "js_check",
+    "tau_ms": 63.27,
+    "success": true,
+    "timestamp": "2026-04-22T11:37:50.880321",
+    "output_preview": "stealth_browser_mcp JS file check OK"
+  },
+  {
+    "tool_name": "browser_actuation",
+    "operation_type": "playwright_navigation",
+    "tau_ms": 39.14,
+    "success": false,
+    "timestamp": "2026-04-22T11:37:50.920660",
+    "output_preview": "[stderr: Traceback (most recent call last):\n  File \"/tmp/test_playwright.py\", line 2, in <module>\n    from pl]"
+  }
+]
