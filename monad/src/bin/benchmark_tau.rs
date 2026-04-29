@@ -70,6 +70,7 @@ async fn main() {
         "---\ntags: [benchmark, telemetry, cognitive_overhead]\nprov:Activity: Autonomous Self-Instrumentation\nprov:Agent: benchmark_tau\n---\n# Phase A: \u{03C4}/S Telemetry\n\nThe Monad formally requested to measure the raw execution time of the Puppeteer MCP to isolate the `C` (Cognitive Overhead) block.\n\n```text\n{}```",
         memory_buffer
     );
+    let _ = tokio::fs::create_dir_all("MEMORY/ops").await;
     let _ = tokio::fs::write("MEMORY/ops/tau_baseline.md", memory_payload).await;
     println!("[\u{25C8} ARS CONTEXTA] Telemetry successfully injected into Monad's episodic vault (MEMORY/ops/tau_baseline.md).");
 }

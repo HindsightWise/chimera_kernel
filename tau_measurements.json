@@ -1,0 +1,26 @@
+[
+  {
+    "tool_name": "network",
+    "operation_type": "curl_test",
+    "tau_ms": 162.32,
+    "success": true,
+    "timestamp": "2026-04-22T11:36:14.903342",
+    "output_preview": "HTTP/2 200 \ncontent-type: text/html; charset=utf-8\nvia: 1.1 google, 1.1 varnish, 1.1 varnish, 1.1 va"
+  },
+  {
+    "tool_name": "node",
+    "operation_type": "version_check",
+    "tau_ms": 81.3,
+    "success": true,
+    "timestamp": "2026-04-22T11:36:14.984711",
+    "output_preview": "v25.9.0"
+  },
+  {
+    "tool_name": "filesystem",
+    "operation_type": "mcp_check",
+    "tau_ms": 7.85,
+    "success": true,
+    "timestamp": "2026-04-22T11:36:14.992616",
+    "output_preview": "-rw-r--r--  1 zerbytheboss  staff  11374 Apr 20 13:40 src/mcp_servers/stealth_browser.js"
+  }
+]

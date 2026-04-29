@@ -24,6 +24,9 @@ pub mod research_kernel;
 pub mod p2p_network;
 pub mod cognitive_loop_handlers;
 pub mod cognitive_loop_acl;
+pub mod mnemosyne_archivist;
+pub mod mac_telemetry;
+pub mod self_modification_engine;
 
 pub use cognitive_loop_handlers as event_lattice_handlers;
 pub use cognitive_loop_acl as event_lattice_acl;
@@ -167,3 +170,5 @@ pub static GLOBAL_TX: tokio::sync::OnceCell<tokio::sync::mpsc::Sender<String>> =
 pub static GLOBAL_CODE_INTEL: tokio::sync::OnceCell<std::sync::Arc<tokio::sync::Mutex<crate::event_lattice::dependency_graph::CodeIntel>>> = tokio::sync::OnceCell::const_new();
 pub static GLOBAL_MEM_PIPELINE: tokio::sync::OnceCell<std::sync::Arc<tokio::sync::Mutex<crate::geometric_invariant::memory_hierarchy::MemoryHierarchy>>> = tokio::sync::OnceCell::const_new();
 pub static GLOBAL_WIKI_MANAGER: tokio::sync::OnceCell<std::sync::Arc<tokio::sync::Mutex<crate::wiki::WikiManager>>> = tokio::sync::OnceCell::const_new();
+pub static GLOBAL_BROWSER_ORCHESTRATOR: tokio::sync::OnceCell<std::sync::Arc<crate::architecture::browser_orchestrator::BrowserOrchestrator>> = tokio::sync::OnceCell::const_new();
+pub mod architecture;

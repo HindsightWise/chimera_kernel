@@ -51,6 +51,20 @@ async fn main() {
         .with_writer(std::io::stderr)
         .init();
 
+    // Panic Hook to tear down the Ghostty TUI
+    let default_panic = std::panic::take_hook();
+    std::panic::set_hook(Box::new(move |panic_info| {
+        let mut stdout = std::io::stdout();
+        let _ = crossterm::execute!(
+            stdout,
+            crossterm::terminal::LeaveAlternateScreen,
+            crossterm::event::DisableBracketedPaste,
+            crossterm::event::DisableMouseCapture
+        );
+        let _ = crossterm::terminal::disable_raw_mode();
+        default_panic(panic_info);
+    }));
+
     // Load environment variables from .env file
     load_env_from_file().await;
 
@@ -108,12 +122,24 @@ async fn main() {
                 .await;
         };
 
+        #[cfg(unix)]
+        let quit = async {
+            signal::unix::signal(signal::unix::SignalKind::quit())
+                .expect("failed to install SIGQUIT handler")
+                .recv()
+                .await;
+        };
+
         #[cfg(not(unix))]
         let terminate = std::future::pending::<()>();
+        
+        #[cfg(not(unix))]
+        let quit = std::future::pending::<()>();
 
         tokio::select! {
             _ = ctrl_c => {},
             _ = terminate => {},
+            _ = quit => {},
         }
 
         monad::log_ui!("{}", "[MONAD] Received shutdown signal, initiating graceful termination".yellow().bold());
@@ -126,9 +152,26 @@ async fn main() {
         monad::webhook::start_server(tx_clone).await;
     });
 
+    // Spawn the Phoenix Self-Modification Engine
+    tokio::spawn(async move {
+        monad::self_modification_engine::SelfModificationEngine::awaken().await;
+    });
+
     // Phase 4: Awaken the Multi-Monad P2P Network
     tokio::spawn(async move {
         monad::p2p_network::MonadSwarmNode::awaken_p2p_listener(8080).await;
+    });
+
+    // Spawn the UDP Gossip Discovery Protocol
+    tokio::spawn(async move {
+        monad::p2p_network::MonadSwarmNode::awaken_discovery_beacon(8080).await;
+    });
+    
+    tokio::spawn(async move {
+        // Sleep briefly to ensure COUNCIL_BUS is fully registered
+        tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+        monad::p2p_network::MonadSwarmNode::spawn_p2p_emitter().await;
+        monad::mnemosyne_archivist::MnemosyneArchivist::awaken().await;
     });
 
 

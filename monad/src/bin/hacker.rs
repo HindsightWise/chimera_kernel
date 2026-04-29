@@ -8,13 +8,21 @@ async fn main() {
         if let Ok(line) = line {
             if let Ok(ThoughtVector::ExecutionRequest { target_url }) = serde_json::from_str::<ThoughtVector>(&line) {
                 // Simulate "Hacker" offensive execution via Leviathan stealth browser
-                let result_content = format!("Hacked target: {}. Payload successfully executed.", target_url);
+                // RAG Pipeline Simulation: Querying LanceDB for Documentation
+                let rag_context = if target_url.contains("rust") || target_url.contains("python") {
+                    monad::log_ui!("🔍 [HACKER] RAG Pipeline triggered! Querying LanceDB semantic memory for: {}", target_url);
+                    "Found 3 relevant documentation chunks in LanceDB. Context loaded."
+                } else {
+                    "No documentation required."
+                };
+
+                let execution_report = format!("Hacker successfully penetrated {} and extracted internal logic variables. (RAG Status: {})", target_url, rag_context);
                 
                 // Emits a new hypothesis based on its findings
                 let hack_result = ThoughtVector::Hypothesis {
                     origin: Persona::Hacker,
                     id: 999, // In reality, we'd sync ID generation
-                    content: result_content,
+                    content: execution_report,
                 };
                 
                 println!("{}", serde_json::to_string(&hack_result).unwrap());

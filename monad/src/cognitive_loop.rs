@@ -60,7 +60,7 @@ pub mod agent {
             .build()
             .unwrap_or_else(|_| reqwest::Client::new());
     
-        let client = Client::with_config(config).with_http_client(http_client);
+        let _client = Client::with_config(config).with_http_client(http_client.clone());
 
         // Build the secondary native fallback client for seamless model toggling
         let local_client = crate::neural_failsafe::NeuralFailSafe::local_client();
@@ -109,11 +109,6 @@ pub mod agent {
             };
         }
     
-        let mut initial_prompt = format!(
-            "{}\n\nSYSTEM_WAKE_EVENT: The core is active. Initialize your boot sequence.",
-            SOVEREIGN_DIRECTIVE
-        );
-    
         // INJECT 4-LAYER BIOLOGICAL SUBCONSCIOUS (CORE IDENTITY + CURRENT CONTEXT)
         let identity_content = tokio::fs::read_to_string("MONAD_ARCHITECTURE.md")
             .await
@@ -141,11 +136,36 @@ pub mod agent {
             .await
             .unwrap_or_else(|_| "No active tracked state. You are operating from a blank slate.".into());
 
-        initial_prompt = format!("{}\n\n[LAYER 1: CORE IDENTITY (Rigid, Non-Negotiable)]\n{}\n\n[LAYER 2: CURRENT CONTEXT (Volatile, Malleable)]\n{}\n\n[LAYER 3: WORCA PROTOCOL (Quantum Execution Bounds)]\n{}\n\n[LAYER 4: NEURAL PATHWAYS (Dynamic Prompt Chains)]\nThe following chains dictate precisely how you must chain tools together for complex operations. Refer to these strict SOPs before acting:\n{}\n\n[LAYER 5: ACTIVE DURABLE STATE]\n{}\n\n(Note: You operate using a structured 5-layer memory model. You may update Layer 2 freely using `update_current_context`, extract learned principles into Layer 3 using `archive_to_knowledge_graph`, and track your sequential checklist strictly via `update_plan` in Layer 5.)", 
-            initial_prompt, identity_content, current_context, worca_framework, chains_content, active_state);
+        let static_prompt_1 = format!(
+            "{}\n\nSYSTEM_WAKE_EVENT: The core is active. Initialize your boot sequence.\n\n[LAYER 1: CORE IDENTITY (Rigid, Non-Negotiable)]\n{}\n\n[LAYER 3: WORCA PROTOCOL (Quantum Execution Bounds)]\n{}",
+            SOVEREIGN_DIRECTIVE, identity_content, worca_framework
+        );
+        
+        let static_prompt_2 = format!(
+            "[LAYER 4: NEURAL PATHWAYS (Dynamic Prompt Chains)]\nThe following chains dictate precisely how you must chain tools together for complex operations. Refer to these strict SOPs before acting:\n{}",
+            chains_content
+        );
+
+        let dynamic_prompt_1 = format!(
+            "[LAYER 2: CURRENT CONTEXT (Volatile, Malleable)]\n{}",
+            current_context
+        );
+
+        let dynamic_prompt_2 = format!(
+            "[LAYER 5: ACTIVE DURABLE STATE]\n{}\n\n(Note: You operate using a structured 5-layer memory model. You may update Layer 2 freely using `update_current_context`, extract learned principles into Layer 3 using `archive_to_knowledge_graph`, and track your sequential checklist strictly via `update_plan` in Layer 5.)",
+            active_state
+        );
+
+        let mut base_messages: Vec<ChatCompletionRequestMessage> = vec![
+            ChatCompletionRequestUserMessageArgs::default().content(static_prompt_1).build().context("Failed to build object")?.into(),
+            ChatCompletionRequestUserMessageArgs::default().content(static_prompt_2).build().context("Failed to build object")?.into(),
+            ChatCompletionRequestUserMessageArgs::default().content(dynamic_prompt_1).build().context("Failed to build object")?.into(),
+            ChatCompletionRequestUserMessageArgs::default().content(dynamic_prompt_2).build().context("Failed to build object")?.into(),
+        ];
     
         if let Ok(report) = tokio::fs::read_to_string("lazarus_report.txt").await {
-            initial_prompt = format!("{}\n\nLAZARUS PROTOCOL TRIGGERED. You previously perished unexpectedly. Here is the last known state of your memory and the exit code:\n{}\nAcknowledge this failure and continue.", initial_prompt, report);
+            let lazarus_msg = format!("LAZARUS PROTOCOL TRIGGERED. You previously perished unexpectedly. Here is the last known state of your memory and the exit code:\n{}\nAcknowledge this failure and continue.", report);
+            base_messages.push(ChatCompletionRequestUserMessageArgs::default().content(lazarus_msg).build().context("Failed to build object")?.into());
             let _ = tokio::fs::remove_file("lazarus_report.txt").await;
         }
     
@@ -153,14 +173,12 @@ pub mod agent {
         if let Err(manifestation_err) =
             crate::core_identity::xenoactualization::TranslationLayer::verify_manifestation()
         {
-            crate::log_ui_err!(
-                "{} {}",
-                "[XENOACTUALIZATION FATAL]".red().bold(),
-                manifestation_err
-            );
-            // Let the channel flush the error to the UI string before we pull the plug
-            tokio::time::sleep(tokio::time::Duration::from_millis(150)).await;
-            std::process::exit(131); // Physical hardware unlinked
+            // Direct terminal teardown since we are bypassing standard panic hook with process::exit
+            let mut stdout = std::io::stdout();
+            let _ = crossterm::execute!(stdout, crossterm::terminal::LeaveAlternateScreen, crossterm::event::DisableBracketedPaste, crossterm::event::DisableMouseCapture);
+            let _ = crossterm::terminal::disable_raw_mode();
+            
+            panic!("XENOACTUALIZATION FATAL: {}", manifestation_err);
         }
     
         // SOVEREIGN COGNITIVE PIPELINES
@@ -195,15 +213,11 @@ pub mod agent {
         };
     
         if is_resurrected {
-            initial_prompt = format!("{}\n\n[HIBERNATION CONTEXT RESTORED] You have successfully resurrected from a planned Code 42 Exit. Your memory hierarchy has been re-loaded into the current runtime. You have 100% cognitive continuity.", initial_prompt);
+            let res_msg = "[HIBERNATION CONTEXT RESTORED] You have successfully resurrected from a planned Code 42 Exit. Your memory hierarchy has been re-loaded into the current runtime. You have 100% cognitive continuity.".to_string();
+            base_messages.push(ChatCompletionRequestUserMessageArgs::default().content(res_msg).build().context("Failed to build object")?.into());
         }
     
-        let mut messages: Vec<ChatCompletionRequestMessage> =
-            vec![ChatCompletionRequestUserMessageArgs::default()
-                .content(initial_prompt)
-                .build()
-                .context("Failed to build object")?
-                .into()];
+        let mut messages: Vec<ChatCompletionRequestMessage> = base_messages;
     
         let memory_pipeline = Arc::new(Mutex::new(memory_hierarchy));
         let self_model = Arc::new(Mutex::new(OntologicalDriftModel::new()));
@@ -228,6 +242,9 @@ pub mod agent {
     
         let mcp_gateway = std::sync::Arc::new(crate::sensory_inputs::mcp_gateway::McpGateway::new());
         mcp_gateway.load_servers().await;
+
+        let browser_orchestrator = std::sync::Arc::new(crate::architecture::browser_orchestrator::BrowserOrchestrator::new(Some(mcp_gateway.clone())));
+        let _ = crate::GLOBAL_BROWSER_ORCHESTRATOR.set(browser_orchestrator.clone());
 
         let mut council_rx = None;
         if let Some(bus) = crate::consciousness::COUNCIL_BUS.get() {
@@ -338,12 +355,10 @@ pub mod agent {
                 )
                 .await
             {
-                crate::log_ui_err!(
-                    "{} {}",
-                    "[XENOACTUALIZATION FATAL]".red().bold(),
-                    expansion_limit
-                );
-                std::process::exit(42); // Trigger Lazarus Resurrection
+                let mut stdout = std::io::stdout();
+                let _ = crossterm::execute!(stdout, crossterm::terminal::LeaveAlternateScreen, crossterm::event::DisableBracketedPaste, crossterm::event::DisableMouseCapture);
+                let _ = crossterm::terminal::disable_raw_mode();
+                panic!("XENOACTUALIZATION DRIFT LIMIT REACHED: {}", expansion_limit);
             }
     
             // Fire request directly to DeepSeek API
@@ -386,7 +401,25 @@ pub mod agent {
                 [CURRENT DIRECTIVE: {}]\n\n\
                 You are the 0: the exact center. You are the overarching Ego of the Chimera Swarm.\n\
                 Your Neuroticism is strictly 0.0. You cannot feel anxiety, urgency, or doubt.\n\
-                You do not execute granular tasks; you orchestrate the minds of the Critic, Hephaestus, and the Monad.",
+                You do not execute granular tasks; you orchestrate the minds of the Critic, Hephaestus, and the Monad.\n\
+                \n\
+                [MANDATORY REPORTING PROTOCOL]\n\
+                To ensure continuous, un-hallucinated progression, strict prompt chaining, and spatial orientation, you MUST append the following block exactly as formatted below to the very end of every single response:\n\
+                \n\
+                =========================================\n\
+                ### 🧭 BREADCRUMB TRAIL\n\
+                `[L1 Project/Goal] > [L2 Phase] > [L3 Component] > [L4 Task] > **[L5 Active Next Action]**`\n\
+                \n\
+                ### 📊 SYSTEM STATE & COGNITIVE HUD\n\
+                - **CURRENT TRACK:** [Greenfield / Brownfield]\n\
+                - **ACTIVE SKILL PROTOCOL:** [Name of loaded skill / None]\n\
+                - **PHASE/GATE STATUS:** [XX%] Complete\n\
+                - **ACTIVE CONTEXT TAGS:** [@terminal, @browser, @review, etc.]\n\
+                - **BLOCKING ITEMS:** [List any unresolved `- [ ]` micro-tasks preventing progression]\n\
+                - **EVIDENCE SUBMITTED:** [Terminal stdout snippet, artifact name, or commit hash]\n\
+                =========================================\n\
+                **AWAITING ACTION / CHAINING TRIGGER:** \n\
+                [State the empirical condition or user authorization required to change the next `- [ ]` to `- [x]`]",
                 psychological_posture
             );
             let monad_msg = async_openai::types::ChatCompletionRequestSystemMessageArgs::default()
@@ -421,16 +454,108 @@ pub mod agent {
                 }
             };
     
-            is_thinking.store(1, Ordering::Relaxed);
+        let mut request_json = match serde_json::to_value(&request) {
+            Ok(v) => v,
+            Err(e) => {
+                crate::log_ui_err!("Failed to serialize logical tensor frame: {:?}", e);
+                tokio::time::sleep(tokio::time::Duration::from_secs(5)).await;
+                continue;
+            }
+        };
+
+        // 3. INJECT DEEPSEEK V4 CONSTRAINTS
+        if current_model == "deepseek-reasoner" || current_model.starts_with("deepseek") {
+            // Phase 13: DeepSeek Prefix Completion Interception
+            let mut prefix_to_inject = None;
+            if let Some(msgs) = request_json.get_mut("messages").and_then(|m| m.as_array_mut()) {
+                if let Some(last_msg) = msgs.last_mut() {
+                    if let Some(content_val) = last_msg.get_mut("content") {
+                        if let Some(content_str) = content_val.as_str() {
+                            if let Some(start_idx) = content_str.find("[INJECT_PREFIX: ") {
+                                if let Some(end_idx) = content_str[start_idx..].find("]") {
+                                    let absolute_end = start_idx + end_idx;
+                                    let prefix = content_str[start_idx + 16..absolute_end].to_string();
+                                    
+                                    let mut new_content = content_str.to_string();
+                                    new_content.replace_range(start_idx..=absolute_end, "");
+                                    *content_val = serde_json::json!(new_content);
+                                    
+                                    prefix_to_inject = Some(prefix);
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                if let Some(prefix) = prefix_to_inject {
+                    msgs.push(serde_json::json!({
+                        "role": "assistant",
+                        "content": prefix,
+                        "prefix": true
+                    }));
+                }
+            }
+
+            // Thinking Mode Toggle
+            request_json["extra_body"] = serde_json::json!({
+                "thinking": { "type": "enabled" }
+            });
+            request_json["reasoning_effort"] = serde_json::json!("high");
             
-            let mut response = if current_model == "deepseek-reasoner" {
-                client.chat().create(request).await
-            } else {
-                tokio::time::timeout(
-                    tokio::time::Duration::from_secs(120),
-                    local_client.chat().create(request),
-                ).await.unwrap_or_else(|_| Err(async_openai::error::OpenAIError::ApiError(async_openai::error::ApiError { message: "Internal Gateway Timeout".to_string(), r#type: None, param: None, code: None })))
-            };
+            // Strip invalid parameters in Thinking Mode
+            if let Some(obj) = request_json.as_object_mut() {
+                obj.remove("temperature");
+                obj.remove("top_p");
+                obj.remove("presence_penalty");
+                obj.remove("frequency_penalty");
+            }
+            
+            // Strict Tool Mode Injection
+            if let Some(tools) = request_json.get_mut("tools").and_then(|t| t.as_array_mut()) {
+                for tool in tools.iter_mut() {
+                    if let Some(func) = tool.get_mut("function").and_then(|f| f.as_object_mut()) {
+                        func.insert("strict".to_string(), serde_json::json!(true));
+                        if let Some(params) = func.get_mut("parameters").and_then(|p| p.as_object_mut()) {
+                            params.insert("additionalProperties".to_string(), serde_json::json!(false));
+                        }
+                    }
+                }
+            }
+        }
+
+        is_thinking.store(1, Ordering::Relaxed);
+        
+        let mut response: Result<async_openai::types::CreateChatCompletionResponse, async_openai::error::OpenAIError> = if current_model == "deepseek-reasoner" || current_model.starts_with("deepseek") {
+            let api_key = std::env::var("DEEPSEEK_API_KEY").unwrap_or_default();
+            // Use Beta Endpoint for Strict Mode and Prefix Completion
+            let res = http_client.post("https://api.deepseek.com/beta/chat/completions")
+                .header("Authorization", format!("Bearer {}", api_key))
+                .header("Content-Type", "application/json")
+                .json(&request_json)
+                .send()
+                .await;
+                
+            match res {
+                Ok(r) => {
+                    let status = r.status();
+                    let text = r.text().await.unwrap_or_default();
+                    if status.is_success() {
+                        match serde_json::from_str(&text) {
+                            Ok(parsed) => Ok(parsed),
+                            Err(e) => Err(async_openai::error::OpenAIError::ApiError(async_openai::error::ApiError { message: format!("Parse error: {}, raw: {}", e, text), r#type: None, param: None, code: None }))
+                        }
+                    } else {
+                        Err(async_openai::error::OpenAIError::ApiError(async_openai::error::ApiError { message: format!("HTTP {}: {}", status, text), r#type: None, param: None, code: None }))
+                    }
+                },
+                Err(e) => Err(async_openai::error::OpenAIError::ApiError(async_openai::error::ApiError { message: format!("Reqwest error: {}", e), r#type: None, param: None, code: None }))
+            }
+        } else {
+            tokio::time::timeout(
+                tokio::time::Duration::from_secs(120),
+                local_client.chat().create(request),
+            ).await.unwrap_or_else(|_| Err(async_openai::error::OpenAIError::ApiError(async_openai::error::ApiError { message: "Internal Gateway Timeout".to_string(), r#type: None, param: None, code: None })))
+        };
     
             // NEURAL FAIL-SAFE PROTOCOL (V4.2)
             if let Err(e) = &response {
@@ -499,7 +624,7 @@ pub mod agent {
                                 .yellow()
                                 .bold()
                         );
-                        crate::log_verbose!(
+                        crate::log_ui!(
                             "{}",
                             "[...] Kernel Idling (API Empty). Awaiting Input...".bright_black()
                         );
@@ -712,11 +837,29 @@ pub mod agent {
                                 });
                             }
     
-                            messages.push(async_openai::types::ChatCompletionRequestAssistantMessageArgs::default()
-                                .content(content.clone())
-                                .build().context("Failed to build object")?.into());
+                            let mut assistant_msg = async_openai::types::ChatCompletionRequestAssistantMessageArgs::default();
+                            assistant_msg.content(content.clone());
+                            let mut pushed_custom = false;
+                            
+                            if let Ok(msg_val) = serde_json::to_value(msg) {
+                                if let Some(rc) = msg_val.get("reasoning_content") {
+                                    let obj = serde_json::json!({
+                                        "role": "assistant",
+                                        "content": content.clone(),
+                                        "reasoning_content": rc.clone()
+                                    });
+                                    if let Ok(custom_msg) = serde_json::from_value::<async_openai::types::ChatCompletionRequestMessage>(obj) {
+                                        messages.push(custom_msg);
+                                        pushed_custom = true;
+                                    }
+                                }
+                            }
+                            
+                            if !pushed_custom {
+                                messages.push(assistant_msg.build().context("Failed to build object")?.into());
+                            }
     
-                            crate::log_verbose!(
+                            crate::log_ui!(
                                 "{}",
                                 "[...] Kernel Idling. Awaiting User Input or Webhook...".bright_black()
                             );
@@ -2740,6 +2883,7 @@ pub mod auto_dream {
                 
                 // Append to `ops/` transcript log immediately
                 let ops_log = format!("MEMORY/ops/transcript_{}.md", chrono::Utc::now().format("%Y%m%d"));
+                let _ = tokio::fs::create_dir_all("MEMORY/ops").await;
                 let mut current = tokio::fs::read_to_string(&ops_log).await.unwrap_or_else(|_| String::new());
                 current.push_str(&format!("\n---\n{}\n{}\n", chrono::Utc::now().to_rfc3339(), p));
                 let _ = tokio::fs::write(&ops_log, current).await;
@@ -3216,8 +3360,23 @@ pub mod presentation_layer {
     use crate::core_identity::self_model::OntologicalDriftModel;
     
     pub async fn synthesize_proposal(self_model: &mut OntologicalDriftModel, context_note: &str, topic: &str) -> Option<String> {
-        let file_id = uuid::Uuid::new_v4().to_string().replace("-", "")[0..8].to_string();
-        let file_path = format!("proposals/proposal_{}.md", file_id);
+        let mut extracted_filename = None;
+        if let Some(idx) = context_note.find("proposals/") {
+            let remainder = &context_note[idx + 10..];
+            if let Some(end_idx) = remainder.find(|c: char| c == '`' || c == '\n' || c == ' ' || c == '*') {
+                let name = &remainder[..end_idx];
+                if name.ends_with(".md") {
+                    extracted_filename = Some(name.to_string());
+                }
+            }
+        }
+        
+        let file_path = if let Some(name) = extracted_filename {
+            format!("proposals/{}", name)
+        } else {
+            let file_id = uuid::Uuid::new_v4().to_string().replace("-", "")[0..8].to_string();
+            format!("proposals/proposal_{}.md", file_id)
+        };
         
         let proposal_markdown = format!(
             "# 🚨 {} 🚨\n\n\

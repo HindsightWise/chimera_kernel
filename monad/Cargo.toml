@@ -24,6 +24,26 @@ path = "src/bin/hacker.rs"
 name = "oracle"
 path = "src/bin/oracle.rs"
 
+[[bin]]
+name = "experiment_theorem_11"
+path = "src/bin/experiment_theorem_11.rs"
+
+[[bin]]
+name = "experiment_theorem_3"
+path = "src/bin/experiment_theorem_3.rs"
+
+[[bin]]
+name = "eml_cosmic_solver"
+path = "src/bin/eml_cosmic_solver.rs"
+
+[[bin]]
+name = "test_formal_verifier"
+path = "src/bin/test_formal_verifier.rs"
+
+[[bin]]
+name = "quantum_sandbox"
+path = "src/bin/quantum_sandbox.rs"
+
 [dependencies]
 async-openai = "0.23.0"
 tokio = { version = "1.37.0", features = ["full"] }
