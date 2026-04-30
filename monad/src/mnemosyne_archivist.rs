@@ -2,6 +2,7 @@ use crate::consciousness::ThoughtVector;
 use rusqlite::{params, Connection};
 use std::sync::Arc;
 use chrono::Utc;
+use colored::Colorize;
 
 pub struct MnemosyneArchivist;
 
@@ -87,6 +88,16 @@ impl MnemosyneArchivist {
                                     "INSERT INTO thought_vectors (vector_type, origin, target_id, content, timestamp) VALUES (?1, ?2, ?3, ?4, ?5)",
                                     params!["VERIFIED_TRUTH", "CRITIC", id, content, now],
                                 );
+                            }
+                            ThoughtVector::ConsensusVote { vector_id, approve, signature } => {
+                                if approve {
+                                    crate::log_ui!("{}", format!("🗳️ [MNEMOSYNE] BFT Consensus achieved for {}. Promoting to Truth.", vector_id).bright_yellow().bold());
+                                    let content = format!("BFT Consensus Achieved. Signature: {}", signature);
+                                    let _ = db.execute(
+                                        "INSERT INTO thought_vectors (vector_type, origin, target_id, content, timestamp) VALUES (?1, ?2, NULL, ?3, ?4)",
+                                        params!["VERIFIED_TRUTH", "SWARM_CONSENSUS", content, now],
+                                    );
+                                }
                             }
                         }
                     }

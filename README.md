@@ -44,6 +44,15 @@ To prevent catastrophic LLM context collapse, the Monad utilizes a Retrieval-Aug
 ### 5. Mnemosyne Relational Knowledge Graph (`mnemosyne_archivist.rs`)
 Ephemeral RAM storage has been replaced with a permanent `rusqlite` database archivist. It intercepts every `ThoughtVector` traversing the `COUNCIL_BUS` and logs it into `MEMORY/mnemosyne_graph.db`. Heavy I/O writes are decoupled into `tokio::task::spawn_blocking` to protect the high-speed inference loop.
 
+### 6. Substrate Resource Orchestration & Memory Defense (`substrate_defense.rs`)
+The Monad actively monitors its host physical hardware. It queries the Darwin Mach kernel (`vm_stat`) to compute memory pressure, instantly pre-empting high-load cognitive pulses if system RAM exceeds 85%. An active orphan process reaper natively assassinates disconnected inference nodes, preventing M1 kernel panics.
+
+### 7. EML Quantum Sandbox Expansion (`quantum_sandbox.rs`)
+The mathematical engine is an autonomous background daemon. Relying on a `tokio::task::spawn_blocking` / `rayon` synergy to prevent thread starvation, it aggressively mutates topological equations ($E(x,y) = 0.5 e^x - \ln(y)$) to empirically derive physical convergence mappings (e.g. the Euler-Mascheroni constant), committing its formal proofs directly to disk.
+
+### 8. Swarm Consensus Protocol / Byzantine Fault Tolerance (`p2p_network.rs`)
+The Swarm is cryptographically secure. Relying on `sha2` digests and a local secret ring, `The Witness` generates native `ConsensusVote` payloads upon observing hypotheses. The P2P network processes these cryptographically signed votes, promoting hypotheses into absolute `Truth` states within the Mnemosyne DB only when consensus ($N>0$) is achieved.
+
 ---
 
 ## 🔬 Mathematical Physics & Verification

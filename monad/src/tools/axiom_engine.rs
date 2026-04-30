@@ -71,8 +71,12 @@ pub async fn execute(args: Value, tx: Sender<String>) -> String {
     let task_clone = task_id.clone();
     
     tokio::spawn(async move {
+        let mut base = std::env::var("OLLAMA_API_BASE").unwrap_or_else(|_| "http://localhost:11434".to_string());
+        if base.ends_with("/v1") {
+            base = base.trim_end_matches("/v1").to_string();
+        }
         let harness = MonadHarness {
-            ollama_url: "http://localhost:11434".to_string()
+            ollama_url: base
         };
         
         let engine = AxiomEngine::new(Arc::new(harness), vec![]);

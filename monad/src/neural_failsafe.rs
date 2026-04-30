@@ -10,8 +10,9 @@ pub struct NeuralFailSafe;
 
 impl NeuralFailSafe {
     pub fn local_client() -> Client<OpenAIConfig> {
+        let api_base = std::env::var("OLLAMA_API_BASE").unwrap_or_else(|_| "http://127.0.0.1:11434/v1".to_string());
         let config = OpenAIConfig::new()
-            .with_api_base("http://127.0.0.1:11434/v1")
+            .with_api_base(api_base)
             .with_api_key("ollama");
         Client::with_config(config)
     }

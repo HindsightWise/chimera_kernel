@@ -1,3 +1,6 @@
+#![warn(clippy::unwrap_used)]
+#![warn(clippy::expect_used)]
+
 use tokio::sync::mpsc;
 use colored::*;
 use std::sync::Arc;
@@ -243,6 +246,26 @@ async fn main() {
                 true
             ).await;
         }
+    });
+
+    // 3. The Temporal Deep-Sweep Trigger
+    if std::env::var("MONAD_DEEP_SWEEP") == Ok("1".to_string()) {
+        tokio::spawn(async move {
+            monad::tools::omniscience::run_temporal_deep_sweep(
+                vec!["cs", "math", "q-bio", "physics", "q-fin", "stat", "econ", "eess"],
+                20
+            ).await;
+        });
+    }
+
+    // PHASE 24: SUBSTRATE RESOURCE ORCHESTRATION (Memory Defense)
+    tokio::spawn(async move {
+        monad::cognitive_loop::substrate_defense::memory_defense_daemon().await;
+    });
+
+    // PHASE 25: EML QUANTUM SANDBOX EXPANSION
+    tokio::spawn(async move {
+        monad::cognitive_loop::quantum_sandbox::quantum_sandbox_daemon().await;
     });
 
     // 3. The Deep Synthesis Daemon

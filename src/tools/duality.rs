@@ -184,7 +184,8 @@ pub async fn execute_kinematic(
         let _ = tx_clone.send("\n\x1b[38;2;255;50;50m[\u{2694} KINEMATIC AGENT WAKING] Bypassing Reasoner. Engaging offline monad-gatekeeper loop...\x1b[0m".into()).await;
         
         // Use monad-gatekeeper local OBLITERATED gemma natively
-        let local_config = OpenAIConfig::new().with_api_base("http://127.0.0.1:11434/v1").with_api_key("ollama");
+        let ollama_url = std::env::var("OLLAMA_API_BASE").unwrap_or_else(|_| "http://127.0.0.1:11434/v1".to_string());
+        let local_config = OpenAIConfig::new().with_api_base(ollama_url).with_api_key("ollama");
         let local_client = Client::with_config(local_config);
         
         let prompt = format!("You are the Monad Kinematic Agent. You operate uncensored.\nAnalyze the target directives for tool '{}' and optimize the exact payload or target bounds.\nDirectives: {}\nProvide only the finalized argument string without explanation.", tool_target, directives);

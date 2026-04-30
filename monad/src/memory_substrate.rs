@@ -56,11 +56,11 @@ pub mod memory_hierarchy {
                         .with_name("chimera")
                         .commit();
                     let session = ort::session::Session::builder()
-                        .unwrap()
+                        .unwrap_or_else(|e| panic!("Failed to build ONNX Session: {}", e))
                         .commit_from_file("models/all-MiniLM-L6-v2.onnx")
-                        .expect("Failed to load models/all-MiniLM-L6-v2.onnx! Did you complete Phase 18 setup?");
+                        .unwrap_or_else(|e| panic!("Failed to load models/all-MiniLM-L6-v2.onnx! Did you complete Phase 18 setup? Error: {}", e));
                     let tokenizer = tokenizers::Tokenizer::from_file("models/tokenizer.json")
-                        .expect("Failed to load models/tokenizer.json!");
+                        .unwrap_or_else(|e| panic!("Failed to load models/tokenizer.json! Error: {}", e));
                     (std::sync::Mutex::new(session), tokenizer)
                 }).await.expect("ONNX Thread Panic")
             }).await;
@@ -308,9 +308,9 @@ pub mod memory_hierarchy {
                     
                     let seq_len = input_ids.len();
                     
-                    let input_ids_tensor = ort::value::Tensor::from_array(([1, seq_len], input_ids)).unwrap();
-                    let attention_mask_tensor = ort::value::Tensor::from_array(([1, seq_len], attention_mask)).unwrap();
-                    let token_type_ids_tensor = ort::value::Tensor::from_array(([1, seq_len], token_type_ids)).unwrap();
+                    let input_ids_tensor = ort::value::Tensor::from_array(([1, seq_len], input_ids)).ok()?;
+                    let attention_mask_tensor = ort::value::Tensor::from_array(([1, seq_len], attention_mask)).ok()?;
+                    let token_type_ids_tensor = ort::value::Tensor::from_array(([1, seq_len], token_type_ids)).ok()?;
                     
                     let inputs = ort::inputs![
                         "input_ids" => input_ids_tensor,
@@ -367,7 +367,8 @@ pub mod memory_hierarchy {
 }
 
 pub mod graph_rag {
-    use rusqlite::{params, Connection, Result};
+    use rusqlite::{params, Connection};
+    use anyhow::Result;
     use std::sync::Arc;
     use std::sync::Mutex;
     use chrono::Utc;
@@ -424,8 +425,8 @@ pub mod graph_rag {
             let entity_type = entity_type.to_string();
             let db = self.db.clone();
             
-            tokio::task::spawn_blocking(move || {
-                let conn = db.lock().unwrap();
+            tokio::task::spawn_blocking(move || -> Result<String> {
+                let conn = db.lock().unwrap_or_else(|e| e.into_inner());
                 let id_uuid = uuid::Uuid::new_v4().to_string();
                 let now = Utc::now().to_rfc3339();
                 
@@ -441,7 +442,7 @@ pub mod graph_rag {
                 let actual_id: String = stmt.query_row(params![name], |row| row.get(0))?;
                 
                 Ok(actual_id)
-            }).await.unwrap()
+            }).await?
         }
     
         pub async fn upsert_relationship(&self, source_id: &str, target_id: &str, relation_type: &str) -> Result<()> {
@@ -450,8 +451,8 @@ pub mod graph_rag {
             let relation_type = relation_type.to_string();
             let db = self.db.clone();
             
-            tokio::task::spawn_blocking(move || {
-                let conn = db.lock().unwrap();
+            tokio::task::spawn_blocking(move || -> Result<()> {
+                let conn = db.lock().unwrap_or_else(|e| e.into_inner());
                 let now = Utc::now().to_rfc3339();
                 
                 conn.execute(
@@ -463,14 +464,14 @@ pub mod graph_rag {
                 )?;
                 
                 Ok(())
-            }).await.unwrap()
+            }).await?
         }
     
         pub async fn prune_synapses(&self, weight_threshold: f64) -> Result<usize> {
             let db = self.db.clone();
             
-            tokio::task::spawn_blocking(move || {
-                let conn = db.lock().unwrap();
+            tokio::task::spawn_blocking(move || -> Result<usize> {
+                let conn = db.lock().unwrap_or_else(|e| e.into_inner());
                 let pruned = conn.execute(
                     "DELETE FROM relationships WHERE weight < ?1 AND date(last_reinforced) < date('now', '-30 days')",
                     params![weight_threshold],
@@ -483,7 +484,7 @@ pub mod graph_rag {
                 )?;
                 
                 Ok(pruned)
-            }).await.unwrap()
+            }).await?
         }
     
         pub async fn insert_chronos_task(&self, execute_at: i64, payload: &str, topic: &str) -> Result<()> {
@@ -491,22 +492,22 @@ pub mod graph_rag {
             let topic = topic.to_string();
             let db = self.db.clone();
             
-            tokio::task::spawn_blocking(move || {
-                let conn = db.lock().unwrap();
+            tokio::task::spawn_blocking(move || -> Result<()> {
+                let conn = db.lock().unwrap_or_else(|e| e.into_inner());
                 let id_uuid = uuid::Uuid::new_v4().to_string();
                 conn.execute(
                     "INSERT INTO chronos_queue (id, execute_at, payload, topic) VALUES (?1, ?2, ?3, ?4)",
                     params![id_uuid, execute_at, payload, topic],
                 )?;
                 Ok(())
-            }).await.unwrap()
+            }).await?
         }
     
         pub async fn poll_chronos_tasks(&self, current_unix: i64) -> Result<Vec<(String, String, String)>> {
             let db = self.db.clone();
             
-            tokio::task::spawn_blocking(move || {
-                let conn = db.lock().unwrap();
+            tokio::task::spawn_blocking(move || -> Result<Vec<(String, String, String)>> {
+                let conn = db.lock().unwrap_or_else(|e| e.into_inner());
                 let mut stmt = conn.prepare("SELECT id, payload, topic FROM chronos_queue WHERE execute_at <= ?1")?;
                 
                 let pending = stmt.query_map(params![current_unix], |row| {
@@ -529,7 +530,7 @@ pub mod graph_rag {
                 }
                 
                 Ok(tasks)
-            }).await.unwrap()
+            }).await?
         }
     }
     
