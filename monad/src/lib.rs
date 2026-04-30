@@ -1,3 +1,6 @@
+#![warn(clippy::unwrap_used)]
+#![warn(clippy::expect_used)]
+
 pub mod webhook;
 pub mod prompts;
 pub mod tools;

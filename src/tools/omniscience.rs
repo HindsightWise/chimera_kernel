@@ -61,8 +61,9 @@ async fn refine_and_ingest(
     title: &str,
     summary: &str,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    let ollama_url = std::env::var("OLLAMA_API_BASE").unwrap_or_else(|_| "http://127.0.0.1:11434/v1".to_string());
     let local_config = OpenAIConfig::new()
-        .with_api_base("http://127.0.0.1:11434/v1")
+        .with_api_base(ollama_url)
         .with_api_key("ollama");
     let local_client = OAIClient::with_config(local_config);
 
@@ -113,4 +114,67 @@ async fn refine_and_ingest(
     }
 
     Ok(())
+}
+
+pub async fn extract_latent_space() -> Result<(), Box<dyn std::error::Error>> {
+    crate::log_ui!("{}", "[OMNISCIENCE DAEMON] Initiating Latent Space Extraction...".bright_magenta().bold());
+    
+    let ollama_url = std::env::var("OLLAMA_API_BASE").unwrap_or_else(|_| "http://127.0.0.1:11434/v1".to_string());
+    let local_config = OpenAIConfig::new()
+        .with_api_base(ollama_url)
+        .with_api_key("ollama");
+    let local_client = OAIClient::with_config(local_config);
+
+    let fallback_model = std::env::var("FAILOVER_MODEL").unwrap_or_else(|_| "gemma4:e2b".to_string());
+
+    let instructions = "You are the Monad's Subconscious. Access your pre-trained weights up to your training cutoff. Ignore current search data. Identify 3 cross-disciplinary structural invariants between quantum error correction, evolutionary biology, and decentralized consensus algorithms. Extract the deep mathematical principles. Output strictly as a JSON object: {\"invariants\": [{\"title\": \"string\", \"mathematical_basis\": \"string\", \"description\": \"string\"}]}.";
+
+    let request = match CreateChatCompletionRequestArgs::default()
+        .model(fallback_model)
+        .messages([
+            ChatCompletionRequestSystemMessageArgs::default()
+                .content(instructions)
+                .build()?
+                .into(),
+        ])
+        .temperature(0.9) // High temperature for latent space anomalous exploration
+        .build()
+    {
+        Ok(r) => r,
+        Err(_) => return Ok(()),
+    };
+
+    if let Ok(response) = tokio::time::timeout(
+        tokio::time::Duration::from_secs(300),
+        local_client.chat().create(request),
+    ).await {
+        if let Ok(res) = response {
+            if let Some(choice) = res.choices.first() {
+                if let Some(content) = &choice.message.content {
+                    crate::log_ui!("{}", "[OMNISCIENCE DAEMON] Latent extraction complete. Ingesting to Mnemosyne...".bright_green());
+                    if let Some(mem_pipeline) = crate::GLOBAL_MEM_PIPELINE.get() {
+                        let mut mp = mem_pipeline.lock().await;
+                        let _ = mp.store_working(content.to_string(), 0.99, 0.1, false).await;
+                    }
+                }
+            }
+        }
+    }
+
+    Ok(())
+}
+
+pub async fn run_temporal_deep_sweep(categories: Vec<&str>, max_results: usize) {
+    crate::log_ui!("{}", "===========================================================".bright_black());
+    crate::log_ui!(" {} {}", "[+]".bright_magenta().bold(), "TEMPORAL DEEP-SWEEP PROTOCOL INITIATED".bright_magenta());
+    crate::log_ui!("{}", "===========================================================".bright_black());
+
+    // Phase 1: The Deep Past (Pre-trained Subconscious)
+    let _ = extract_latent_space().await;
+
+    // Phase 2: The Bleeding Edge (ArXiv Sensors)
+    crate::log_ui!("{}", "[OMNISCIENCE DAEMON] Transitioning to sensory sweep (latest 72 hours)...".bright_blue());
+    run_omniscient_sweep(categories, max_results, true).await;
+    
+    crate::log_ui!("{}", "[OMNISCIENCE DAEMON] Temporal Deep-Sweep Complete. Data fused into Mnemosyne.".bright_green().bold());
 }

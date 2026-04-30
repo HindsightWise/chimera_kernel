@@ -1,5 +1,8 @@
 /// [AGENT_CONTEXT: Primary Autonomic Nervous System & Cognitive Handlers.]
 
+pub mod substrate_defense;
+pub mod quantum_sandbox;
+
 pub mod agent {
     use async_openai::{
         config::OpenAIConfig,

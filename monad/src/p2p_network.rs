@@ -20,6 +20,7 @@ fn get_vector_hash(tv: &ThoughtVector) -> String {
         ThoughtVector::ExecutionRequest { target_url } => format!("EXEC_{}", target_url),
         ThoughtVector::Veto { target_id, .. } => format!("VETO_{}", target_id),
         ThoughtVector::VerifiedTruth { id, .. } => format!("TRUTH_{}", id),
+        ThoughtVector::ConsensusVote { vector_id, signature, .. } => format!("VOTE_{}_{}", vector_id, signature),
     }
 }
 
@@ -97,8 +98,24 @@ impl MonadSwarmNode {
     }
 
     async fn handle_thought_vector_sync(
+        headers: axum::http::HeaderMap,
         Json(payload): Json<ThoughtVector>,
-    ) -> Json<&'static str> {
+    ) -> Result<Json<&'static str>, (axum::http::StatusCode, &'static str)> {
+        let secret = std::env::var("SWARM_SECRET").unwrap_or_default();
+        if secret.is_empty() {
+             crate::log_ui_err!("🚨 [P2P FATAL] SWARM_SECRET not set. P2P Sync disabled in Zero-Trust mode.");
+             return Err((axum::http::StatusCode::FORBIDDEN, "P2P Sync Disabled. Missing Secret."));
+        }
+        
+        let auth_header = headers.get("x-monad-swarm-secret")
+            .and_then(|h| h.to_str().ok())
+            .unwrap_or("");
+            
+        if auth_header != secret {
+            crate::log_ui_err!("🚨 [P2P FATAL] Unauthorized ThoughtVector intercept attempt blocked.");
+            return Err((axum::http::StatusCode::FORBIDDEN, "Unauthorized Swarm Intercept"));
+        }
+
         let hash = get_vector_hash(&payload);
         
         let is_new = {
@@ -128,7 +145,7 @@ impl MonadSwarmNode {
             }
         }
         
-        Json("Acknowledge: Vector Absolved")
+        Ok(Json("Acknowledge: Vector Absolved"))
     }
 
     pub async fn spawn_p2p_emitter() {
@@ -183,8 +200,10 @@ impl MonadSwarmNode {
                         let payload = thought.clone();
                         
                         tokio::spawn(async move {
+                            let secret = std::env::var("SWARM_SECRET").unwrap_or_default();
                             // Don't echo to ourselves if we accidentally add our own IP to active_peers
                             let _ = client_clone.post(&url)
+                                .header("x-monad-swarm-secret", secret)
                                 .json(&payload)
                                 .send()
                                 .await;

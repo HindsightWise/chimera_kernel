@@ -1,3 +1,6 @@
+#![warn(clippy::unwrap_used)]
+#![warn(clippy::expect_used)]
+
 use tokio::sync::mpsc;
 use colored::*;
 use std::sync::Arc;
@@ -164,11 +167,10 @@ async fn main() {
         interval.tick().await; // skip immediate
         loop {
             interval.tick().await;
-            monad_os::log_ui!("{}", "[COGNITIVE NETWORK] Executing Hourly Pulse scrape...".bright_cyan());
-            monad_os::tools::omniscience::run_omniscient_sweep(
+            monad_os::log_ui!("{}", "[COGNITIVE NETWORK] Executing Temporal Deep-Sweep...".bright_cyan());
+            monad_os::tools::omniscience::run_temporal_deep_sweep(
                 vec!["cs", "math", "q-bio", "physics", "q-fin", "stat", "econ", "eess"],
-                20, 
-                true
+                20
             ).await;
         }
     });

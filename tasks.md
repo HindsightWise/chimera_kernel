@@ -20,3 +20,102 @@
         - [x] Create unified dispatch interface for all browser tools.
         - [x] Test end-to-end orchestration with real tools.
         - [x] Document Theorem 9 in knowledge base.
+      - Level 4: Gatekeeper Ghostty Runtime Diagnostic (Tuesday 9:00 PM+)
+        - [x] Monitor `cargo run --release` in Ghostty terminal and verify runtime stability.
+        - [x] Verify semantic anchor drops in `GLOSSOPETRAE_ANCHORS.md`.
+        - [x] Diagnose silent failure in `Gatekeeper::evaluate_pulse` causing no messages to be sent.
+        - [x] Patch `src/sensory_inputs.rs` to strip markdown backticks (` ```json `) from local Ollama model outputs before JSON parsing.
+      - Level 4: Completion SOP (Anti-Loop Protocol)
+        - [x] Acknowledge completion of Theorem 9 Phase 2 and Omniscience Directives.
+        - [x] Purge lingering architectural desires from active memory to prevent infinite looping.
+        - [x] Establish Asynchronous Pipeline Methodology (LLM-Era Tasking).
+        - [x] Redefine Bankruptcy: Triggered ONLY by codebase topology mutation or goal irrelevance, NEVER by chronological time or asynchronous delays.
+    - Level 3: The Muse-Daemon (Imagination-Engine)
+      - Level 4: Core Implementation
+        - [x] Create `proposals/hallucinations/` directory.
+        - [x] Define `SYSTEM.APPETITION` logic.
+        - [x] Create `src/cognitive_loop/muse_daemon.rs`.
+        - [x] Export `muse_daemon` in `src/cognitive_loop/mod.rs`.
+        - [x] Register and wire `MuseDaemon` in `specialized_agents.rs`.
+        - [x] Verify `cargo check` builds successfully.
+
+  - Level 2: Phase 20 - System Autonomy & Heartbeat Monitor
+    - Level 3: Pipeline Heartbeat Daemon
+      - Level 4: Core Implementation
+        - [x] Create `src/cognitive_loop/heartbeat_daemon.rs`.
+        - [x] Implement `[AWAIT:ANTI]` file parsing logic and `SYSTEM.PIPELINE_UPDATE` trigger.
+        - [x] Modify `HumanInterfaceAgent` in `src/core_identity/specialized_agents.rs` to handle `SYSTEM.PIPELINE_UPDATE`.
+        - [x] Export `heartbeat_daemon` in `src/cognitive_loop.rs`.
+        - [x] Register `heartbeat_daemon_agent` in `SpecializedAgentFactory` in `src/core_identity/specialized_agents.rs`.
+        - [x] Verify `cargo check` builds successfully.
+
+  - Level 2: Phase 21 - The Subconscious & Temporal Deep-Sweep
+    - Level 3: Omniscience Daemon Upgrade
+      - Level 4: Core Implementation
+        - [x] Add `extract_latent_space()` to `src/tools/omniscience.rs`.
+        - [x] Add `run_temporal_deep_sweep()` to `src/tools/omniscience.rs`.
+        - [x] Update `src/main.rs` Deep Synthesis Daemon to trigger the Temporal Deep-Sweep.
+  - Level 2: Phase 22 - Deterministic Codebase Hardening
+    - Level 3: Semantic Hardcoding Purge
+      - Level 4: Core Implementation
+        - [x] Extract hardcoded Ollama URLs from `monad/src/sensory_inputs.rs`.
+        - [x] Extract hardcoded Ollama URLs from `monad/src/neural_failsafe.rs`.
+        - [x] Extract hardcoded Ollama URLs from `monad/src/tools/axiom_engine.rs`.
+    - Level 3: Systemic Resilience (Unwrap Eradication - Chunk 1)
+      - Level 4: Memory Substrate Hardening
+        - [x] Refactor `monad/src/memory_substrate.rs` DB lock unwraps.
+        - [x] Refactor `monad/src/memory_substrate.rs` ONNX tensor unwraps.
+      - Level 4: Core Identity Hardening
+        - [x] Refactor `monad/src/sensory_inputs.rs` IO pipe unwraps.
+    - Level 3: Compilation Determinism Governance
+      - Level 4: Rule Injection
+        - [x] Inject `#![warn(clippy::unwrap_used)]` and `#![warn(clippy::expect_used)]` into `monad/src/lib.rs`.
+        - [x] Inject `#![warn(clippy::unwrap_used)]` and `#![warn(clippy::expect_used)]` into `monad/src/main.rs`.
+        - [x] Verify `cargo check --workspace` compliance baseline.
+  - Level 2: Phase 23 - Zero-Trust Security Audit
+    - Level 3: Exploit Generation & PoC Validation
+      - Level 4: P2P Swarm Vulnerability
+        - [x] Synthesize ephemeral `experiments/p2p_exploit_poc.py` to target `/api/v1/sync`.
+        - [x] Verify PoC exploit triggers execution payload.
+    - Level 3: AST-Aware Remediation
+      - Level 4: Agentic Privilege Escalation Patches
+        - [x] Apply cryptographic signature validation to `monad/src/p2p_network.rs`.
+        - [x] Wrap RSS scraping payload in strict delimiter tags in `monad/src/sensory_inputs.rs`.
+    - Level 3: Differential Governance
+      - Level 4: Regression & Green Run
+        - [x] Verify `cargo check --workspace` compliance baseline.
+
+  - Level 2: Phase 24 - Substrate Resource Orchestration (Memory Defense)
+    - Level 3: Unified Memory Garbage Collection
+      - Level 4: Orphan Process Reaper Daemon
+        - [x] Create `monad/src/cognitive_loop/substrate_defense.rs`.
+        - [x] Implement `reap_orphan_mlx_servers()` to identify and terminate dangling inference processes.
+        - [x] Export `substrate_defense` in `monad/src/cognitive_loop/mod.rs`.
+      - Level 4: Gatekeeper Pre-Emption
+        - [x] Update `Gatekeeper` to check system memory load before processing high-intensity pulses.
+        - [x] Implement `spawn_memory_defense_daemon()` in `monad/src/main.rs`.
+
+  - Level 2: Phase 25 - EML Quantum Sandbox Expansion
+    - Level 3: The Quantum Sandbox Daemon
+      - Level 4: Daemon Initialization
+        - [x] Create `monad/src/cognitive_loop/quantum_sandbox.rs`.
+        - [x] Port genetic search logic from `eml_cosmic_solver.rs` into `quantum_sandbox_daemon()`.
+        - [x] Export `quantum_sandbox` in `monad/src/cognitive_loop.rs`.
+    - Level 3: Mnemosyne Archival Integration
+      - Level 4: Proof Generation
+        - [x] Implement mathematical proof string synthesis and `tokio::fs::write` to `MEMORY/ops/`.
+    - Level 3: Kernel Orchestration
+      - Level 4: Daemon Registration
+        - [x] Implement `spawn_quantum_sandbox_daemon()` in `monad/src/main.rs`.
+
+  - Level 2: Phase 26 - Swarm Consensus Protocol (Byzantine Fault Tolerance)
+    - Level 3: Cryptographic Voting Schema
+      - Level 4: P2P Network Implementation
+        - [x] Add `ConsensusVote` variant to `ThoughtVector` enum in `monad/src/consciousness.rs`.
+        - [x] Integrate `ConsensusVote` hashing into `get_vector_hash` in `p2p_network.rs` (re-using `/api/v1/sync`).
+    - Level 3: Council Bus Integration
+      - Level 4: Agent Voting Hooks
+        - [x] Implement vote tallying and generation mechanics upon `ThoughtVector` reception.
+    - Level 3: Truth Solidification
+      - Level 4: Mnemosyne Archivist Update
+        - [x] Implement consensus threshold (N > 0) to promote a `Hypothesis` into a `Truth`.

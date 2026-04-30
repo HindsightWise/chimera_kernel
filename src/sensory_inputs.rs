@@ -22,8 +22,9 @@ pub mod gatekeeper {
     
     impl Gatekeeper {
         pub fn new() -> Self {
+            let ollama_url = std::env::var("OLLAMA_API_BASE").unwrap_or_else(|_| "http://127.0.0.1:11434/v1".to_string());
             let config = OpenAIConfig::new()
-                .with_api_base("http://127.0.0.1:11434/v1")
+                .with_api_base(ollama_url)
                 .with_api_key("ollama");
             
             let client = Client::with_config(config);
@@ -68,9 +69,20 @@ pub mod gatekeeper {
                 Ok(Ok(response)) => {
                     if let Some(choice) = response.choices.first() {
                         if let Some(content) = &choice.message.content {
-                            let parsed: Value = match serde_json::from_str(content) {
+                            let clean_content = content
+                                .replace("```json\n", "")
+                                .replace("```json", "")
+                                .replace("```\n", "")
+                                .replace("```", "")
+                                .trim()
+                                .to_string();
+                                
+                            let parsed: Value = match serde_json::from_str(&clean_content) {
                                 Ok(p) => p,
-                                Err(_) => return Ok(None) // Fail silently if schema drifts
+                                Err(e) => {
+                                    crate::log_ui_err!("[\u{25C8} GATEKEEPER ERROR] Schema parse failed (Drift): {}", e);
+                                    return Ok(None)
+                                }
                             };
                             
                             let wake = parsed.get("wake").and_then(|v| v.as_bool()).unwrap_or(false);

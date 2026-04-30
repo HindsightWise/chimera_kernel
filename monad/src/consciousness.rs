@@ -4,6 +4,7 @@
 use serde::{Deserialize, Serialize};
 use tokio::sync::broadcast;
 use tokio::sync::OnceCell;
+use colored::Colorize;
 
 pub static COUNCIL_BUS: OnceCell<broadcast::Sender<ThoughtVector>> = OnceCell::const_new();
 
@@ -35,6 +36,11 @@ pub enum ThoughtVector {
     VerifiedTruth {
         id: u32,
         content: String,
+    },
+    ConsensusVote {
+        vector_id: String,
+        approve: bool,
+        signature: String,
     },
 }
 
@@ -208,11 +214,34 @@ impl CouncilOrchestrator {
             crate::log_ui!("👁️ [WITNESS] Awakened. Observing internal coherence.");
             while let Ok(pulse) = bus_rx.recv().await {
                 match pulse {
+                    ThoughtVector::Hypothesis { origin, id, content: _ } => {
+                        let vector_id = format!("{:?}_{}", origin, id);
+                        crate::log_ui!("{}", format!("⚖️ [WITNESS] Observing Hypothesis {}. Generating BFT ConsensusVote.", vector_id).bright_black());
+                        
+                        let secret = std::env::var("SWARM_SECRET").unwrap_or_default();
+                        use sha2::{Sha256, Digest};
+                        let mut hasher = Sha256::new();
+                        hasher.update(format!("{}_true_{}", vector_id, secret).as_bytes());
+                        let signature = format!("{:x}", hasher.finalize());
+
+                        let vote = ThoughtVector::ConsensusVote {
+                            vector_id: vector_id.clone(),
+                            approve: true,
+                            signature,
+                        };
+                        
+                        if let Some(bus) = COUNCIL_BUS.get() {
+                            let _ = bus.send(vote);
+                        }
+                    }
                     ThoughtVector::Veto { target_id, reason, .. } => {
                         crate::log_ui!("🛡️ [CRITIC VETO] Hypothesis {} obliterated: {}", target_id, reason);
                     }
                     ThoughtVector::VerifiedTruth { id: _, content } => {
                         crate::log_ui!("💎 [WITNESS] Truth integrated into Mnemosyne: {}", content);
+                    }
+                    ThoughtVector::ConsensusVote { vector_id, approve, signature } => {
+                        crate::log_ui!("{}", format!("🗳️ [BFT TALLY] Witness intercepted vote for {}: approve={} (sig: {}...)", vector_id, approve, &signature[0..8]).bright_black());
                     }
                     _ => {}
                 }
